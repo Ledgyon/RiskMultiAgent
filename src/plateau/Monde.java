@@ -35,6 +35,14 @@ public class Monde {
                                 tempListeTerritoire.add(continents.get(4).getTerritoires().get(5));
                                 continents.get(i).getTerritoires().get(j).setTerritoires_adjacents(tempListeTerritoire);
                                 break;
+                            case 1:			//ALBERTA
+                            	tempListeTerritoire = new ArrayList<>();
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(0));
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(5));
+                                tempListeTerritoire.add(continents.get(4).getTerritoires().get(6));
+                                tempListeTerritoire.add(continents.get(4).getTerritoires().get(8));
+                                continents.get(i).getTerritoires().get(j).setTerritoires_adjacents(tempListeTerritoire);
+                                break;
                         }
                     }
                     break;
