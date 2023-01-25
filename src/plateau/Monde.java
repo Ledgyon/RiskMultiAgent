@@ -36,7 +36,7 @@ public class Monde {
                                 continents.get(i).getTerritoires().get(j).setTerritoires_adjacents(tempListeTerritoire);
                             }
                             case 1 -> {                    //TERRITOIRE ALBERTA
-                                tempListeTerritoire = new ArrayList<>();
+                                tempListeTerritoire.clear();
                                 tempListeTerritoire.add(continents.get(0).getTerritoires().get(0));
                                 tempListeTerritoire.add(continents.get(0).getTerritoires().get(5));
                                 tempListeTerritoire.add(continents.get(0).getTerritoires().get(6));
@@ -44,14 +44,14 @@ public class Monde {
                                 continents.get(i).getTerritoires().get(j).setTerritoires_adjacents(tempListeTerritoire);
                             }
                             case 2 -> {                    //TERRITOIRE AMERIQUE_CENTRALE
-                                tempListeTerritoire = new ArrayList<>();
+                                tempListeTerritoire.clear();
                                 tempListeTerritoire.add(continents.get(1).getTerritoires().get(3));
                                 tempListeTerritoire.add(continents.get(0).getTerritoires().get(3));
                                 tempListeTerritoire.add(continents.get(0).getTerritoires().get(8));
                                 continents.get(i).getTerritoires().get(j).setTerritoires_adjacents(tempListeTerritoire);
                             }
                             case 3 -> {                    //TERRITOIRE ETATS_EST
-                                tempListeTerritoire = new ArrayList<>();
+                                tempListeTerritoire.clear();
                                 tempListeTerritoire.add(continents.get(0).getTerritoires().get(2));
                                 tempListeTerritoire.add(continents.get(0).getTerritoires().get(6));
                                 tempListeTerritoire.add(continents.get(0).getTerritoires().get(7));
@@ -59,7 +59,7 @@ public class Monde {
                                 continents.get(i).getTerritoires().get(j).setTerritoires_adjacents(tempListeTerritoire);
                             }
                             case 4 -> {                    //TERRITOIRE GROENLAND
-                                tempListeTerritoire = new ArrayList<>();
+                                tempListeTerritoire.clear();
                                 tempListeTerritoire.add(continents.get(0).getTerritoires().get(5));
                                 tempListeTerritoire.add(continents.get(0).getTerritoires().get(6));
                                 tempListeTerritoire.add(continents.get(0).getTerritoires().get(7));
@@ -67,7 +67,7 @@ public class Monde {
                                 continents.get(i).getTerritoires().get(j).setTerritoires_adjacents(tempListeTerritoire);
                             }
                             case 5 -> {                    //TERRITOIRE TERRITOIRES_NORD_OUEST
-                                tempListeTerritoire = new ArrayList<>();
+                                tempListeTerritoire.clear();
                                 tempListeTerritoire.add(continents.get(0).getTerritoires().get(0));
                                 tempListeTerritoire.add(continents.get(0).getTerritoires().get(1));
                                 tempListeTerritoire.add(continents.get(0).getTerritoires().get(4));
@@ -76,7 +76,7 @@ public class Monde {
                                 continents.get(i).getTerritoires().get(j).setTerritoires_adjacents(tempListeTerritoire);
                             }
                             case 6 -> {                    //TERRITOIRE ONTARIO
-                                tempListeTerritoire = new ArrayList<>();
+                                tempListeTerritoire.clear();
                                 tempListeTerritoire.add(continents.get(0).getTerritoires().get(1));
                                 tempListeTerritoire.add(continents.get(0).getTerritoires().get(3));
                                 tempListeTerritoire.add(continents.get(0).getTerritoires().get(4));
@@ -86,14 +86,14 @@ public class Monde {
                                 continents.get(i).getTerritoires().get(j).setTerritoires_adjacents(tempListeTerritoire);
                             }
                             case 7 -> {                    //TERRITOIRE QUEBEC
-                                tempListeTerritoire = new ArrayList<>();
+                                tempListeTerritoire.clear();
                                 tempListeTerritoire.add(continents.get(0).getTerritoires().get(3));
                                 tempListeTerritoire.add(continents.get(0).getTerritoires().get(4));
                                 tempListeTerritoire.add(continents.get(0).getTerritoires().get(6));
                                 continents.get(i).getTerritoires().get(j).setTerritoires_adjacents(tempListeTerritoire);
                             }
                             case 8 -> {                    //TERRITOIRE ETATS_OUEST
-                                tempListeTerritoire = new ArrayList<>();
+                                tempListeTerritoire.clear();
                                 tempListeTerritoire.add(continents.get(0).getTerritoires().get(1));
                                 tempListeTerritoire.add(continents.get(0).getTerritoires().get(2));
                                 tempListeTerritoire.add(continents.get(0).getTerritoires().get(3));
