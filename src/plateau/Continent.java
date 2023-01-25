@@ -3,7 +3,6 @@ package plateau;
 import plateau.enumerations.*;
 
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.List;
 
 public class Continent {
@@ -20,78 +19,64 @@ public class Continent {
     // Fonction qui permet d'assigner un nombre de renfort obtenue au début de chaque tour dépendant du continent
     public void assignRenfort (String nom){
         switch (nom) {
-            case "AMERIQUE_NORD", "EUROPE":
-                this.renfortObtenu = 5;
-                break;
-            case "AMERIQUE_SUD", "OCEANIE":
-                this.renfortObtenu = 2;
-                break;
-            case "AFRIQUE":
-                this.renfortObtenu = 3;
-                break;
-            case "ASIE":
-                this.renfortObtenu = 7;
-                break;
+            case "AMERIQUE_NORD", "EUROPE" -> this.renfortObtenu = 5;
+            case "AMERIQUE_SUD", "OCEANIE" -> this.renfortObtenu = 2;
+            case "AFRIQUE" -> this.renfortObtenu = 3;
+            case "ASIE" -> this.renfortObtenu = 7;
         }
     }
 
     // Fonction qui permet d'assigner les noms de territoires pour chaque continent
     public void assignTerritoire (String nom){
         switch (nom) {
-            case "AMERIQUE_NORD":
+            case "AMERIQUE_NORD" -> {
                 territoires = new ArrayList<>();
                 NomTerritoireAN[] nomTerritoireAN = NomTerritoireAN.values();
-
-                for(int i = 0; i < 9; i++) {
+                for (int i = 0; i < 9; i++) {
                     Territoire t = new Territoire(nomTerritoireAN[i].toString());
                     this.territoires.add(t);
                 }
-                break;
-            case "AMERIQUE_SUD":
+            }
+            case "AMERIQUE_SUD" -> {
                 territoires = new ArrayList<>();
                 NomTerritoireAS[] nomTerritoireAS = NomTerritoireAS.values();
-
-                for(int i = 0; i < 4; i++) {
+                for (int i = 0; i < 4; i++) {
                     Territoire t = new Territoire(nomTerritoireAS[i].toString());
                     this.territoires.add(t);
                 }
-                break;
-            case "AFRIQUE":
+            }
+            case "AFRIQUE" -> {
                 territoires = new ArrayList<>();
                 NomTerritoireAF[] nomTerritoireAF = NomTerritoireAF.values();
-
-                for(int i = 0; i < 6; i++) {
+                for (int i = 0; i < 6; i++) {
                     Territoire t = new Territoire(nomTerritoireAF[i].toString());
                     this.territoires.add(t);
                 }
-                break;
-            case "ASIE":
+            }
+            case "ASIE" -> {
                 territoires = new ArrayList<>();
                 NomTerritoireASIE[] nomTerritoireASIE = NomTerritoireASIE.values();
-
-                for(int i = 0; i < 12; i++) {
+                for (int i = 0; i < 12; i++) {
                     Territoire t = new Territoire(nomTerritoireASIE[i].toString());
                     this.territoires.add(t);
                 }
-                break;
-            case "EUROPE":
+            }
+            case "EUROPE" -> {
                 territoires = new ArrayList<>();
                 NomTerritoireEU[] nomTerritoireEU = NomTerritoireEU.values();
-
-                for(int i = 0; i < 7; i++) {
+                for (int i = 0; i < 7; i++) {
                     Territoire t = new Territoire(nomTerritoireEU[i].toString());
                     this.territoires.add(t);
                 }
-                break;
-            case "OCEANIE":
+            }
+            case "OCEANIE" -> {
                 territoires = new ArrayList<>();
                 NomTerritoireOC[] nomTerritoireOC = NomTerritoireOC.values();
-
-                for(int i = 0; i < 4; i++) {
+                for (int i = 0; i < 4; i++) {
                     Territoire t = new Territoire(nomTerritoireOC[i].toString());
                     this.territoires.add(t);
                 }
-                break;
+            }
         }
     }
 

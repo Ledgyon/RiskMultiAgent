@@ -1,10 +1,7 @@
 package plateau;
 
-import plateau.enumerations.NomTerritoireOC;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class Territoire {
     private String nomTerritoire;
@@ -19,11 +16,42 @@ public class Territoire {
         this.territoires_adjacents.addAll(territoires_adjacents);
     }
 
+    public String getNomTerritoire() {
+        return nomTerritoire;
+    }
+
+    public void setNomTerritoire(String nomTerritoire) {
+        this.nomTerritoire = nomTerritoire;
+    }
+
+    public List<Territoire> getTerritoires_adjacents() {
+        return territoires_adjacents;
+    }
+
+    public int getRegimentSurTerritoire() {
+        return regimentSurTerritoire;
+    }
+
+    public void setRegimentSurTerritoire(int regimentSurTerritoire) {
+        this.regimentSurTerritoire = regimentSurTerritoire;
+    }
+
     @Override
     public String toString() {
         return "Territoire{" +
                 "nomTerritoire='" + nomTerritoire + '\'' +
-                ", territoires_adjacents=" + territoires_adjacents +
+                toStringTerritoireAdjacents() +
                 '}';
+    }
+
+    public String toStringTerritoireAdjacents(){
+        StringBuilder renvoie= new StringBuilder(", territoireAdjacent=[ ");
+        for(Territoire ter:territoires_adjacents){
+            renvoie.append(ter.getNomTerritoire());
+            if(!territoires_adjacents.get(territoires_adjacents.size()-1).getNomTerritoire().equals(ter.getNomTerritoire()))
+                renvoie.append(", ");
+        }
+        renvoie.append(" ]");
+        return renvoie.toString();
     }
 }
