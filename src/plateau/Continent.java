@@ -106,10 +106,10 @@ public class Continent {
 
     @Override
     public String toString() {
-        return "Continent{" +
+        return "\n\tContinent{" +
                 "nom='" + nom + '\'' +
-                ", territoires=" + territoires +
                 ", renfortObtenu=" + renfortObtenu +
+                ", territoires=" + territoires +
                 '}';
     }
 }

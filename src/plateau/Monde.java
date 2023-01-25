@@ -43,6 +43,64 @@ public class Monde {
                                 tempListeTerritoire.add(continents.get(0).getTerritoires().get(8));
                                 continents.get(i).getTerritoires().get(j).setTerritoires_adjacents(tempListeTerritoire);
                             }
+                            case 2 -> {                    //AMERIQUE CENTRALE
+                                tempListeTerritoire = new ArrayList<>();
+                                tempListeTerritoire.add(continents.get(1).getTerritoires().get(3));
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(3));
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(8));
+                                continents.get(i).getTerritoires().get(j).setTerritoires_adjacents(tempListeTerritoire);
+                            }
+                            case 3 -> {                    //ETATS EST
+                                tempListeTerritoire = new ArrayList<>();
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(2));
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(6));
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(7));
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(8));
+                                continents.get(i).getTerritoires().get(j).setTerritoires_adjacents(tempListeTerritoire);
+                            }
+                            case 4 -> {                    //GROENLAND
+                                tempListeTerritoire = new ArrayList<>();
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(5));
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(6));
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(7));
+                                tempListeTerritoire.add(continents.get(2).getTerritoires().get(1));
+                                continents.get(i).getTerritoires().get(j).setTerritoires_adjacents(tempListeTerritoire);
+                            }
+                            case 5 -> {                    //TERRITOIRES NORD OUEST
+                                tempListeTerritoire = new ArrayList<>();
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(0));
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(1));
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(4));
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(6));
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(7));
+                                continents.get(i).getTerritoires().get(j).setTerritoires_adjacents(tempListeTerritoire);
+                            }
+                            case 6 -> {                    //ONTARIO
+                                tempListeTerritoire = new ArrayList<>();
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(1));
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(3));
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(4));
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(5));
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(7));
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(8));
+                                continents.get(i).getTerritoires().get(j).setTerritoires_adjacents(tempListeTerritoire);
+                            }
+                            case 7 -> {                    //QUEBEC
+                                tempListeTerritoire = new ArrayList<>();
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(3));
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(4));
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(6));
+                                continents.get(i).getTerritoires().get(j).setTerritoires_adjacents(tempListeTerritoire);
+                            }
+                            case 8 -> {                    //ETATS OUEST
+                                tempListeTerritoire = new ArrayList<>();
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(1));
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(2));
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(3));
+                                tempListeTerritoire.add(continents.get(0).getTerritoires().get(6));
+                                continents.get(i).getTerritoires().get(j).setTerritoires_adjacents(tempListeTerritoire);
+                            }
+                            
                         }
                     }
                     break;
@@ -338,6 +396,6 @@ public class Monde {
     }
 
     public String toString() {
-        return "Monde{continents=" + this.continents + "}";
+        return "Monde\n\tContinents = " + this.continents + "}";
     }
 }

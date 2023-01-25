@@ -38,7 +38,7 @@ public class Territoire {
 
     @Override
     public String toString() {
-        return "Territoire{" +
+        return "\n\t\tTerritoire{" +
                 "nomTerritoire='" + nomTerritoire + '\'' +
                 toStringTerritoireAdjacents() +
                 '}';
