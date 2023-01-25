@@ -1,0 +1,5 @@
+package plateau.enumerations;
+
+public enum NomTerritoireEU {
+    GRANDE_BRETAGNE,ISLANDE,EUROPE_NORD,SCANDINAVIE,EUROPE_SUD,UKRAINE,EUROPE_OCCIDENTALE
+}
