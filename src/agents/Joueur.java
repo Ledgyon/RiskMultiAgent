@@ -9,6 +9,12 @@ public class Joueur {
         return nombreRegiment == 0;
     }
 
+    public Joueur getThisByCouleur(String couleur){
+        if(this.couleur==couleur)
+            return this;
+        return null;
+    }
+
     public String getCouleur() {
         return couleur;
     }
@@ -24,4 +30,5 @@ public class Joueur {
     public void setNombreRegiment(int nombreRegiment) {
         this.nombreRegiment = nombreRegiment;
     }
+
 }
