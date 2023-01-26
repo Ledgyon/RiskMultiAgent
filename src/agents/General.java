@@ -182,7 +182,7 @@ public class General {
 
 	@Override
 	public String toString() {
-		return "General [pioche=" + pioche + ", objectifs=" + objectifs + "]";
+		return "General [pioche=" + pioche + "\nobjectifs=" + objectifs + "]";
 	}
 
 		

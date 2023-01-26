@@ -24,12 +24,11 @@ public class Monde {
     public void assignTerritoireAdjacents(){
         ArrayList<Territoire> tempListeTerritoire = new ArrayList<>();
         for(int i=0 ; i<6 ; i++){
-            switch(i){
-                case 0:                               //Continent AMERIQUE_NORD
-                    for(int j=0 ; j<9 ;j++){
+            switch (i) {
+                case 0 -> {                               //Continent AMERIQUE_NORD
+                    for (int j = 0; j < 9; j++) {
                         switch (j) {
                             case 0 -> {                   //TERRITOIRE ALASKA
-                                tempListeTerritoire.clear();
                                 tempListeTerritoire.add(continents.get(0).getTerritoires().get(5));
                                 tempListeTerritoire.add(continents.get(0).getTerritoires().get(1));
                                 tempListeTerritoire.add(continents.get(4).getTerritoires().get(5));
@@ -102,9 +101,9 @@ public class Monde {
                             }
                         }
                     }
-                    break;
-                case 1:                               //Continent AMERIQUE_SUD
-                    for(int j=0 ; j<4 ;j++){
+                }
+                case 1 -> {                               //Continent AMERIQUE_SUD
+                    for (int j = 0; j < 4; j++) {
                         switch (j) {
                             case 0 -> {                   //TERRITOIRE ARGENTINE
                                 tempListeTerritoire.clear();
@@ -136,9 +135,9 @@ public class Monde {
                             }
                         }
                     }
-                    break;
-                case 2:                               //Continent EUROPE
-                    for(int j=0 ; j<7 ;j++) {
+                }
+                case 2 -> {                               //Continent EUROPE
+                    for (int j = 0; j < 7; j++) {
                         switch (j) {
                             case 0 -> {                   //TERRITOIRE GRANDE_BRETAGNE
                                 tempListeTerritoire.clear();
@@ -198,9 +197,9 @@ public class Monde {
                             }
                         }
                     }
-                    break;
-                case 3:                               //Continent Afrique
-                    for(int j=0 ; j<6 ;j++) {
+                }
+                case 3 -> {                               //Continent Afrique
+                    for (int j = 0; j < 6; j++) {
                         switch (j) {
                             case 0 -> {                   //TERRITOIRE CONGO
                                 tempListeTerritoire.clear();
@@ -251,9 +250,9 @@ public class Monde {
                             }
                         }
                     }
-                    break;
-                case 4:                               //Continent Asie
-                    for(int j=0 ; j<12 ; j++){
+                }
+                case 4 -> {                               //Continent Asie
+                    for (int j = 0; j < 12; j++) {
                         switch (j) {
                             case 0 -> {                   //TERRITOIRE AFGHANISTAN
                                 tempListeTerritoire.clear();
@@ -356,9 +355,9 @@ public class Monde {
                             }
                         }
                     }
-                    break;
-                case 5:                               //Continent Oceanie
-                    for(int j=0 ; j<4 ;j++){
+                }
+                case 5 -> {                               //Continent Oceanie
+                    for (int j = 0; j < 4; j++) {
                         switch (j) {
                             case 0 -> {                   //TERRITOIRE AUSTRALIE_ORIENTALE
                                 tempListeTerritoire.clear();
@@ -389,7 +388,7 @@ public class Monde {
                             }
                         }
                     }
-                    break;
+                }
             }
         }
     }
