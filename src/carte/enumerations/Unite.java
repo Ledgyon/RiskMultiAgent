@@ -2,7 +2,7 @@ package carte.enumerations;
 
 public enum Unite {
 	FANTASSIN,
-	CAVALERIE,
+	CAVALIER,
 	CANON,
 	FANTASSIN_CAVALERIE_CANON
 }
