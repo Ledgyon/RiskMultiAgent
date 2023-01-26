@@ -160,6 +160,8 @@ public class General {
 		objectifs.add(carteM);
 		carteM = new CarteMission("vert");
 		objectifs.add(carteM);
+
+		Collections.shuffle(this.objectifs);
 	}
 
 	public List<CartePioche> getPioche() {

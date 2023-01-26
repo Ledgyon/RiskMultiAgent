@@ -69,4 +69,14 @@ public class CarteMission {
     public void setCouleur(String couleur) {
         this.couleur = couleur;
     }
+
+    @Override
+    public String toString() {
+        return "\n\tCarteMission{" +
+                "nbTerritoire=" + nbTerritoire +
+                ", nbArmee=" + nbArmee +
+                ", continentAConquerir=" + continentAConquerir +
+                ", couleur='" + couleur + '\'' +
+                '}';
+    }
 }
