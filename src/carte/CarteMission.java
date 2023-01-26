@@ -10,6 +10,7 @@ public class CarteMission {
     private List<String> continentAConquerir;
     private String couleur; // A voir ultérieurement
 
+
     public CarteMission(String cont1, String cont2){                    // Constructeur si la Carte Mission est deux continents à conquérir
         continentAConquerir = new ArrayList<>();
         continentAConquerir.add(cont1);
@@ -20,7 +21,7 @@ public class CarteMission {
         continentAConquerir = new ArrayList<>();
         continentAConquerir.add(cont1);
         continentAConquerir.add(cont2);
-        continentAConquerir.add("Autre");
+        continentAConquerir.add(autre);
     }
 
     public CarteMission(int nbTerritoire){                              // Constructeur si la Carte Mission est un certain nombre de Territoires à controller
