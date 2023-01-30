@@ -1,5 +1,6 @@
 package gui;
 
+import agents.General;
 import agents.Joueur;
 import jade.gui.GuiEvent;
 
@@ -8,21 +9,19 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
-public class JoueurGui extends JFrame {
+public class GeneralGui extends JFrame {
 
-    private static int nbJoueurGui = 0;
-    private final int noJoueurGui;
 
     private final JTextArea jTextArea;
 
-    private final Joueur myAgent;
+    private final General myAgent;
 
-    public JoueurGui(Joueur a) {
+    public GeneralGui(General a) {
         super(a.getName());
-        noJoueurGui = ++nbJoueurGui;
         myAgent = a;
 
         jTextArea = new JTextArea();
+        jTextArea.setBackground(new Color(255, 255, 240));
         jTextArea.setEditable(false);
         jTextArea.setColumns(40);
         jTextArea.setRows(5);
@@ -49,9 +48,6 @@ public class JoueurGui extends JFrame {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         int screenWidth = (int) screenSize.getWidth();
         int width = this.getWidth();
-        int xx = (noJoueurGui * width) % screenWidth;
-        int yy = ((noJoueurGui * width) / screenWidth) * getHeight();
-        setLocation(xx, yy);
         setTitle(myAgent.getLocalName());
         setVisible(true);
     }
@@ -63,15 +59,7 @@ public class JoueurGui extends JFrame {
         jTextArea.setCaretPosition(texte.length());
     }
 
-    public int getNoJoueurGui() {
-        return noJoueurGui;
-    }
-
     public void setColor(Color color) {
         jTextArea.setBackground(color);
-    }
-
-    public JTextArea getjTextArea() {
-        return jTextArea;
     }
 }

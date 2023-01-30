@@ -38,12 +38,32 @@ public class Joueur extends GuiAgent{
         window = new gui.JoueurGui(this);
         window.display();
         switch(window.getNoJoueurGui()){
-            case(1)-> window.setColor(Color.YELLOW);
-            case(2)-> window.setColor(Color.RED);
-            case(3)-> window.setColor(Color.BLUE);
-            case(4)-> window.setColor(Color.BLACK);
-            case(5)-> window.setColor(Color.MAGENTA);
-            case(6)-> window.setColor(Color.GREEN);
+            case(1)-> {
+                window.setColor(Color.YELLOW);
+                this.couleur = "jaune";
+            }
+            case(2)-> {
+                window.setColor(Color.RED);
+                this.couleur = "rouge";
+            }
+            case(3)-> {
+                window.setColor(Color.BLUE);
+                this.couleur = "bleu";
+                window.getjTextArea().setForeground(Color.WHITE);
+            }
+            case(4)-> {
+                window.setColor(Color.BLACK);
+                this.couleur = "noir";
+                window.getjTextArea().setForeground(Color.WHITE);
+            }
+            case(5)-> {
+                window.setColor(Color.MAGENTA);
+                this.couleur = "violet";
+            }
+            case(6)-> {
+                window.setColor(Color.GREEN);
+                this.couleur = "vert";
+            }
         }
         window.println("Hello! Agent  " + getLocalName() + " is ready, my address is " + this.getAID().getName());
 

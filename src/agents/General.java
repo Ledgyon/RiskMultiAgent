@@ -1,6 +1,10 @@
 package agents;
 
+import jade.gui.GuiAgent;
+import jade.gui.GuiEvent;
 import plateau.enumerations.*;
+
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -9,10 +13,20 @@ import carte.CarteMission;
 import carte.CartePioche;
 import carte.enumerations.Unite;
 
-public class General {
+public class General extends GuiAgent {
 	private List<CartePioche> pioche;
 	private List<CarteMission> objectifs;
-	
+	private gui.GeneralGui window;
+
+	@Override
+	protected void setup(){
+		final Object[] args = getArguments(); // Recuperation des arguments
+		window = new gui.GeneralGui(this);
+		window.display();
+		window.println("Hello! Agent  " + getLocalName() + " is ready, my address is " + this.getAID().getName());
+		window.println(this.toString());
+
+	}
 	
 	public General() {
 		// init de la pioche
@@ -21,7 +35,14 @@ public class General {
 		this.objectifs = new ArrayList<>();
 		constructObjectifs();
 	}
-	
+
+	@Override
+	protected void onGuiEvent(GuiEvent guiEvent) {
+		if (guiEvent.getType() == Joueur.EXIT) {
+			doDelete();
+		}
+	}
+
 	//fonction de construction de la pioche
 	public void constructPioche()
 	{
@@ -182,7 +203,7 @@ public class General {
 
 	@Override
 	public String toString() {
-		return "General [pioche=" + pioche + "\nobjectifs=" + objectifs + "]";
+		return "pioche=\n" + pioche + "\nobjectifs=\n" + objectifs;
 	}
 
 		

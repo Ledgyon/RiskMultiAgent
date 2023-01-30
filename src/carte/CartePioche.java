@@ -27,6 +27,6 @@ public class CartePioche {
 
 	@Override
 	public String toString() {
-		return "\n\tCartePioche [territoire=" + territoire + ", unite=" + unite + "]";
+		return "\n\tCartePioche [territoire = " + territoire + ", unite = " + unite + "]";
 	}
 }

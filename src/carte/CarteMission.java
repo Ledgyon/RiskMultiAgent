@@ -72,11 +72,15 @@ public class CarteMission {
 
     @Override
     public String toString() {
-        return "\n\tCarteMission{" +
-                "nbTerritoire=" + nbTerritoire +
-                ", nbArmee=" + nbArmee +
-                ", continentAConquerir=" + continentAConquerir +
-                ", couleur='" + couleur + '\'' +
-                '}';
+        String temp = "\n\tCarteMission [";
+        if(couleur != null){
+            temp+="couleur = "+couleur + ", objectif secondaire, nbTerritoire = " + nbTerritoire;
+        } else if (nbTerritoire != 0) {
+            temp+="nbTerritoire = " + nbTerritoire;
+        } else {
+            temp+="Continent a conquerir = " + continentAConquerir;
+        }
+        temp+="]";
+        return temp;
     }
 }
