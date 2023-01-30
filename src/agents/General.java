@@ -1,10 +1,5 @@
 package agents;
 
-import jade.gui.GuiAgent;
-import jade.gui.GuiEvent;
-import plateau.enumerations.*;
-
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -12,11 +7,29 @@ import java.util.List;
 import carte.CarteMission;
 import carte.CartePioche;
 import carte.enumerations.Unite;
+import jade.core.AID;
+import jade.core.AgentServicesTools;
+import jade.domain.DFSubscriber;
+import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.gui.GuiAgent;
+import jade.gui.GuiEvent;
+import plateau.enumerations.NomContinents;
+import plateau.enumerations.NomTerritoireAF;
+import plateau.enumerations.NomTerritoireAN;
+import plateau.enumerations.NomTerritoireAS;
+import plateau.enumerations.NomTerritoireASIE;
+import plateau.enumerations.NomTerritoireEU;
+import plateau.enumerations.NomTerritoireOC;
 
 public class General extends GuiAgent {
 	private List<CartePioche> pioche;
 	private List<CarteMission> objectifs;
 	private gui.GeneralGui window;
+	
+	/**
+     * liste des joueurs
+     */
+    private ArrayList<AID> joueurs;
 
 	@Override
 	protected void setup(){
@@ -24,8 +37,33 @@ public class General extends GuiAgent {
 		window.display();
 		window.println("Hello! Agent  " + getLocalName() + " is ready, my address is " + this.getAID().getName());
 		window.println(this.toString());
-
+		
+		detectJoueurs();
 	}
+	
+	/**
+     * ecoute des evenement de type enregistrement en tant que joueur, pour avoir acces a leurs adresses
+     */
+    private void detectJoueurs() {
+        var model = AgentServicesTools.createAgentDescription("liste joueur", "get AID joueur");
+        joueurs = new ArrayList<>();
+
+        //souscription au service des pages jaunes pour recevoir une alerte en cas mouvement sur le service travel agency'seller
+        addBehaviour(new DFSubscriber(this, model) {
+            @Override
+            public void onRegister(DFAgentDescription dfd) { //au debut
+                joueurs.add(dfd.getName());
+                window.println(dfd.getName().getLocalName() + " s'est inscrit en tant que joueur : " + model.getAllServices().get(0));
+            }
+            
+            @Override
+            public void onDeregister(DFAgentDescription dfd) { // lorsque le joueur est mort
+                joueurs.remove(dfd.getName());
+                window.println(dfd.getName().getLocalName() + " s'est desinscrit de  : " + model.getAllServices().get(0));
+            }
+        });
+
+    }
 	
 	public General() {
 		// init de la pioche

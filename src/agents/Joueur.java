@@ -9,6 +9,7 @@ import carte.CartePioche;
 import gui.JoueurGui;
 import jade.core.AgentServicesTools;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.ReceiverBehaviour;
 import jade.domain.FIPAAgentManagement.FailureException;
 import jade.domain.FIPAAgentManagement.NotUnderstoodException;
 import jade.domain.FIPAAgentManagement.RefuseException;
@@ -66,6 +67,7 @@ public class Joueur extends GuiAgent{
         }
         window.println("Hello! Agent  " + getLocalName() + " is ready, my address is " + this.getAID().getName());
 
+        AgentServicesTools.register(this, "liste joueur", "get AID joueur");
     }
 
     public boolean isDead(){
