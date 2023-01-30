@@ -1,6 +1,7 @@
 package gui;
 
 import agents.General;
+import agents.Intermediaire;
 import agents.Joueur;
 import jade.gui.GuiEvent;
 
@@ -9,15 +10,14 @@ import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
-public class GeneralGui extends JFrame {
+public class IntermediaireGui extends JFrame {
 
 
     private final JTextArea jTextArea;
 
-    private final General myAgent;
-    public static final int EXIT = 0;
+    private final Intermediaire myAgent;
 
-    public GeneralGui(General a) {
+    public IntermediaireGui(Intermediaire a) {
         super(a.getName());
         myAgent = a;
 
@@ -35,7 +35,7 @@ public class GeneralGui extends JFrame {
             @Override
             public void windowClosing(WindowEvent e) {
                 // SEND AN GUI EVENT TO THE AGENT !!!
-                GuiEvent guiEv = new GuiEvent(this, Joueur.EXIT);
+                GuiEvent guiEv = new GuiEvent(this, Intermediaire.EXIT);
                 myAgent.postGuiEvent(guiEv);
                 // END SEND AN GUI EVENT TO THE AGENT !!!
             }

@@ -23,6 +23,7 @@ public class LaunchRisk {
         for(int i = 1; i <= 6; i++)
             sb.append("Joueur_").append(i).append(":agents.Joueur;");
         sb.append("General:agents.General;");
+        sb.append("Intermediaire:agents.Intermediaire;");
         prop.setProperty(Profile.AGENTS, sb.toString());
         // creer le profile pour le conteneur principal
         ProfileImpl profMain = new ProfileImpl(prop);

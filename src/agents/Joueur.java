@@ -34,7 +34,6 @@ public class Joueur extends GuiAgent{
 
     @Override
     protected void setup(){
-        final Object[] args = getArguments(); // Recuperation des arguments
         window = new gui.JoueurGui(this);
         window.display();
         switch(window.getNoJoueurGui()){

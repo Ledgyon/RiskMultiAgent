@@ -20,7 +20,6 @@ public class General extends GuiAgent {
 
 	@Override
 	protected void setup(){
-		final Object[] args = getArguments(); // Recuperation des arguments
 		window = new gui.GeneralGui(this);
 		window.display();
 		window.println("Hello! Agent  " + getLocalName() + " is ready, my address is " + this.getAID().getName());
@@ -38,7 +37,7 @@ public class General extends GuiAgent {
 
 	@Override
 	protected void onGuiEvent(GuiEvent guiEvent) {
-		if (guiEvent.getType() == Joueur.EXIT) {
+		if (guiEvent.getType() == Intermediaire.EXIT) {
 			doDelete();
 		}
 	}
