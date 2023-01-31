@@ -1,25 +1,17 @@
 package agents;
 
-import java.awt.*;
+import java.awt.Color;
 import java.util.List;
-import java.util.Objects;
 
 import carte.CarteMission;
 import carte.CartePioche;
-import gui.JoueurGui;
 import jade.core.AgentServicesTools;
+import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.ReceiverBehaviour;
-import jade.domain.FIPAAgentManagement.FailureException;
-import jade.domain.FIPAAgentManagement.NotUnderstoodException;
-import jade.domain.FIPAAgentManagement.RefuseException;
-import jade.domain.FIPANames;
-import jade.gui.AgentWindowed;
 import jade.gui.GuiAgent;
 import jade.gui.GuiEvent;
-import jade.gui.SimpleWindow4Agent;
 import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
 import plateau.Territoire;
 
 public class Joueur extends GuiAgent{
@@ -68,6 +60,17 @@ public class Joueur extends GuiAgent{
         window.println("Hello! Agent  " + getLocalName() + " is ready, my address is " + this.getAID().getName());
 
         AgentServicesTools.register(this, "liste joueur", "get AID joueur");
+        
+        addBehaviour(new CyclicBehaviour(this) {
+        	public void action() {
+        		ACLMessage msg = receive();
+        		if(msg != null) {
+        			System.out.println("Msg = " + msg.getContent());
+        		}
+        		else window.println("error");
+        		block();
+        	}
+        });
     }
 
     public boolean isDead(){

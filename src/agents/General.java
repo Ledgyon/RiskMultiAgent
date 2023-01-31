@@ -1,5 +1,6 @@
 package agents;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -13,6 +14,7 @@ import jade.domain.DFSubscriber;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.gui.GuiAgent;
 import jade.gui.GuiEvent;
+import jade.lang.acl.ACLMessage;
 import plateau.enumerations.NomContinents;
 import plateau.enumerations.NomTerritoireAF;
 import plateau.enumerations.NomTerritoireAN;
@@ -27,6 +29,15 @@ public class General extends GuiAgent {
 	private gui.GeneralGui window;
 	
 	/**
+     * code pour ajout de livre par la gui
+     */
+    public static final int EXIT = 0;
+    /**
+     * code pour achat de livre par la gui
+     */
+    public static final int INITIALISATION_RISK = 1;
+	
+	/**
      * liste des joueurs
      */
     private ArrayList<AID> joueurs;
@@ -39,6 +50,10 @@ public class General extends GuiAgent {
 		window.println(this.toString());
 		
 		detectJoueurs();
+		
+		//System.out.println("Liste de joueurs"+joueurs);
+
+		//sendCarteTerritoire();
 	}
 	
 	/**
@@ -46,13 +61,14 @@ public class General extends GuiAgent {
      */
     private void detectJoueurs() {
         var model = AgentServicesTools.createAgentDescription("liste joueur", "get AID joueur");
-        joueurs = new ArrayList<>();
+        this.joueurs = new ArrayList<>();
 
         //souscription au service des pages jaunes pour recevoir une alerte en cas mouvement sur le service travel agency'seller
         addBehaviour(new DFSubscriber(this, model) {
             @Override
             public void onRegister(DFAgentDescription dfd) { //au debut
                 joueurs.add(dfd.getName());
+                System.out.println("Liste de joueurs AID"+joueurs);
                 window.println(dfd.getName().getLocalName() + " s'est inscrit en tant que joueur : " + model.getAllServices().get(0));
             }
             
@@ -62,7 +78,37 @@ public class General extends GuiAgent {
                 window.println(dfd.getName().getLocalName() + " s'est desinscrit de  : " + model.getAllServices().get(0));
             }
         });
+        System.out.println("Liste de joueurs"+joueurs);
 
+    }
+    
+    private void sendCarteTerritoire()
+    {
+    	int i = 0;
+    	while(!pioche.isEmpty() == true) // alors on envoie une carte a chaque joueurs jusqu'a ce que la liste "pioche" soit vide
+    	{
+    		//System.out.println("yes");
+    		ACLMessage message = new ACLMessage(ACLMessage.PROPOSE);
+    		message.addReceiver(new AID(joueurs.get(i).getLocalName().toString(), AID.ISLOCALNAME));
+    		try {
+				message.setContentObject(pioche.get(0));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    		send(message);
+    		
+    		window.println("Carte "+pioche.get(0));
+    		
+    		pioche.remove(0); // on retire la carte qu'on vient d'envoyer
+    		
+    		//boucle pour gerer l'envoie aux joueurs
+    		if(i != (joueurs.size() - 1) )
+    		{
+    			i++;
+    		}
+    		else i = 0;
+    	}
     }
 	
 	public General() {
@@ -77,6 +123,9 @@ public class General extends GuiAgent {
 	protected void onGuiEvent(GuiEvent guiEvent) {
 		if (guiEvent.getType() == Intermediaire.EXIT) {
 			doDelete();
+		}
+		if (guiEvent.getType() == General.INITIALISATION_RISK) {
+			sendCarteTerritoire();
 		}
 	}
 
@@ -179,11 +228,13 @@ public class General extends GuiAgent {
 		carteP = new CartePioche(NomTerritoireOC.NOUVELLE_GUINEE.toString(),Unite.CAVALIER.toString());
 		this.pioche.add(carteP);
 		
+		/*
 		//JOKER
 		carteP = new CartePioche("JOKER",Unite.FANTASSIN_CAVALERIE_CANON.toString());
 		this.pioche.add(carteP);
 		carteP = new CartePioche("JOKER",Unite.FANTASSIN_CAVALERIE_CANON.toString());
 		this.pioche.add(carteP);
+		*/
 		
 		Collections.shuffle(this.pioche);
 		

@@ -5,6 +5,7 @@ import agents.Joueur;
 import jade.gui.GuiEvent;
 
 import javax.swing.*;
+
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -42,6 +43,25 @@ public class GeneralGui extends JFrame {
         });
 
         setResizable(true);
+        
+        JPanel p = new JPanel();
+        p.setLayout(new GridLayout(0, 1, 0, 0));
+        
+        getContentPane().add(p, BorderLayout.SOUTH);
+        
+        JButton addButton = new JButton("Start");
+        addButton.addActionListener(event -> {
+            try {
+                // SEND AN GUI EVENT TO THE AGENT !!!
+                GuiEvent guiEv = new GuiEvent(this, General.INITIALISATION_RISK);
+                myAgent.postGuiEvent(guiEv);
+                // END SEND AN GUI EVENT TO THE AGENT !!!
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(GeneralGui.this, "Invalid values. " + e.getMessage(), "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        p.add(addButton);
     }
 
     public void display() {

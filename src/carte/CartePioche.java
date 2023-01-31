@@ -1,6 +1,8 @@
 package carte;
 
-public class CartePioche {
+import java.io.Serializable;
+
+public class CartePioche implements Serializable {
 	private String territoire;
 	private String unite;
 	
