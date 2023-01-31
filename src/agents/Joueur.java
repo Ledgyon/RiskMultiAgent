@@ -19,6 +19,7 @@ import jade.gui.GuiEvent;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.UnreadableException;
 import jade.proto.ContractNetInitiator;
+import plateau.Continent;
 import plateau.Territoire;
 
 public class Joueur extends GuiAgent{
@@ -28,6 +29,7 @@ public class Joueur extends GuiAgent{
     private List<CartePioche> main; // cartes que le joueur possede dans sa main (max 5)
     private CarteMission objectif; // objectif du joueur pour remporter la partie
     private List<Territoire> territoires; // territoires possedes par le joueur
+    private List<String> continents; // permet de savoir quel continent le joueur a conquis pour l'attribution des renforts et pour les objectifs
     public static final int EXIT = 0;
     /**
      * topic du joueur demandant les informations du territoire
@@ -104,10 +106,16 @@ public class Joueur extends GuiAgent{
                             ACLMessage infoT = receive();
                             if(infoT == null) block();
 
-                            window.println("Msg = " + msg.getContentObject().getClass());
+                            window.println("Msg = " + msg.getContentObject());
                         }
                         else {
-                            objectif = (CarteMission) msg.getContentObject();
+                            CarteMission temp = (CarteMission) msg.getContentObject();
+                            if(temp.getCouleur() != null) {
+                                if (temp.getCouleur().equals(couleur)) {
+                                    temp = new CarteMission(temp.getNbTerritoire());
+                                }
+                            }
+                            objectif = temp;
                             window.println(objectif.toString());
                         }
                     } catch (UnreadableException e) {
