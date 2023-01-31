@@ -6,12 +6,16 @@ import java.util.List;
 import carte.CarteMission;
 import carte.CartePioche;
 import jade.core.AgentServicesTools;
+import jade.core.ServiceException;
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.messaging.TopicManagementHelper;
 import jade.gui.GuiAgent;
 import jade.gui.GuiEvent;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.UnreadableException;
 import plateau.Territoire;
 
 public class Joueur extends GuiAgent{
@@ -24,11 +28,18 @@ public class Joueur extends GuiAgent{
     public static final int EXIT = 0;
 
     private gui.JoueurGui window;
+    
+    /**
+     * topic du joueur demandant les informations du territoire
+     */
+    private AID topicTerritoire;
 
     @Override
     protected void setup(){
         window = new gui.JoueurGui(this);
         window.display();
+        
+        //gestion couleur des joueurs
         switch(window.getNoJoueurGui()){
             case(1)-> {
                 window.setColor(Color.YELLOW);
@@ -58,14 +69,49 @@ public class Joueur extends GuiAgent{
             }
         }
         window.println("Hello! Agent  " + getLocalName() + " is ready, my address is " + this.getAID().getName());
+        
+        //gestion topic manager pour la communication avec l'agent INTERMEDIARE pour avoir les infos plus precise du territoire acquis
+        TopicManagementHelper topicHelper = null;
+        try {
+            topicHelper = (TopicManagementHelper) getHelper(TopicManagementHelper.SERVICE_NAME);
+            topicTerritoire = topicHelper.createTopic("INFO TERRITOIRE");
+            topicHelper.register(topicTerritoire);
+        } catch (ServiceException e) {
+            e.printStackTrace();
+        }
 
+        //enregistrement de son adresse dans GENERAL
         AgentServicesTools.register(this, "liste joueur", "get AID joueur");
         
+        //reception des cartes territoires
         addBehaviour(new CyclicBehaviour(this) {
         	public void action() {
         		ACLMessage msg = receive();
         		if(msg != null) {
-        			System.out.println("Msg = " + msg.getContent());
+        			/*
+        			String values[] = msg.getContent().split(",");
+        			System.out.println("Msg = " + values[0] + " " + values[1] );
+        			*/
+        			try {
+        				//reception
+        				CartePioche temp = (CartePioche)msg.getContentObject();
+        				
+        				//demande a INTERMEDIAIRE les infos du territoire
+        				ACLMessage info_territoire = new ACLMessage(ACLMessage.REQUEST);
+        				info_territoire.setContent(temp.getTerritoire());
+        				info_territoire.addReceiver(topicTerritoire);
+        	            send(info_territoire);
+        	            
+        	            ACLMessage infoT = receive();
+        	            if(infoT == null) block();
+        	            
+        	            
+        	            //affichage
+						window.println("Msg = " + msg.getContentObject().getClass());
+					} catch (UnreadableException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
         		}
         		else window.println("error");
         		block();

@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.swing.AbstractButton;
+
 import carte.CarteMission;
 import carte.CartePioche;
 import carte.enumerations.Unite;
@@ -85,22 +87,25 @@ public class General extends GuiAgent {
     private void sendCarteTerritoire()
     {
     	int i = 0;
-    	while(!pioche.isEmpty() == true) // alors on envoie une carte a chaque joueurs jusqu'a ce que la liste "pioche" soit vide
+    	int i_carte = 0;
+    	while(i_carte < pioche.size()) // alors on envoie une carte a chaque joueurs jusqu'a ce que la liste "pioche" soit vide
     	{
     		//System.out.println("yes");
     		ACLMessage message = new ACLMessage(ACLMessage.PROPOSE);
     		message.addReceiver(new AID(joueurs.get(i).getLocalName().toString(), AID.ISLOCALNAME));
+			//message.setContent(pioche.get(i_carte).getTerritoire() + "," + pioche.get(i_carte).getUnite());
     		try {
-				message.setContentObject(pioche.get(0));
+				message.setContentObject(pioche.get(i_carte));
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
     		send(message);
     		
-    		window.println("Carte "+pioche.get(0));
+    		window.println("Carte "+pioche.get(i_carte));
     		
-    		pioche.remove(0); // on retire la carte qu'on vient d'envoyer
+    		i_carte++;
+    		//pioche.remove(0); // on retire la carte qu'on vient d'envoyer
     		
     		//boucle pour gerer l'envoie aux joueurs
     		if(i != (joueurs.size() - 1) )
@@ -126,6 +131,7 @@ public class General extends GuiAgent {
 		}
 		if (guiEvent.getType() == General.INITIALISATION_RISK) {
 			sendCarteTerritoire();
+			//((AbstractButton)guiEvent.getSource()).setEnabled(false);
 		}
 	}
 
