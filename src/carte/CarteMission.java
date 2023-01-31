@@ -1,9 +1,10 @@
 package carte;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CarteMission {
+public class CarteMission implements Serializable {
 
     private int nbTerritoire;
     private int nbArmee;

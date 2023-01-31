@@ -1,11 +1,10 @@
 package agents;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import javax.swing.AbstractButton;
 
 import carte.CarteMission;
 import carte.CartePioche;
@@ -24,6 +23,8 @@ import plateau.enumerations.NomTerritoireAS;
 import plateau.enumerations.NomTerritoireASIE;
 import plateau.enumerations.NomTerritoireEU;
 import plateau.enumerations.NomTerritoireOC;
+
+import javax.swing.*;
 
 public class General extends GuiAgent {
 	private List<CartePioche> pioche;
@@ -83,37 +84,47 @@ public class General extends GuiAgent {
         System.out.println("Liste de joueurs"+joueurs);
 
     }
+
+	private void sendCarteMission(){
+		for(int j=0; j<joueurs.size(); j++){
+			ACLMessage message = new ACLMessage(ACLMessage.PROPOSE);
+			message.addReceiver(new AID(joueurs.get(j).getLocalName(), AID.ISLOCALNAME));
+			try {
+				message.setContentObject(objectifs.get(0));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			send(message);
+			objectifs.remove(0);
+		}
+	}
     
     private void sendCarteTerritoire()
     {
     	int i = 0;
-    	int i_carte = 0;
-    	while(i_carte < pioche.size()) // alors on envoie une carte a chaque joueurs jusqu'a ce que la liste "pioche" soit vide
-    	{
-    		//System.out.println("yes");
-    		ACLMessage message = new ACLMessage(ACLMessage.PROPOSE);
-    		message.addReceiver(new AID(joueurs.get(i).getLocalName().toString(), AID.ISLOCALNAME));
-			//message.setContent(pioche.get(i_carte).getTerritoire() + "," + pioche.get(i_carte).getUnite());
-    		try {
+		int i_carte = 0;
+		while(i_carte < pioche.size()) // alors on envoie une carte a chaque joueurs jusqu'a ce que la liste "pioche" soit vide
+		{
+			//System.out.println("yes");
+			ACLMessage message = new ACLMessage(ACLMessage.PROPOSE);
+			message.addReceiver(new AID(joueurs.get(i).getLocalName(), AID.ISLOCALNAME));
+			try {
 				message.setContentObject(pioche.get(i_carte));
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-    		send(message);
-    		
-    		window.println("Carte "+pioche.get(i_carte));
-    		
-    		i_carte++;
-    		//pioche.remove(0); // on retire la carte qu'on vient d'envoyer
-    		
-    		//boucle pour gerer l'envoie aux joueurs
-    		if(i != (joueurs.size() - 1) )
-    		{
-    			i++;
-    		}
-    		else i = 0;
-    	}
+			send(message);
+
+			window.println("Carte "+pioche.get(i_carte));
+
+			i_carte++;
+			//boucle pour gerer l'envoie aux joueurs
+			if (i != (joueurs.size() - 1)) {
+				i++;
+			} else i = 0;
+		}
     }
 	
 	public General() {
@@ -126,12 +137,12 @@ public class General extends GuiAgent {
 
 	@Override
 	protected void onGuiEvent(GuiEvent guiEvent) {
-		if (guiEvent.getType() == Intermediaire.EXIT) {
+		if (guiEvent.getType() == General.EXIT) {
 			doDelete();
 		}
 		if (guiEvent.getType() == General.INITIALISATION_RISK) {
 			sendCarteTerritoire();
-			//((AbstractButton)guiEvent.getSource()).setEnabled(false);
+			sendCarteMission();
 		}
 	}
 

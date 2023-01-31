@@ -15,7 +15,7 @@ public class Intermediaire extends GuiAgent {
 
     private gui.IntermediaireGui window;
     public static final int EXIT = 0;
-    
+
     /**
      * topic du joueur demandant les informations du territoire
      */
@@ -27,14 +27,14 @@ public class Intermediaire extends GuiAgent {
         window.display();
         window.setColor(Color.LIGHT_GRAY);
         window.println("Hello! Agent  " + getLocalName() + " is ready, my address is " + this.getAID().getName());
-        
+
         Monde plateau = new Monde();
         topicTerritoire = AgentServicesTools.generateTopicAID(this, "INFO TERRITOIRE");
         //ecoute des messages radio
         addBehaviour(new ReceiverBehaviour(this, -1, MessageTemplate.MatchTopic(topicTerritoire), true, (a, m)->{
             println("Message recu sur le topic " + topicTerritoire.getLocalName() + ". Contenu " + m.getContent()
                     + " emis par :  " + m.getSender().getLocalName());
-            
+
             /*
              * A FAIRE
              * prendre le territoire du plateau et le renvoyer au joueur que a fait la demande
