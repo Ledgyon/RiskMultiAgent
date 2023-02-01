@@ -75,6 +75,10 @@ public class Joueur extends GuiAgent{
         window.println("Hello! Agent  " + getLocalName() + " is ready, my address is " + this.getAID().getName());
 
         //gestion topic manager pour la communication avec l'agent INTERMEDIARE pour avoir les infos plus precise du territoire acquis
+        /**
+         * Probleme ou le TopicManagementHelper est considere comme inactif donc impossiblite de creer un topic
+         * et donc la conversation entre le joueur et l'intermediaire ne se fera jamais
+         */
         TopicManagementHelper topicHelper = null;
         try {
             topicHelper = (TopicManagementHelper) getHelper(TopicManagementHelper.SERVICE_NAME);
