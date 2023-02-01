@@ -34,7 +34,7 @@ public class Joueur extends GuiAgent{
     /**
      * topic du joueur demandant les informations du territoire
      */
-    private AID topicTerritoire;
+    AID topicTerritoire;
 
     private gui.JoueurGui window;
 
@@ -98,9 +98,9 @@ public class Joueur extends GuiAgent{
                             CartePioche temp = (CartePioche)msg.getContentObject();
 
                             //demande a INTERMEDIAIRE les infos du territoire
-                            ACLMessage info_territoire = new ACLMessage(ACLMessage.REQUEST);
-                            info_territoire.setContent(temp.getTerritoire());
+                            ACLMessage info_territoire = new ACLMessage(ACLMessage.INFORM);
                             info_territoire.addReceiver(topicTerritoire);
+                            info_territoire.setContent(temp.getTerritoire());
                             send(info_territoire);
 
                             ACLMessage infoT = receive();
@@ -109,6 +109,7 @@ public class Joueur extends GuiAgent{
                             window.println("Msg = " + msg.getContentObject());
                         }
                         else {
+                            // AJout de la carte mission donné par le General
                             CarteMission temp = (CarteMission) msg.getContentObject();
                             if(temp.getCouleur() != null) {
                                 if (temp.getCouleur().equals(couleur)) {

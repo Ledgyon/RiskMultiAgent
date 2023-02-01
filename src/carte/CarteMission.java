@@ -75,12 +75,13 @@ public class CarteMission implements Serializable {
     public String toString() {
         String temp = "\n\tCarteMission [";
         if(couleur != null){
-            temp+="couleur = "+couleur + ", objectif secondaire, nbTerritoire = " + nbTerritoire;
-        } else if (nbTerritoire != 0) {
-            temp+="nbTerritoire = " + nbTerritoire;
-        } else {
-            temp+="Continent a conquerir = " + continentAConquerir;
-        }
+            temp += "couleur = " + couleur + ", objectif secondaire, nbTerritoire = " + nbTerritoire;
+        } else if (nbTerritoire == 24) {
+            temp += "nbTerritoire = " + nbTerritoire;
+        } else if (nbTerritoire == 18) {
+            temp += "nbTerritoire = " + nbTerritoire + " avec = " + nbArmee + " armees par territoire";
+        } else
+            temp += "Continent a conquerir = " + continentAConquerir;
         temp+="]";
         return temp;
     }

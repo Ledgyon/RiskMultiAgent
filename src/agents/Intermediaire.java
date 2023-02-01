@@ -19,7 +19,7 @@ public class Intermediaire extends GuiAgent {
     /**
      * topic du joueur demandant les informations du territoire
      */
-    private AID topicTerritoire;
+    AID topicTerritoire;
 
     @Override
     protected void setup(){
@@ -32,7 +32,7 @@ public class Intermediaire extends GuiAgent {
         topicTerritoire = AgentServicesTools.generateTopicAID(this, "INFO TERRITOIRE");
         //ecoute des messages radio
         addBehaviour(new ReceiverBehaviour(this, -1, MessageTemplate.MatchTopic(topicTerritoire), true, (a, m)->{
-            println("Message recu sur le topic " + topicTerritoire.getLocalName() + ". Contenu " + m.getContent()
+            window.println("Message recu sur le topic " + topicTerritoire.getLocalName() + ". Contenu " + m.getContent()
                     + " emis par :  " + m.getSender().getLocalName());
 
             /*
