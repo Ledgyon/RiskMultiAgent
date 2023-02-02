@@ -393,6 +393,14 @@ public class Monde {
         }
     }
 
+    public Territoire getTerritoireByName(String territoire){
+        for(Continent c:continents)
+            for (Territoire t : c.getTerritoires())
+                if (t.getNomTerritoire().equals(territoire))
+                    return t;
+        return null;
+    }
+
     public String toString() {
         return "Monde\n\tContinents = " + this.continents + "}";
     }

@@ -80,6 +80,10 @@ public class GeneralGui extends JFrame {
         jTextArea.setCaretPosition(texte.length());
     }
 
+    public JTextArea getjTextArea() {
+        return jTextArea;
+    }
+
     public void setColor(Color color) {
         jTextArea.setBackground(color);
     }
