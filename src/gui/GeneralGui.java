@@ -49,7 +49,7 @@ public class GeneralGui extends JFrame {
         
         getContentPane().add(p, BorderLayout.SOUTH);
         
-        JButton addButton = new JButton("Start");
+        JButton addButton = new JButton("Initialisation");
         addButton.addActionListener(event -> {
             try {
                 // SEND AN GUI EVENT TO THE AGENT !!!
@@ -60,6 +60,8 @@ public class GeneralGui extends JFrame {
                 JOptionPane.showMessageDialog(GeneralGui.this, "Invalid values. " + e.getMessage(), "Error",
                         JOptionPane.ERROR_MESSAGE);
             }
+            // Permet de rendre le bouton inutilisable
+            ((JButton)event.getSource()).setEnabled(false);
         });
         p.add(addButton);
     }

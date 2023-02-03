@@ -110,6 +110,14 @@ public class General extends GuiAgent {
 			ACLMessage message = new ACLMessage(ACLMessage.PROPOSE);
 			message.addReceiver(new AID(joueurs.get(i).getLocalName(), AID.ISLOCALNAME));
 			try {
+				//System.out.println("On attend les actions");
+				Thread.sleep(1);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			try {
 				message.setContentObject(pioche.get(i_carte));
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -118,6 +126,7 @@ public class General extends GuiAgent {
 			send(message);
 
 			window.println("Carte "+pioche.get(i_carte));
+			window.println("MSG "+message.toString());
 
 			i_carte++;
 			//boucle pour gerer l'envoie aux joueurs
@@ -143,7 +152,21 @@ public class General extends GuiAgent {
 		if (guiEvent.getType() == General.INITIALISATION_RISK) {
 			sendCarteTerritoire();
 			sendCarteMission();
+			addJokerShuffle();
 		}
+	}
+
+	public void addJokerShuffle(){
+		//JOKER
+		CartePioche carteP = new CartePioche("JOKER",Unite.FANTASSIN_CAVALERIE_CANON.toString());
+		this.pioche.add(carteP);
+		carteP = new CartePioche("JOKER",Unite.FANTASSIN_CAVALERIE_CANON.toString());
+		this.pioche.add(carteP);
+
+
+		Collections.shuffle(this.pioche);
+
+		window.println(pioche.toString());
 	}
 
 	//fonction de construction de la pioche

@@ -89,11 +89,11 @@ public class Joueur extends GuiAgent{
         //detectIntermediaire();
 
         //gestion topic manager pour la communication avec l'agent INTERMEDIARE pour avoir les infos plus precise du territoire acquis
-        /**
+        /*
          * Probleme ou le TopicManagementHelper est considere comme inactif donc impossiblite de creer un topic
          * et donc la conversation entre le joueur et l'intermediaire ne se fera jamais
          */
-        TopicManagementHelper topicHelper = null;
+        TopicManagementHelper topicHelper;
         try {
             topicHelper =  ( TopicManagementHelper ) getHelper (TopicManagementHelper.SERVICE_NAME) ;
             topicTerritoire = topicHelper.createTopic("INFO TERRITOIRE");
@@ -114,6 +114,7 @@ public class Joueur extends GuiAgent{
                         if(msg.getContentObject().getClass().getName().equals("carte.CartePioche")) {
                             //reception
                             CartePioche temp = (CartePioche)msg.getContentObject();
+                            //window.println(temp.toString());
 
                             //demande a INTERMEDIAIRE les infos du territoire
                             ACLMessage info_territoire = new ACLMessage(ACLMessage.INFORM);

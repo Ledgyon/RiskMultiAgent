@@ -22,6 +22,8 @@ public class Intermediaire extends GuiAgent {
     private Monde plateau;
     public static final int EXIT = 0;
 
+    public static final int LANCER_RISK = 1;
+
     /**
      * topic du joueur demandant les informations du territoire
      */
@@ -76,5 +78,12 @@ public class Intermediaire extends GuiAgent {
         if (guiEvent.getType() == Intermediaire.EXIT) {
             doDelete();
         }
+        if (guiEvent.getType() == Intermediaire.LANCER_RISK){
+            launchRisk();
+        }
+    }
+
+    public void launchRisk(){
+        window.println("Debut de la partie");
     }
 }

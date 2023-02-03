@@ -29,6 +29,12 @@ public class CartePioche implements Serializable {
 
 	@Override
 	public String toString() {
-		return "\n\tCartePioche [territoire = " + territoire + ", unite = " + unite + "]";
+		String temp = "\n\tCartePioche [";
+		if(territoire.equals("JOKER")){
+			temp += "nom = ";
+		} else
+			temp += "territoire = ";
+		temp+= territoire + ", unite = " + unite +"]";
+		return temp;
 	}
 }
