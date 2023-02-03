@@ -2,19 +2,18 @@ package agents;
 
 import java.awt.Color;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import jade.core.AID;
 import jade.core.AgentServicesTools;
+import jade.core.ServiceException;
 import jade.core.behaviours.ReceiverBehaviour;
-import jade.domain.DFSubscriber;
-import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.core.messaging.TopicManagementHelper;
 import jade.gui.GuiAgent;
 import jade.gui.GuiEvent;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import plateau.Monde;
+import plateau.Territoire;
 
 public class Intermediaire extends GuiAgent {
 
@@ -37,23 +36,38 @@ public class Intermediaire extends GuiAgent {
 
         plateau = new Monde();
 
-        AgentServicesTools.register(this, "intermediaire", "link");
+        //AgentServicesTools.register(this, "intermediaire", "link");
 
+ /*       TopicManagementHelper topicHelper = null;
+        try {
+            topicHelper =  ( TopicManagementHelper ) getHelper (TopicManagementHelper.SERVICE_NAME) ;
+            topicTerritoireRetour = topicHelper.createTopic("RETOUR INFO TERRITOIRE");
+            topicHelper.register(topicTerritoireRetour);
+        } catch (ServiceException e) {
+            e.printStackTrace();
+        }*/
 
-        /*topicTerritoire = AgentServicesTools.generateTopicAID(this, "INFO TERRITOIRE");
+        topicTerritoire = AgentServicesTools.generateTopicAID(this, "INFO TERRITOIRE");
+        
         //ecoute des messages radio
         addBehaviour(new ReceiverBehaviour(this, -1, MessageTemplate.MatchTopic(topicTerritoire), true, (a, m)->{
             window.println("Message recu sur le topic " + topicTerritoire.getLocalName() + ". Contenu " + m.getContent()
-                    + " emis par :  " + m.getSender().getLocalName());*/
+                    + " emis par :  " + m.getSender().getLocalName());
 
-            /*
-             * A FAIRE
-             * prendre le territoire du plateau et le renvoyer au joueur que a fait la demande
-             */
-            //ACLMessage retour = m.createReply();
-            //plateau
-            //retour.setContentObject();
-        //}));
+            Territoire tempT = plateau.getTerritoireByName(m.getContent());
+            window.println("Territoire complet = " + tempT + " class = " + tempT.getClass());
+            		
+            ACLMessage retour = m.createReply();
+            retour.setPerformative(ACLMessage.PROPAGATE); // IMPORTANT !!! Grace a ce mot cle PROPAGATE, cela va partir dans une fonction speciale de Joueur
+
+            try {
+				retour.setContentObject(tempT);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+            send(retour);
+        }));
     }
 
 

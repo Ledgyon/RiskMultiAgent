@@ -1,9 +1,10 @@
 package plateau;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Territoire {
+public class Territoire implements Serializable {
     private String nomTerritoire;
     private List<Territoire> territoires_adjacents;
     private int regimentSurTerritoire;

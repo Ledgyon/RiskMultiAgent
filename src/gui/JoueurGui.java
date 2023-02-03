@@ -1,5 +1,6 @@
 package gui;
 
+import agents.General;
 import agents.Joueur;
 import jade.gui.GuiEvent;
 
@@ -42,6 +43,25 @@ public class JoueurGui extends JFrame {
         });
 
         setResizable(true);
+        /*
+        JPanel p = new JPanel();
+        p.setLayout(new GridLayout(0, 1, 0, 0));
+        
+        getContentPane().add(p, BorderLayout.SOUTH);
+        
+        JButton addButton = new JButton("Territoire");
+        addButton.addActionListener(event -> {
+            try {
+                // SEND AN GUI EVENT TO THE AGENT !!!
+                GuiEvent guiEv = new GuiEvent(this, Joueur.GET_INFO_TERRITOIRE);
+                myAgent.postGuiEvent(guiEv);
+                // END SEND AN GUI EVENT TO THE AGENT !!!
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(JoueurGui.this, "Invalid values. " + e.getMessage(), "Error",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        p.add(addButton);*/
     }
 
     public void display() {

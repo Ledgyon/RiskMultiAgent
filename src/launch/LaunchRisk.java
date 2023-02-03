@@ -18,6 +18,8 @@ public class LaunchRisk {
         Properties prop = new ExtendedProperties();
         // demander la fenetre de controle
         prop.setProperty(Profile.GUI, "true");
+        // add the Topic Management Service
+        prop.setProperty(Profile.SERVICES, "jade.core.messaging.TopicManagementService;jade.core.event.NotificationService");
         // nommer les agents
         StringBuilder sb = new StringBuilder();
         for(int i = 1; i <= 6; i++)
