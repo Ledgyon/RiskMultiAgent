@@ -1,8 +1,11 @@
 package agents;
 
 import java.awt.Color;
+import java.io.IOException;
+import java.sql.Array;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import carte.CarteMission;
 import carte.CartePioche;
@@ -11,6 +14,7 @@ import jade.core.AID;
 import jade.core.AgentServicesTools;
 import jade.core.ServiceException;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.ReceiverBehaviour;
 import jade.core.messaging.TopicManagementHelper;
 import jade.domain.DFSubscriber;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -20,25 +24,30 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 import jade.proto.states.MsgReceiver;
+import plateau.Continent;
 import plateau.Territoire;
 
 @SuppressWarnings("serial")
 public class Joueur extends GuiAgent{
 
     private String couleur;
-    private int nombreRegiment;
+    private int nombreRegimentAPlacer;
+    private int nombreRegimentMax;
     private List<CartePioche> main; // cartes que le joueur possede dans sa main (max 5)
     private CarteMission objectif; // objectif du joueur pour remporter la partie
     private List<String> territoires_temp; // territoires possedes par le joueur
     private List<Territoire> territoires; // territoires possedes par le joueur
-    private List<String> continents; // permet de savoir quel continent le joueur a conquis pour l'attribution des renforts et pour les objectifs
+    private List<Continent> continents; // permet de savoir quel continent le joueur a conquis pour l'attribution des renforts et pour les objectifs
     public static final int EXIT = 0;
     public static final int GET_INFO_TERRITOIRE = 1;
-    private AID intermediaire;
     /**
      * topic du joueur demandant les informations du territoire
      */
     AID topicTerritoire;
+    /**
+     * topic du joueur permettant de faire la repartition des regiments sur les territoires du joueur en debut de partie
+     */
+    AID topicRepartition;
     /**
      * topic du joueur retournant les informations du territoire
      */
@@ -54,6 +63,8 @@ public class Joueur extends GuiAgent{
         
         this.territoires_temp = new ArrayList<>();
         this.territoires = new ArrayList<>();
+        this.main = new ArrayList<>();
+        this.nombreRegimentAPlacer = nombreRegimentMax = 20;
 
         //gestion couleur des joueurs
         switch(window.getNoJoueurGui()){
@@ -89,10 +100,6 @@ public class Joueur extends GuiAgent{
         //detectIntermediaire();
 
         //gestion topic manager pour la communication avec l'agent INTERMEDIARE pour avoir les infos plus precise du territoire acquis
-        /*
-         * Probleme ou le TopicManagementHelper est considere comme inactif donc impossiblite de creer un topic
-         * et donc la conversation entre le joueur et l'intermediaire ne se fera jamais
-         */
         TopicManagementHelper topicHelper;
         try {
             topicHelper =  ( TopicManagementHelper ) getHelper (TopicManagementHelper.SERVICE_NAME) ;
@@ -128,6 +135,7 @@ public class Joueur extends GuiAgent{
                         	window.println("pb topic" + territoires.toString());*/
                         } else if(msg.getContentObject().getClass().getName().equals("carte.CarteMission")) {
                             // AJout de la carte mission donnÃ© par le General
+
                             CarteMission temp = (CarteMission) msg.getContentObject();
                             if(temp.getCouleur() != null) {
                                 if (temp.getCouleur().equals(couleur)) {
@@ -151,6 +159,16 @@ public class Joueur extends GuiAgent{
         		block();
         	}
         });
+
+        topicRepartition = AgentServicesTools.generateTopicAID(this, "REPARTITION REGIMENT");
+
+        //ecoute des messages radio
+        addBehaviour(new ReceiverBehaviour(this, -1, MessageTemplate.MatchTopic(topicRepartition), true, (a, m)->{
+            window.println("Message recu sur le topic " + topicRepartition.getLocalName() + ". Contenu " + m.getContent()
+                    + " emis par :  " + m.getSender().getLocalName());
+            assignationRegimentTerritoire();
+            nouveauxRenforts();
+        }));
         
         //A PARTIR DE MTN "PROPAGATE" NE SERT QUE POUR LE RENVOIE DES INFOS DE TERRITOIRE
         var model = MessageTemplate.MatchPerformative(ACLMessage.PROPAGATE);
@@ -167,7 +185,8 @@ public class Joueur extends GuiAgent{
         				// TODO Auto-generated catch block
         				e.printStackTrace();
         			}
-        			window.println("Message recu sur le topic " + topicTerritoire.getLocalName() + ". Contenu " + tempT.toString()
+                    assert tempT != null;
+                    window.println("Message recu sur le topic " + topicTerritoire.getLocalName() + ". Contenu " + tempT.toString()
                     + " emis par :  " + msg.getSender().getLocalName());
         			territoires.add(tempT);
 
@@ -183,31 +202,60 @@ public class Joueur extends GuiAgent{
 
     }
 
-    private void detectIntermediaire() {
-        var model = AgentServicesTools.createAgentDescription("intermediaire", "link");
+    // fonction permettant la première assignation de régiments sur les territoires du joueur
+    public void assignationRegimentTerritoire(){
+        for(Territoire t:territoires) {
+            t.setRegimentSurTerritoire(1);
+            nombreRegimentAPlacer -= 1;
+        }
+        Random rand = new Random();
+        while(nombreRegimentAPlacer!=0){
+            int alea = rand.nextInt(territoires.size());
+            territoires.get(alea).addRegimentSurTerritoire(1);
+            nombreRegimentAPlacer--;
+        }
+        window.println(territoires.toString());
+    }
 
-        //souscription au service des pages jaunes pour recevoir une alerte en cas mouvement sur le service travel agency'seller
-        addBehaviour(new DFSubscriber(this, model) {
-            @Override
-            public void onRegister(DFAgentDescription dfd) {
-                intermediaire=dfd.getName();
-                window.println(dfd.getName().getLocalName() + " s'est inscrit en tant qu'intermediaire : " + model.getAllServices().get(0));
+    public void nouveauxRenforts(){
+        window.println(String.valueOf(nombreRegimentMax));
+        boolean b, combinaisonPossible;
+        int nbFantassin=0, nbCavalier=0, nbCanon=0;
+        int nbAddRegiment = (int) Math.floor(this.territoires.size()/3);
+        if(nbAddRegiment<3)
+            nbAddRegiment=3;
+        nombreRegimentMax += nbAddRegiment;
+        if(this.continents!=null)
+            for(Continent c:continents)
+                nombreRegimentMax += c.getRenfortObtenu();
+        Random rand = new Random();
+        b=rand.nextBoolean();
+        for(CartePioche cp:main){
+            switch(cp.getUnite()){
+                case("FANTASSIN") -> nbFantassin++;
+                case("CAVALIER") -> nbCavalier++;
+                case("CANON") -> nbCanon++;
             }
-
-            @Override
-            public void onDeregister(DFAgentDescription dfd) {
-                if(dfd.getName().equals(intermediaire)) {
-                    intermediaire=null;
-                    window.println(dfd.getName().getLocalName() + " s'est desinscrit de  : " + model.getAllServices().get(0));
-                }
+        }
+        if(b) {
+            if ((nbFantassin > 0)&&(nbCavalier > 0)&&(nbCanon > 0)) {
+                nombreRegimentMax+=10;
             }
-
-        });
-
+            if (nbCanon >= 3) {
+                nombreRegimentMax+=8;
+            }
+            if (nbCavalier >= 3) {
+                nombreRegimentMax+=6;
+            }
+            if (nbFantassin >= 3) {
+                nombreRegimentMax+=4;
+            }
+        }
+        window.println(String.valueOf(nombreRegimentMax));
     }
 
     public boolean isDead(){
-        return nombreRegiment == 0;
+        return nombreRegimentMax == 0;
     }
 
     public Joueur getThisByCouleur(String couleur){
@@ -224,18 +272,6 @@ public class Joueur extends GuiAgent{
 
     public void setCouleur(String couleur) {
         this.couleur = couleur;
-    }
-
-    public int getNombreRegiment() {
-        return nombreRegiment;
-    }
-
-    public void setNombreRegiment(int nombreRegiment) {
-        this.nombreRegiment = nombreRegiment;
-    }
-
-    public AID getIntermediaire() {
-        return intermediaire;
     }
 
     @Override

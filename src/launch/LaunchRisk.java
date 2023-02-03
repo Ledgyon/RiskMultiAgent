@@ -33,10 +33,6 @@ public class LaunchRisk {
         Runtime rt = Runtime.instance();
         rt.createMainContainer(profMain);
 
-        /*Monde plateau = new Monde();
-        System.out.println(plateau);
-        General general = new General();
-        System.out.println("\n"+general);*/
     }
 }
 

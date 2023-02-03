@@ -28,6 +28,7 @@ public class Intermediaire extends GuiAgent {
      * topic du joueur demandant les informations du territoire
      */
     AID topicTerritoire;
+    AID topicRepartition;
 
     @Override
     protected void setup(){
@@ -40,14 +41,17 @@ public class Intermediaire extends GuiAgent {
 
         //AgentServicesTools.register(this, "intermediaire", "link");
 
- /*       TopicManagementHelper topicHelper = null;
+        TopicManagementHelper topicHelper = null;
         try {
             topicHelper =  ( TopicManagementHelper ) getHelper (TopicManagementHelper.SERVICE_NAME) ;
-            topicTerritoireRetour = topicHelper.createTopic("RETOUR INFO TERRITOIRE");
-            topicHelper.register(topicTerritoireRetour);
+            topicRepartition = topicHelper.createTopic("REPARTITION REGIMENT");
+            //topicTerritoireRetour = topicHelper.createTopic("RETOUR INFO TERRITOIRE");
+            //topicHelper.register(topicTerritoireRetour);
+            topicHelper.register(topicRepartition);
         } catch (ServiceException e) {
             e.printStackTrace();
-        }*/
+        }
+
 
         topicTerritoire = AgentServicesTools.generateTopicAID(this, "INFO TERRITOIRE");
         
@@ -85,5 +89,9 @@ public class Intermediaire extends GuiAgent {
 
     public void launchRisk(){
         window.println("Debut de la partie");
+
+        ACLMessage assignRegiment = new ACLMessage(ACLMessage.INFORM);
+        assignRegiment.addReceiver(topicRepartition);
+        send(assignRegiment);
     }
 }

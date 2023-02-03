@@ -40,13 +40,13 @@ public class Territoire implements Serializable {
     @Override
     public String toString() {
         return "\n\t\tTerritoire{" +
-                "nomTerritoire='" + nomTerritoire + '\'' +
+                "nomTerritoire = '" + nomTerritoire + '\'' +
                 toStringTerritoireAdjacents() +
-                '}';
+                "regimentSurTerritoire = " + regimentSurTerritoire + '}';
     }
 
     public String toStringTerritoireAdjacents(){
-        StringBuilder renvoie= new StringBuilder(", territoireAdjacent=[ ");
+        StringBuilder renvoie= new StringBuilder(", territoireAdjacent = [ ");
         for(Territoire ter:territoires_adjacents){
             renvoie.append(ter.getNomTerritoire());
             if(!territoires_adjacents.get(territoires_adjacents.size()-1).getNomTerritoire().equals(ter.getNomTerritoire()))
@@ -54,5 +54,9 @@ public class Territoire implements Serializable {
         }
         renvoie.append(" ]");
         return renvoie.toString();
+    }
+
+    public void addRegimentSurTerritoire(int i) {
+        this.regimentSurTerritoire+=i;
     }
 }
