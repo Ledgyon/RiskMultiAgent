@@ -113,7 +113,8 @@ public class Joueur extends GuiAgent{
         AgentServicesTools.register(this, "liste joueur", "get AID joueur");
 
       //A PARTIR DE MTN "PROPAGATE" NE SERT QUE POUR LE RENVOIE DES INFOS DE TERRITOIRE
-        var model0 = MessageTemplate.MatchPerformative(ACLMessage.PROPOSE);
+        //var model0 = MessageTemplate.MatchPerformative(ACLMessage.PROPOSE);
+        var model0 = MessageTemplate.MatchConversationId("send carte");
         
         //Reception des info du territoire et stockage, fonction ne captant que les messages du model créer precedemment
         
@@ -180,7 +181,10 @@ public class Joueur extends GuiAgent{
         }));
         
         //A PARTIR DE MTN "PROPAGATE" NE SERT QUE POUR LE RENVOIE DES INFOS DE TERRITOIRE
-        var model1 = MessageTemplate.MatchPerformative(ACLMessage.PROPAGATE);
+        //var model1 = MessageTemplate.MatchPerformative(ACLMessage.PROPAGATE);
+        
+        //init du model
+        var model1 = MessageTemplate.MatchConversationId("send infos territoire");
         
         //Reception des info du territoire et stockage, fonction ne captant que les messages du model créer precedemment
         addBehaviour(new MsgReceiver(this,model1,MsgReceiver.INFINITE,null,null){

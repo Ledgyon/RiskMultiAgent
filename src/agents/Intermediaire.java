@@ -64,8 +64,11 @@ public class Intermediaire extends GuiAgent {
             window.println("Territoire complet = " + tempT + " class = " + tempT.getClass());
             		
             ACLMessage retour = m.createReply();
-            retour.setPerformative(ACLMessage.PROPAGATE); // IMPORTANT !!! Grace a ce mot cle PROPAGATE, cela va partir dans une fonction speciale de Joueur
-
+            //retour.setPerformative(ACLMessage.PROPAGATE); // IMPORTANT !!! Grace a ce mot cle PROPAGATE, cela va partir dans une fonction speciale de Joueur
+            
+            //init du model
+            retour.setConversationId("send infos territoire");
+            
             try {
 				retour.setContentObject(tempT);
 			} catch (IOException e) {

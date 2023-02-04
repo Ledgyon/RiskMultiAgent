@@ -133,6 +133,7 @@ public class General extends GuiAgent {
 	private void sendCarteMission(){
 		for(int j=0; j<joueurs.size(); j++){
 			ACLMessage message = new ACLMessage(ACLMessage.PROPOSE);
+			message.setConversationId("send carte");
 			message.addReceiver(new AID(joueurs.get(j).getLocalName(), AID.ISLOCALNAME));
 			try {
 				message.setContentObject(objectifs.get(0));
@@ -153,6 +154,7 @@ public class General extends GuiAgent {
 		{
 			//System.out.println("yes");
 			ACLMessage message = new ACLMessage(ACLMessage.PROPOSE);
+			message.setConversationId("send carte");
 			message.addReceiver(new AID(joueurs.get(i).getLocalName(), AID.ISLOCALNAME));
 			try {
 				//System.out.println("On attend les actions");
