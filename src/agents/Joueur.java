@@ -112,10 +112,14 @@ public class Joueur extends GuiAgent{
         //enregistrement de son adresse dans GENERAL
         AgentServicesTools.register(this, "liste joueur", "get AID joueur");
 
+      //A PARTIR DE MTN "PROPAGATE" NE SERT QUE POUR LE RENVOIE DES INFOS DE TERRITOIRE
+        var model0 = MessageTemplate.MatchPerformative(ACLMessage.PROPOSE);
+        
+        //Reception des info du territoire et stockage, fonction ne captant que les messages du model créer precedemment
+        
         //reception des cartes territoires et des cartes missions
-        addBehaviour(new CyclicBehaviour(this) {
-        	public void action() {
-        		ACLMessage msg = receive();
+        addBehaviour(new MsgReceiver(this,model0,MsgReceiver.INFINITE,null,null){
+        	protected void handleMessage(ACLMessage msg) {
         		if(msg != null) {
                     try {
                         if(msg.getContentObject().getClass().getName().equals("carte.CartePioche")) {
@@ -144,7 +148,11 @@ public class Joueur extends GuiAgent{
                             }
                             objectif = temp;
                             window.println(objectif.toString());
-                        } else /*if(msg.getContentObject().getClass().getName().equals("plateau.Territoire"))*/ {
+                        } 
+                        /*
+                         * OBSOLETE MAIS ON LAISSE POUR L'INSTANT
+                         */
+                        else /*if(msg.getContentObject().getClass().getName().equals("plateau.Territoire"))*/ { 
                         	window.println("pb topic");
                         	Territoire tempT = (Territoire)msg.getContentObject();
                         	territoires.add(tempT);
@@ -157,6 +165,7 @@ public class Joueur extends GuiAgent{
                 }
         		else window.println("error territoire");
         		block();
+        		reset(model0,MsgReceiver.INFINITE,null,null);
         	}
         });
 
@@ -171,10 +180,10 @@ public class Joueur extends GuiAgent{
         }));
         
         //A PARTIR DE MTN "PROPAGATE" NE SERT QUE POUR LE RENVOIE DES INFOS DE TERRITOIRE
-        var model = MessageTemplate.MatchPerformative(ACLMessage.PROPAGATE);
+        var model1 = MessageTemplate.MatchPerformative(ACLMessage.PROPAGATE);
         
         //Reception des info du territoire et stockage, fonction ne captant que les messages du model créer precedemment
-        addBehaviour(new MsgReceiver(this,model,MsgReceiver.INFINITE,null,null){
+        addBehaviour(new MsgReceiver(this,model1,MsgReceiver.INFINITE,null,null){
         	protected void handleMessage(ACLMessage msg) {
         		if(msg!=null)
         		{
@@ -193,7 +202,7 @@ public class Joueur extends GuiAgent{
                     window.println("Liste de territoire = " + territoires.toString());
         			
         		}
-        		reset(model,MsgReceiver.INFINITE,null,null);
+        		reset(model1,MsgReceiver.INFINITE,null,null);
         	}
         });
 

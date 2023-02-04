@@ -1,7 +1,6 @@
 package agents;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -11,6 +10,9 @@ import carte.CartePioche;
 import carte.enumerations.Unite;
 import jade.core.AID;
 import jade.core.AgentServicesTools;
+import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.SequentialBehaviour;
+import jade.core.behaviours.TickerBehaviour;
 import jade.domain.DFSubscriber;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.gui.GuiAgent;
@@ -24,12 +26,12 @@ import plateau.enumerations.NomTerritoireASIE;
 import plateau.enumerations.NomTerritoireEU;
 import plateau.enumerations.NomTerritoireOC;
 
-import javax.swing.*;
-
 public class General extends GuiAgent {
 	private List<CartePioche> pioche;
 	private List<CarteMission> objectifs;
 	private gui.GeneralGui window;
+	
+	private int nbJoueurs = 0;
 	
 	/**
      * code pour ajout de livre par la gui
@@ -51,8 +53,51 @@ public class General extends GuiAgent {
 		window.display();
 		window.println("Hello! Agent  " + getLocalName() + " is ready, my address is " + this.getAID().getName());
 		window.println(this.toString());
-		
 		detectJoueurs();
+		
+		/*
+		 * OBSOLETE MAIS METHODE POUVANT ETRE PRATIQUE POUR PLUS TARD
+		 */
+		/*
+		SequentialBehaviour comportementSequentiel = new SequentialBehaviour();
+				
+		comportementSequentiel.addSubBehaviour(new TickerBehaviour(this,500) {
+			
+			int i_carte = 0;	
+			int i = 0;
+			protected void onTick() {
+		        //System.out.println("Il reste "+(nombreDeSecondes-getTickCount())+" seconds");
+		    	  ACLMessage message = new ACLMessage(ACLMessage.PROPOSE);
+		  			message.addReceiver(new AID(joueurs.get(i).getLocalName(), AID.ISLOCALNAME));
+
+		  			try {
+		  				message.setContentObject(pioche.get(i_carte));
+		  			} catch (IOException e) {
+		  				// TODO Auto-generated catch block
+		  				e.printStackTrace();
+		  			}
+		  			send(message);
+
+		  			window.println("Carte "+pioche.get(i_carte));
+		  			window.println("MSG "+message.toString());
+
+		  			i_carte++;
+		  			//boucle pour gerer l'envoie aux joueurs
+		  			if (i != (joueurs.size() - 1)) {
+		  				i++;
+		  			} else i = 0;
+		  			
+		  			if(i_carte == pioche.size())
+		  			{
+		  				
+		  			}
+		  		
+		      } 
+	    });
+		
+		addBehaviour(comportementSequentiel);
+		
+		*/
 		
 		//System.out.println("Liste de joueurs"+joueurs);
 
