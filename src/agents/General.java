@@ -181,6 +181,13 @@ public class General extends GuiAgent {
 				i++;
 			} else i = 0;
 		}
+		
+		CartePioche carteP = new CartePioche("JOKER",Unite.FANTASSIN_CAVALERIE_CANON.toString());
+		this.pioche.add(carteP);
+		carteP = new CartePioche("JOKER",Unite.FANTASSIN_CAVALERIE_CANON.toString());
+		this.pioche.add(carteP);
+		
+		Collections.shuffle(this.pioche);
     }
 	
 	public General() {
