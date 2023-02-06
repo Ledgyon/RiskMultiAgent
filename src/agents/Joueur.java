@@ -2,11 +2,15 @@ package agents;
 
 import java.awt.Color;
 import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+
+import java.util.*;
+
 
 import carte.CarteMission;
 import carte.CartePioche;
@@ -46,6 +50,10 @@ public class Joueur extends GuiAgent{
      * topic du joueur demandant les informations du territoire
      */
     AID topicTerritoire;
+    /**
+     * topic du joueur demandant de mettre à jour les régiments sur le plateau
+     */
+    AID topicRegimentTeritoire;
     /**
      * topic du joueur permettant de faire la repartition des regiments sur les territoires du joueur en debut de partie
      */
@@ -106,8 +114,10 @@ public class Joueur extends GuiAgent{
         TopicManagementHelper topicHelper;
         try {
             topicHelper =  ( TopicManagementHelper ) getHelper (TopicManagementHelper.SERVICE_NAME) ;
+            topicRegimentTeritoire = topicHelper.createTopic("INFO REGIMENT TERRITOIRE");
             topicTerritoire = topicHelper.createTopic("INFO TERRITOIRE");
             topicHelper.register(topicTerritoire);
+            topicHelper.register(topicRegimentTeritoire);
         } catch (ServiceException e) {
             e.printStackTrace();
         }
@@ -239,10 +249,17 @@ public class Joueur extends GuiAgent{
                     // Affectation du nombre de regiment
                     territoires.get(Integer.parseInt(infos[1])).getTerritoires_adjacents().get(Integer.parseInt(infos[2])).setRegimentSurTerritoire(Integer.parseInt(infos[3]));
         			
+                    //si dernier update, alors affichage
+                    if(Integer.parseInt(infos[1]) == territoires.size()-1 && Integer.parseInt(infos[2]) == territoires.get(Integer.parseInt(infos[1])).getTerritoires_adjacents().size()-1)
+                    {
+                    	window.println("\n\nTerritoires adjacents regiments update :");
+                        window.println(territoires.toString());
+                    }
         		}
         		reset(model3,MsgReceiver.INFINITE,null,null);
         	}
         });
+
 
         //addBehaviour(new ContractNetAttaque(this, new ACLMessage(ACLMessage.CFP)));
 
@@ -261,7 +278,21 @@ public class Joueur extends GuiAgent{
             territoires.get(alea).addRegimentSurTerritoire(1);
             nombreRegimentAPlacer--;
         }
-        window.println(territoires.toString());
+        for(Territoire ter:territoires){
+            updateRegimentTerritoire(ter);
+        }
+    }
+
+    public void updateRegimentTerritoire(Territoire ter){
+        ACLMessage infoRegimentTerritoire = new ACLMessage(ACLMessage.INFORM);
+        try {
+            infoRegimentTerritoire.setContentObject(ter);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        infoRegimentTerritoire.addReceiver(topicRegimentTeritoire);
+        send(infoRegimentTerritoire);
     }
 
     // Permet de rajouter d'obtenir de nouveaux renforts
@@ -274,7 +305,8 @@ public class Joueur extends GuiAgent{
         if(this.continents!=null)
             for(Continent c:continents)
                 nombreRegimentMax += c.getRenfortObtenu();
-        nouveauxRenfortsMain();
+        if(main.size() >= 3)
+            nouveauxRenfortsMain();
         window.println(String.valueOf(nombreRegimentMax));
     }
 
@@ -312,7 +344,7 @@ public class Joueur extends GuiAgent{
                 }
             }
         }
-        if(echange && (main.size() > 3)) {
+        if(echange) {
             if ((nbFantassin > 0) && (nbCavalier > 0) && (nbCanon > 0) && !joker){
                 for(Integer j:fantassins.keySet()){
                     returnCarteGeneral(j);

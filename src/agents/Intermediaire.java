@@ -13,6 +13,7 @@ import jade.gui.GuiEvent;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
+
 import jade.proto.states.MsgReceiver;
 import plateau.Monde;
 import plateau.Territoire;
@@ -30,6 +31,7 @@ public class Intermediaire extends GuiAgent {
      * topic du joueur demandant les informations du territoire
      */
     AID topicTerritoire;
+    AID topicRegimentTeritoire;
     AID topicRepartition;
 
     @SuppressWarnings({ "deprecation", "serial" })
@@ -59,7 +61,9 @@ public class Intermediaire extends GuiAgent {
 
 
         topicTerritoire = AgentServicesTools.generateTopicAID(this, "INFO TERRITOIRE");
-        
+
+        topicRegimentTeritoire = AgentServicesTools.generateTopicAID(this, "INFO REGIMENT TERRITOIRE");
+
         //ecoute des messages radio
         addBehaviour(new ReceiverBehaviour(this, -1, MessageTemplate.MatchTopic(topicTerritoire), true, (a, m)->{
             window.println("Message recu sur le topic " + topicTerritoire.getLocalName() + ". Contenu " + m.getContent()
@@ -82,6 +86,7 @@ public class Intermediaire extends GuiAgent {
 			}
             send(retour);
         }));
+
         
         //init du model
         var model0 = MessageTemplate.MatchConversationId("update regiment territoire adjacent");
@@ -116,6 +121,23 @@ public class Intermediaire extends GuiAgent {
         		reset(model0,MsgReceiver.INFINITE,null,null);
         	}
         });
+
+
+        addBehaviour(new ReceiverBehaviour(this, -1, MessageTemplate.MatchTopic(topicRegimentTeritoire), true, (a, m)->{
+            window.println("Message recu sur le topic " + topicRegimentTeritoire.getLocalName() + ". Contenu " + m.getContent()
+                    + " emis par :  " + m.getSender().getLocalName());
+            Territoire tempT = null;
+            try {
+                tempT = (Territoire) m.getContentObject();
+            } catch (UnreadableException e) {
+                //throw new RuntimeException(e);
+            }
+
+            plateau.getTerritoireByName(tempT.getNomTerritoire()).setRegimentSurTerritoire(tempT.getRegimentSurTerritoire());
+            window.println(plateau.toString());
+        }));
+
+
     }
 
 
