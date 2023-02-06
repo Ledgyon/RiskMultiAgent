@@ -2,8 +2,11 @@ package agents;
 
 import java.awt.Color;
 import java.io.IOException;
-import java.sql.Array;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 import carte.CarteMission;
 import carte.CartePioche;
@@ -11,7 +14,6 @@ import gui.JoueurGui;
 import jade.core.AID;
 import jade.core.AgentServicesTools;
 import jade.core.ServiceException;
-import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.ReceiverBehaviour;
 import jade.core.messaging.TopicManagementHelper;
 import jade.domain.DFSubscriber;
@@ -33,11 +35,12 @@ public class Joueur extends GuiAgent{
     private int nombreRegimentMax;
     private List<CartePioche> main; // cartes que le joueur possede dans sa main (max 5)
     private CarteMission objectif; // objectif du joueur pour remporter la partie
-    private List<String> territoires_temp; // territoires possedes par le joueur
+    private Map<String,List<Integer>> territoires_adjacent; // territoires adjacent et liste d'indice des territoires possedant ce territoire adjacent
     private List<Territoire> territoires; // territoires possedes par le joueur
     private List<Continent> continents; // permet de savoir quel continent le joueur a conquis pour l'attribution des renforts et pour les objectifs
     public static final int EXIT = 0;
     public static final int GET_INFO_TERRITOIRE = 1;
+    private AID intermediaire;
     private AID general;
     /**
      * topic du joueur demandant les informations du territoire
@@ -60,7 +63,7 @@ public class Joueur extends GuiAgent{
         window = new gui.JoueurGui(this);
         window.display();
         
-        this.territoires_temp = new ArrayList<>();
+        this.territoires_adjacent = new HashMap<>();
         this.territoires = new ArrayList<>();
         this.main = new ArrayList<>();
         this.nombreRegimentAPlacer = nombreRegimentMax = 20;
@@ -96,7 +99,7 @@ public class Joueur extends GuiAgent{
         }
         window.println("Hello! Agent  " + getLocalName() + " is ready, my address is " + this.getAID().getName());
 
-        //detectIntermediaire();
+        detectIntermediaire();
         detectGeneral();
 
         //gestion topic manager pour la communication avec l'agent INTERMEDIARE pour avoir les infos plus precise du territoire acquis
@@ -114,7 +117,7 @@ public class Joueur extends GuiAgent{
 
       //A PARTIR DE MTN "PROPAGATE" NE SERT QUE POUR LE RENVOIE DES INFOS DE TERRITOIRE
         //var model0 = MessageTemplate.MatchPerformative(ACLMessage.PROPOSE);
-        var model0 = MessageTemplate.MatchConversationId("send carte");
+        var model0 = MessageTemplate.MatchConversationId("init jeu");
         
         //Reception des info du territoire et stockage, fonction ne captant que les messages du model créer precedemment
         
@@ -150,15 +153,17 @@ public class Joueur extends GuiAgent{
                             objectif = temp;
                             window.println(objectif.toString());
                         } 
+                        
                         /*
                          * OBSOLETE MAIS ON LAISSE POUR L'INSTANT
                          */
-                        else /*if(msg.getContentObject().getClass().getName().equals("plateau.Territoire"))*/ { 
+                        /*
+                        else if(msg.getContentObject().getClass().getName().equals("plateau.Territoire")) { 
                         	window.println("pb topic");
                         	Territoire tempT = (Territoire)msg.getContentObject();
                         	territoires.add(tempT);
                         	window.println("pb topic" + territoires.toString());
-                        }
+                        }*/
                     } catch (UnreadableException e) { // A DEFINIR DE NE RIEN FAIRE SI MESS VIENT D'UN TOPIC, SINON, REMETTRE LE throw new RuntimeException(e);
                         //throw new RuntimeException(e);
                     }
@@ -176,8 +181,15 @@ public class Joueur extends GuiAgent{
         addBehaviour(new ReceiverBehaviour(this, -1, MessageTemplate.MatchTopic(topicRepartition), true, (a, m)->{
             window.println("Message recu sur le topic " + topicRepartition.getLocalName() + ". Contenu " + m.getContent()
                     + " emis par :  " + m.getSender().getLocalName());
+            
+            //RENFORT
             assignationRegimentTerritoire();
             nouveauxRenforts();
+            window.println(territoires.toString());
+            
+            //COMBAT
+            infoRegimentTerritoireAdjacent();
+            window.println("\n\nTerritoires adjacents regiments update :");
             window.println(territoires.toString());
         }));
         
@@ -208,6 +220,27 @@ public class Joueur extends GuiAgent{
         			
         		}
         		reset(model1,MsgReceiver.INFINITE,null,null);
+        	}
+        });
+        
+        //init du model
+        var model3 = MessageTemplate.MatchConversationId("retour update regiment territoire adjacent");
+        
+        //Reception des info du territoire et stockage, fonction ne captant que les messages du model créer precedemment
+        addBehaviour(new MsgReceiver(this,model3,MsgReceiver.INFINITE,null,null){
+        	protected void handleMessage(ACLMessage msg) {
+        		if(msg!=null)
+        		{
+        			var infos = msg.getContent().split(",");
+                    
+                    window.println("Message recu sur le topic " + topicTerritoire.getLocalName() + ". Contenu " + msg.getContent().toString()
+                    + " emis par :  " + msg.getSender().getLocalName());
+                    
+                    // Affectation du nombre de regiment
+                    territoires.get(Integer.parseInt(infos[1])).getTerritoires_adjacents().get(Integer.parseInt(infos[2])).setRegimentSurTerritoire(Integer.parseInt(infos[3]));
+        			
+        		}
+        		reset(model3,MsgReceiver.INFINITE,null,null);
         	}
         });
 
@@ -471,6 +504,29 @@ public class Joueur extends GuiAgent{
 
     }
 
+    private void detectIntermediaire() {
+        var model = AgentServicesTools.createAgentDescription("intermediaire", "link");
+
+        //souscription au service des pages jaunes pour recevoir une alerte en cas mouvement sur le service travel agency'seller
+        addBehaviour(new DFSubscriber(this, model) {
+            @Override
+            public void onRegister(DFAgentDescription dfd) {
+                intermediaire=dfd.getName();
+                window.println(dfd.getName().getLocalName() + " s'est inscrit en tant que intermediaire : " + model.getAllServices().get(0));
+            }
+
+            @Override
+            public void onDeregister(DFAgentDescription dfd) {
+                if(dfd.getName().equals(general)) {
+                    intermediaire=null;
+                    window.println(dfd.getName().getLocalName() + " s'est desinscrit de  : " + model.getAllServices().get(0));
+                }
+            }
+
+        });
+
+    }
+    
     private void detectGeneral() {
         var model = AgentServicesTools.createAgentDescription("general", "link");
 
@@ -492,6 +548,45 @@ public class Joueur extends GuiAgent{
 
         });
 
+    }
+    
+    /*
+     * Fonction pour update les informations des nombres de regiment présent sur les territoires adjacents
+     */
+    public void infoRegimentTerritoireAdjacent()
+    {
+    	int i,j;
+    	for(i = 0; i < this.territoires.size(); i++) // parcours des territoires
+    	{
+    		for(j = 0; j < this.territoires.get(i).getTerritoires_adjacents().size(); j++) // parcours de tous les territoires adjacents
+    		{
+    			//variable pour raccourcir le nom 
+    			Territoire t_actuel = this.territoires.get(i).getTerritoires_adjacents().get(j);
+    			if(this.territoires.contains(t_actuel)) // alors on possède déja l'info
+    			{
+    				//affectation nombre de regiment
+    				Territoire temp = getTerritoireByName(this.territoires.get(i).getTerritoires_adjacents().get(j).getNomTerritoire());
+    				this.territoires.get(i).getTerritoires_adjacents().get(j).setRegimentSurTerritoire(temp.getRegimentSurTerritoire());
+    			}
+    			else // on demande a intermedaire d'update
+    			{
+    				ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+    				message.setConversationId("update regiment territoire adjacent");
+    				message.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
+    				message.setContent(t_actuel.getNomTerritoire()+","+i+","+j);
+    				send(message);
+    				
+    				//le retour ce fera grace au model3 dans setup()
+    			}
+    		}
+    	}
+    }
+    
+    public Territoire getTerritoireByName(String territoire){
+        for(Territoire t:territoires)
+                if (t.getNomTerritoire().equals(territoire))
+                    return t;
+        return null;
     }
 
     public boolean isDead(){

@@ -12,6 +12,8 @@ import jade.gui.GuiAgent;
 import jade.gui.GuiEvent;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.lang.acl.UnreadableException;
+import jade.proto.states.MsgReceiver;
 import plateau.Monde;
 import plateau.Territoire;
 
@@ -30,7 +32,8 @@ public class Intermediaire extends GuiAgent {
     AID topicTerritoire;
     AID topicRepartition;
 
-    @Override
+    @SuppressWarnings({ "deprecation", "serial" })
+	@Override
     protected void setup(){
         window = new gui.IntermediaireGui(this);
         window.display();
@@ -51,6 +54,8 @@ public class Intermediaire extends GuiAgent {
         } catch (ServiceException e) {
             e.printStackTrace();
         }
+        
+        AgentServicesTools.register(this, "intermediaire", "link");
 
 
         topicTerritoire = AgentServicesTools.generateTopicAID(this, "INFO TERRITOIRE");
@@ -77,6 +82,40 @@ public class Intermediaire extends GuiAgent {
 			}
             send(retour);
         }));
+        
+        //init du model
+        var model0 = MessageTemplate.MatchConversationId("update regiment territoire adjacent");
+        
+        //Reception des info du territoire et stockage, fonction ne captant que les messages du model créer precedemment
+        addBehaviour(new MsgReceiver(this,model0,MsgReceiver.INFINITE,null,null){
+        	protected void handleMessage(ACLMessage msg) {
+        		if(msg!=null)
+        		{
+        			//Reception message
+        			var infos = msg.getContent().split(",");
+        			
+                    window.println("Message recu sur le topic " + topicTerritoire.getLocalName() + ". Contenu " + msg.getContent().toString()
+                    + " emis par :  " + msg.getSender().getLocalName());
+                    
+                    //Recherche territoire voulu du plateau
+                    Territoire Tretour = plateau.getTerritoireByName(infos[0]);
+                    
+                    //Renvoie de l'info
+                    ACLMessage retour = msg.createReply();
+                    
+                    //init du model
+                    retour.setConversationId("retour update regiment territoire adjacent");
+                    retour.setContent(msg.getContent()+","+Tretour.getRegimentSurTerritoire());
+                    send(retour);
+                    
+        			//territoires.add(tempT);
+
+                    window.println("Renvoie du territoire avec le bon nombre de regiment = " + Tretour.toString());
+        			
+        		}
+        		reset(model0,MsgReceiver.INFINITE,null,null);
+        	}
+        });
     }
 
 
@@ -96,5 +135,7 @@ public class Intermediaire extends GuiAgent {
         ACLMessage assignRegiment = new ACLMessage(ACLMessage.INFORM);
         assignRegiment.addReceiver(topicRepartition);
         send(assignRegiment);
+        
+        
     }
 }
