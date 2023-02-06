@@ -48,7 +48,7 @@ public class Territoire implements Serializable {
     public String toStringTerritoireAdjacents(){
         StringBuilder renvoie= new StringBuilder(", territoireAdjacent = [ ");
         for(Territoire ter:territoires_adjacents){
-            renvoie.append(ter.getNomTerritoire());
+            renvoie.append(ter.getNomTerritoire() + ", nbTerritoire = " + ter.getRegimentSurTerritoire());
             if(!territoires_adjacents.get(territoires_adjacents.size()-1).getNomTerritoire().equals(ter.getNomTerritoire()))
                 renvoie.append(", ");
         }

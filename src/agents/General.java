@@ -18,6 +18,9 @@ import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.gui.GuiAgent;
 import jade.gui.GuiEvent;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
+import jade.lang.acl.UnreadableException;
+import jade.proto.states.MsgReceiver;
 import plateau.enumerations.NomContinents;
 import plateau.enumerations.NomTerritoireAF;
 import plateau.enumerations.NomTerritoireAN;
@@ -54,7 +57,24 @@ public class General extends GuiAgent {
 		window.println("Hello! Agent  " + getLocalName() + " is ready, my address is " + this.getAID().getName());
 		window.println(this.toString());
 		detectJoueurs();
-		
+
+		AgentServicesTools.register(this, "general", "link");
+		var model0 = MessageTemplate.MatchConversationId("return carte");
+
+		addBehaviour(new MsgReceiver(this,model0,MsgReceiver.INFINITE,null,null) {
+			 protected void handleMessage(ACLMessage msg) {
+				 if (msg != null) {
+					 try {
+						 CartePioche temp = (CartePioche)msg.getContentObject();
+						 pioche.add(temp);
+					 } catch (UnreadableException e) {
+						 //throw new RuntimeException(e);
+					 }
+				 } else window.println("error cartes");
+				 block();
+				 reset(model0,MsgReceiver.INFINITE,null,null);
+			 }
+		});
 		/*
 		 * OBSOLETE MAIS METHODE POUVANT ETRE PRATIQUE POUR PLUS TARD
 		 */
