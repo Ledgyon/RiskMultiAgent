@@ -14,6 +14,7 @@ public class Territoire implements Serializable {
         territoires_adjacents = new ArrayList<>();
     }
     public void setTerritoires_adjacents(List<Territoire> territoires_adjacents) {
+        this.territoires_adjacents.clear();
         this.territoires_adjacents.addAll(territoires_adjacents);
     }
 
@@ -42,7 +43,7 @@ public class Territoire implements Serializable {
         return "\n\t\tTerritoire{" +
                 "nomTerritoire = '" + nomTerritoire + '\'' +
                 toStringTerritoireAdjacents() +
-                "regimentSurTerritoire = " + regimentSurTerritoire + '}';
+                ", regimentSurTerritoire = " + regimentSurTerritoire + '}';
     }
 
     public String toStringTerritoireAdjacents(){
