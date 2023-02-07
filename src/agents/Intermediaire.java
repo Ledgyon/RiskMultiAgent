@@ -103,19 +103,19 @@ public class Intermediaire extends GuiAgent {
                     + " emis par :  " + msg.getSender().getLocalName());
                     
                     //Recherche territoire voulu du plateau
-                    Territoire Tretour = plateau.getTerritoireByName(infos[0]);
+                    int nbRegiment = plateau.getTerritoireByName(infos[0]).getRegimentSurTerritoire();
                     
                     //Renvoie de l'info
                     ACLMessage retour = msg.createReply();
                     
                     //init du model
                     retour.setConversationId("retour update regiment territoire adjacent");
-                    retour.setContent(msg.getContent()+","+Tretour.getRegimentSurTerritoire());
+                    retour.setContent(msg.getContent()+","+nbRegiment);
                     send(retour);
                     
         			//territoires.add(tempT);
 
-                    window.println("Renvoie du territoire avec le bon nombre de regiment = " + Tretour.toString());
+                    window.println("Renvoie du territoire avec le bon nombre de regiment = " + nbRegiment);
         			
         		}
         		reset(model0,MsgReceiver.INFINITE,null,null);

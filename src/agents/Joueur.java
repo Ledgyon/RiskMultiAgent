@@ -234,10 +234,10 @@ public class Joueur extends GuiAgent{
         });
         
         //init du model
-        var model3 = MessageTemplate.MatchConversationId("retour update regiment territoire adjacent");
+        var model2 = MessageTemplate.MatchConversationId("retour update regiment territoire adjacent");
         
         //Reception des info du territoire et stockage, fonction ne captant que les messages du model créer precedemment
-        addBehaviour(new MsgReceiver(this,model3,MsgReceiver.INFINITE,null,null){
+        addBehaviour(new MsgReceiver(this,model2,MsgReceiver.INFINITE,null,null){
         	protected void handleMessage(ACLMessage msg) {
         		if(msg!=null)
         		{
@@ -256,7 +256,7 @@ public class Joueur extends GuiAgent{
                         window.println(territoires.toString());
                     }
         		}
-        		reset(model3,MsgReceiver.INFINITE,null,null);
+        		reset(model2,MsgReceiver.INFINITE,null,null);
         	}
         });
 
@@ -599,6 +599,13 @@ public class Joueur extends GuiAgent{
     				//affectation nombre de regiment
     				Territoire temp = getTerritoireByName(this.territoires.get(i).getTerritoires_adjacents().get(j).getNomTerritoire());
     				this.territoires.get(i).getTerritoires_adjacents().get(j).setRegimentSurTerritoire(temp.getRegimentSurTerritoire());
+    				window.println("Info déjà en notre possession : "+temp);
+    				//si dernier update, alors affichage
+                    if(i == territoires.size()-1 && j == territoires.get(i).getTerritoires_adjacents().size()-1)
+                    {
+                    	window.println("\n\nTerritoires adjacents regiments update :");
+                        window.println(territoires.toString());
+                    }
     			}
     			else // on demande a intermedaire d'update
     			{
