@@ -211,7 +211,8 @@ public class Joueur extends GuiAgent{
             window.println("\n\nTerritoires adjacents regiments update :");
             window.println(territoires.toString());
 
-            window.println(continents.toString());
+            //MANOEUVRE
+            manoeuvreRegiment();
         }));
         
         //A PARTIR DE MTN "PROPAGATE" NE SERT QUE POUR LE RENVOIE DES INFOS DE TERRITOIRE
@@ -661,6 +662,32 @@ public class Joueur extends GuiAgent{
     			}
     		}
     	}
+    }
+
+    private void manoeuvreRegiment() {
+        Random rand = new Random();
+        //boolean manoeuvre = rand.nextBoolean();
+        boolean manoeuvre = true;
+        int noTerritoire,nbRegiment;
+        if(manoeuvre){
+            List<Territoire> tempT = new ArrayList<>();
+            for(Territoire t1:territoires){
+                for(Territoire t2: t1.getTerritoires_adjacents()){
+                    if(territoires.contains(t2)){
+                        tempT.add(t1);
+                    }
+                }
+            }
+            if(!tempT.isEmpty()) {
+                noTerritoire = rand.nextInt(tempT.size());
+                nbRegiment = rand.nextInt(tempT.get(noTerritoire).getRegimentSurTerritoire() - 1) + 1;
+                tempT.get(noTerritoire).addRegimentSurTerritoire(-nbRegiment);
+                if(tempT.get(noTerritoire).getTerritoires_adjacents().contains(tempT.get(noTerritoire+1))){
+                    tempT.get(noTerritoire+1).addRegimentSurTerritoire(nbRegiment);
+                }
+                System.out.println(nbRegiment +" \t\t\t" +tempT.get(noTerritoire)+"\t\t"+tempT.get(noTerritoire+1));
+            }
+        }
     }
     
     public Territoire getTerritoireByName(String territoire){

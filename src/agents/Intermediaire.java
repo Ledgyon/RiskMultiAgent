@@ -161,7 +161,6 @@ public class Intermediaire extends GuiAgent {
                     for(Territoire ter:tempT){
                         if(ter.getNomTerritoire().equals(t.getNomTerritoire())){
                             nbTerritoire++;
-                            System.out.println(nbTerritoire);
                         }
                     }
                 }
