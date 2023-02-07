@@ -401,6 +401,10 @@ public class Monde {
         return null;
     }
 
+    public List<Continent> getContinents() {
+        return continents;
+    }
+
     public String toString() {
         return "Monde\n\tContinents = " + this.continents + "}";
     }
