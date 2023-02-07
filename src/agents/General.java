@@ -46,6 +46,7 @@ public class General extends GuiAgent {
     private ArrayList<AID> joueurs;
     
 
+	@SuppressWarnings({ "deprecation", "serial" })
 	@Override
 	protected void setup(){
 		window = new gui.GeneralGui(this);

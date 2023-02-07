@@ -11,6 +11,8 @@ import jade.core.AgentServicesTools;
 import jade.core.ServiceException;
 import jade.core.behaviours.ReceiverBehaviour;
 import jade.core.messaging.TopicManagementHelper;
+import jade.domain.DFSubscriber;
+import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.gui.GuiAgent;
 import jade.gui.GuiEvent;
 import jade.lang.acl.ACLMessage;
@@ -31,6 +33,7 @@ public class Intermediaire extends GuiAgent {
 
     public static final int LANCER_RISK = 1;
 
+    private int nbAutorisation = 0; // boolean activant la phase de combat si == 6 (= tous les joueurs ont fini la phase de renfort)
     /**
      * topic du joueur demandant les informations du territoire
      */
@@ -38,6 +41,14 @@ public class Intermediaire extends GuiAgent {
     AID topicRegimentTeritoire;
     AID topicRepartition;
     AID topicUpdateContinent;
+    
+    /**
+     * liste des joueurs
+     */
+    private ArrayList<AID> joueurs;
+    
+    //variables pour gerer qui joue en phase de combat
+    int iJoueurTourCombat = 1;
 
     @SuppressWarnings({ "deprecation", "serial" })
 	@Override
@@ -46,6 +57,8 @@ public class Intermediaire extends GuiAgent {
         window.display();
         window.setColor(Color.LIGHT_GRAY);
         window.println("Hello! Agent  " + getLocalName() + " is ready, my address is " + this.getAID().getName());
+        
+        detectJoueurs();
 
         plateau = new Monde();
 
@@ -185,7 +198,100 @@ public class Intermediaire extends GuiAgent {
 
             window.println(plateau.toString());
         }));
+        
+        var model1 = MessageTemplate.MatchConversationId("autorisation phase combat");
+        
+        //Reception des autorisation de cmmencement de la phase de combat, des que tous les joueurs sont pret (fin phase de renfort), on peut lancer
+        addBehaviour(new MsgReceiver(this,model1,MsgReceiver.INFINITE,null,null){
+        	protected void handleMessage(ACLMessage msg) {
+        		window.println("\nReception autorisation phase de combat de " + msg.getSender().getLocalName() + "\n");
+        		nbAutorisation += 1;
+        		if(nbAutorisation == 6)
+        		{
+        			nbAutorisation = 0; // reset pour la prochaine phase
+        			phaseCombat(); //debut phase de combat
+        		}
+        		reset(model1,MsgReceiver.INFINITE,null,null);
+        	}
+        });
+        
+        //init du model
+        var model2 = MessageTemplate.MatchConversationId("fin tour combat joueur");
+        
+        //Reception des notifications de fin de tour de combat des joueurs, pour permettre au prochain de commencer sa phase de combat
+        addBehaviour(new MsgReceiver(this,model2,MsgReceiver.INFINITE,null,null){
+        	protected void handleMessage(ACLMessage msg) {
+    			if(iJoueurTourCombat < 6) // alors tous les joueurs n'ont pas joue
+    			{
+    				iJoueurTourCombat++; // pour passer au joueur suivant
+    				phaseCombat(); // nouvel phase de combat pour ce nouveau joueur
+    			}
+    			else phaseManoeuvre(); // tous le monde a fait sa phase de combat, DEBUT PHASE MANOEUVRE
+        		reset(model2,MsgReceiver.INFINITE,null,null);
+        	}
+        });
 
+    }
+    
+    /**
+     * ecoute des evenement de type enregistrement en tant que joueur, pour avoir acces a leurs adresses
+     */
+    private void detectJoueurs() {
+        var model = AgentServicesTools.createAgentDescription("liste joueur", "get AID joueur");
+        this.joueurs = new ArrayList<>();
+
+        //souscription au service des pages jaunes pour recevoir une alerte en cas mouvement sur le service travel agency'seller
+        addBehaviour(new DFSubscriber(this, model) {
+            @Override
+            public void onRegister(DFAgentDescription dfd) { //au debut
+                joueurs.add(dfd.getName());
+                System.out.println("Liste de joueurs AID"+joueurs);
+                window.println(dfd.getName().getLocalName() + " s'est inscrit en tant que joueur : " + model.getAllServices().get(0));
+            }
+            
+            @Override
+            public void onDeregister(DFAgentDescription dfd) { // lorsque le joueur est mort
+                joueurs.remove(dfd.getName());
+                window.println(dfd.getName().getLocalName() + " s'est desinscrit de  : " + model.getAllServices().get(0));
+            }
+        });
+        System.out.println("Liste de joueurs"+joueurs);
+
+    }
+    
+    /*
+     * Notification au Joueur_iTourCombat qu'il peut commencer sa phase d'attaque
+     */
+    private void phaseCombat()
+    {
+    	window.println("\nDebut phase de combat");
+    	String tourJoueur = "Joueur_"+iJoueurTourCombat; // iTourCombat variable globale
+    	//window.println("tourJoueur = "+tourJoueur);
+		int iJoueur = 0;
+		while(!joueurs.get(iJoueur).getLocalName().toString().equals(tourJoueur)) // recherche du Joueur_iTourCombat (Joueur_1 -> Joueur_2 -> Joueur_3 -> ...)
+		{
+			//window.println(joueurs.get(iJoueur).getLocalName().toString() + " != " + tourJoueur);
+			iJoueur++;
+		}
+		window.println("\nEnvoie autorisation commencement phase de combat a " + tourJoueur);
+		
+		//Envoie du message pour que le joueur commence son tour
+    	ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+		message.setConversationId("debut phase combat");
+		message.addReceiver(new AID(joueurs.get(iJoueur).getLocalName(), AID.ISLOCALNAME));
+		send(message);
+    }
+    
+    /*
+     * Fonction pour commencer la phase de manoeuvre
+     */
+    private void phaseManoeuvre()
+    {
+    	window.println("\nDebut phase de manoeuvre");
+    	
+    	/*
+    	 * A COMPLETER
+    	 */
     }
 
 

@@ -40,11 +40,12 @@ public class Joueur extends GuiAgent{
     private int nombreRegimentMax;
     private List<CartePioche> main; // cartes que le joueur possede dans sa main (max 5)
     private CarteMission objectif; // objectif du joueur pour remporter la partie
-    private Map<String,List<Integer>> territoires_adjacent; // territoires adjacent et liste d'indice des territoires possedant ce territoire adjacent
+    
     private List<Territoire> territoires; // territoires possedes par le joueur
     private List<Continent> continents; // permet de savoir quel continent le joueur a conquis pour l'attribution des renforts et pour les objectifs
     public static final int EXIT = 0;
     public static final int GET_INFO_TERRITOIRE = 1;
+    
     private AID intermediaire;
     private AID general;
     /**
@@ -76,7 +77,6 @@ public class Joueur extends GuiAgent{
         window = new gui.JoueurGui(this);
         window.display();
         
-        this.territoires_adjacent = new HashMap<>();
         this.territoires = new ArrayList<>();
         this.continents = new ArrayList<>();
         this.main = new ArrayList<>();
@@ -130,7 +130,7 @@ public class Joueur extends GuiAgent{
             e.printStackTrace();
         }
 
-        //enregistrement de son adresse dans GENERAL
+        //enregistrement de son adresse dans GENERAL et INTERMEDIAIRE
         AgentServicesTools.register(this, "liste joueur", "get AID joueur");
 
       //A PARTIR DE MTN "PROPAGATE" NE SERT QUE POUR LE RENVOIE DES INFOS DE TERRITOIRE
@@ -234,7 +234,7 @@ public class Joueur extends GuiAgent{
         				e.printStackTrace();
         			}
                     assert tempT != null;
-                    window.println("Message recu sur le topic " + topicTerritoire.getLocalName() + ". Contenu " + tempT.toString()
+                    window.println("Message recu sur le model " + model1.toString() + ". Contenu " + tempT.toString()
                     + " emis par :  " + msg.getSender().getLocalName());
         			territoires.add(tempT);
 
@@ -255,7 +255,7 @@ public class Joueur extends GuiAgent{
         		{
         			var infos = msg.getContent().split(",");
                     
-                    window.println("Message recu sur le topic " + topicTerritoire.getLocalName() + ". Contenu " + msg.getContent().toString()
+                    window.println("Message recu sur le model " + model2.toString() + ". Contenu " + msg.getContent().toString()
                     + " emis par :  " + msg.getSender().getLocalName());
                     
                     // Affectation du nombre de regiment
@@ -266,6 +266,7 @@ public class Joueur extends GuiAgent{
                     {
                     	window.println("\n\nTerritoires adjacents regiments update :");
                         window.println(territoires.toString());
+                        autorisationPhaseCombat();
                     }
         		}
         		reset(model2,MsgReceiver.INFINITE,null,null);
@@ -292,6 +293,22 @@ public class Joueur extends GuiAgent{
                 }
                 reset(model3,MsgReceiver.INFINITE,null,null);
             }
+        });
+        
+      //init du model
+        var model4 = MessageTemplate.MatchConversationId("debut phase combat");
+        
+        //Reception de la notification du debut de la phase de combat
+        addBehaviour(new MsgReceiver(this,model4,MsgReceiver.INFINITE,null,null){
+        	protected void handleMessage(ACLMessage msg) {
+        		if(msg!=null)
+        		{
+                    window.println("\nMessage recu sur le model " + model4.toString() + " emis par :  " + msg.getSender().getLocalName());
+                    phaseCombatJoueur();
+        			
+        		}
+        		reset(model4,MsgReceiver.INFINITE,null,null);
+        	}
         });
 
     }
@@ -584,9 +601,7 @@ public class Joueur extends GuiAgent{
                     window.println(dfd.getName().getLocalName() + " s'est desinscrit de  : " + model.getAllServices().get(0));
                 }
             }
-
         });
-
     }
 
     // fonction qui permet de mettre à jour les continents possedes
@@ -648,6 +663,9 @@ public class Joueur extends GuiAgent{
                     {
                     	window.println("\n\nTerritoires adjacents regiments update :");
                         window.println(territoires.toString());
+                        
+                        //FIN PHASE DE RENFORT
+                        autorisationPhaseCombat();
                     }
     			}
     			else // on demande a intermedaire d'update
@@ -688,6 +706,32 @@ public class Joueur extends GuiAgent{
                 System.out.println(nbRegiment +" \t\t\t" +tempT.get(noTerritoire)+"\t\t"+tempT.get(noTerritoire+1));
             }
         }
+    }
+    
+    /*
+     * Fonction que tous les joueurs envoie a intermediaire pour notifier qu'ils ont fini leurs phase de renfort
+     */
+    private void autorisationPhaseCombat()
+    {
+    	window.println("\nEnvoie autorisation commencement phase de combat a Intermediaire.");
+    	ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+		message.setConversationId("autorisation phase combat");
+		message.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
+		send(message);
+    }
+    
+    private void phaseCombatJoueur()
+    {
+    	/*
+    	 * Gerer les attaques A FAIRE
+    	 */
+    	
+    	//FIN DU TOUR (plus de combat a mener) ON INDIQUE A INTERMEDIAIRE QU'ON A TERMINE POUR QU'UN AUTRE JOUEUR COMMENCE SON TOUR
+    	window.println("\nFin du tour de la phase de combat, Notification a Intermediaire fin de tour");
+    	ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+		message.setConversationId("fin tour combat joueur");
+		message.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
+		send(message);
     }
     
     public Territoire getTerritoireByName(String territoire){
