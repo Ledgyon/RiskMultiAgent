@@ -3,6 +3,7 @@ package agents;
 import java.awt.Color;
 import java.io.IOException;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -59,6 +60,10 @@ public class Joueur extends GuiAgent{
      */
     AID topicRepartition;
     /**
+     * topic du joueur permettant de mettre à jour les continents possedes
+     */
+    AID topicUpdateContinent;
+    /**
      * topic du joueur retournant les informations du territoire
      */
     AID topicTerritoireRetour;
@@ -73,6 +78,7 @@ public class Joueur extends GuiAgent{
         
         this.territoires_adjacent = new HashMap<>();
         this.territoires = new ArrayList<>();
+        this.continents = new ArrayList<>();
         this.main = new ArrayList<>();
         this.nombreRegimentAPlacer = nombreRegimentMax = 20;
 
@@ -116,8 +122,10 @@ public class Joueur extends GuiAgent{
             topicHelper =  ( TopicManagementHelper ) getHelper (TopicManagementHelper.SERVICE_NAME) ;
             topicRegimentTeritoire = topicHelper.createTopic("INFO REGIMENT TERRITOIRE");
             topicTerritoire = topicHelper.createTopic("INFO TERRITOIRE");
+            topicUpdateContinent = topicHelper.createTopic("UPDATE CONTINENT");
             topicHelper.register(topicTerritoire);
             topicHelper.register(topicRegimentTeritoire);
+            topicHelper.register(topicUpdateContinent);
         } catch (ServiceException e) {
             e.printStackTrace();
         }
@@ -195,12 +203,15 @@ public class Joueur extends GuiAgent{
             //RENFORT
             assignationRegimentTerritoire();
             nouveauxRenforts();
+            updateContinents();
             window.println(territoires.toString());
             
             //COMBAT
             infoRegimentTerritoireAdjacent();
             window.println("\n\nTerritoires adjacents regiments update :");
             window.println(territoires.toString());
+
+            window.println(continents.toString());
         }));
         
         //A PARTIR DE MTN "PROPAGATE" NE SERT QUE POUR LE RENVOIE DES INFOS DE TERRITOIRE
@@ -260,9 +271,27 @@ public class Joueur extends GuiAgent{
         	}
         });
 
+        var model3 = MessageTemplate.MatchConversationId("send update continent");
+
 
         //addBehaviour(new ContractNetAttaque(this, new ACLMessage(ACLMessage.CFP)));
+        addBehaviour(new MsgReceiver(this,model3,MsgReceiver.INFINITE,null,null){
+            protected void handleMessage(ACLMessage msg) {
+                if(msg!=null)
+                {
+                    List<Continent> continentList = new ArrayList<>();
+                    try {
+                        continentList = (List<Continent>) msg.getContentObject();
+                    } catch (UnreadableException e) {
+                        // TODO Auto-generated catch block
+                        e.printStackTrace();
+                    }
 
+                    continents.addAll(continentList);
+                }
+                reset(model3,MsgReceiver.INFINITE,null,null);
+            }
+        });
 
     }
 
@@ -544,7 +573,7 @@ public class Joueur extends GuiAgent{
             @Override
             public void onRegister(DFAgentDescription dfd) {
                 intermediaire=dfd.getName();
-                window.println(dfd.getName().getLocalName() + " s'est inscrit en tant que intermediaire : " + model.getAllServices().get(0));
+                window.println(dfd.getName().getLocalName() + " s'est inscrit en tant qu'intermediaire : " + model.getAllServices().get(0));
             }
 
             @Override
@@ -558,7 +587,20 @@ public class Joueur extends GuiAgent{
         });
 
     }
-    
+
+    // fonction qui permet de mettre à jour les continents possedes
+    public void updateContinents(){
+        ACLMessage infoRegimentTerritoire = new ACLMessage(ACLMessage.INFORM);
+        try {
+            infoRegimentTerritoire.setContentObject((Serializable) territoires);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        infoRegimentTerritoire.addReceiver(topicUpdateContinent);
+        send(infoRegimentTerritoire);
+    }
+
     private void detectGeneral() {
         var model = AgentServicesTools.createAgentDescription("general", "link");
 
@@ -592,7 +634,7 @@ public class Joueur extends GuiAgent{
     	{
     		for(j = 0; j < this.territoires.get(i).getTerritoires_adjacents().size(); j++) // parcours de tous les territoires adjacents
     		{
-    			//variable pour raccourcir le nom 
+    			//variable pour raccourcir le nom
     			Territoire t_actuel = this.territoires.get(i).getTerritoires_adjacents().get(j);
     			if(this.territoires.contains(t_actuel)) // alors on possède déja l'info
     			{

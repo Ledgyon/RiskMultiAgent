@@ -2,6 +2,9 @@ package agents;
 
 import java.awt.Color;
 import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import jade.core.AID;
 import jade.core.AgentServicesTools;
@@ -15,6 +18,7 @@ import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 
 import jade.proto.states.MsgReceiver;
+import plateau.Continent;
 import plateau.Monde;
 import plateau.Territoire;
 
@@ -33,6 +37,7 @@ public class Intermediaire extends GuiAgent {
     AID topicTerritoire;
     AID topicRegimentTeritoire;
     AID topicRepartition;
+    AID topicUpdateContinent;
 
     @SuppressWarnings({ "deprecation", "serial" })
 	@Override
@@ -63,6 +68,8 @@ public class Intermediaire extends GuiAgent {
         topicTerritoire = AgentServicesTools.generateTopicAID(this, "INFO TERRITOIRE");
 
         topicRegimentTeritoire = AgentServicesTools.generateTopicAID(this, "INFO REGIMENT TERRITOIRE");
+
+        topicUpdateContinent = AgentServicesTools.generateTopicAID(this, "UPDATE CONTINENT");
 
         //ecoute des messages radio
         addBehaviour(new ReceiverBehaviour(this, -1, MessageTemplate.MatchTopic(topicTerritoire), true, (a, m)->{
@@ -137,6 +144,48 @@ public class Intermediaire extends GuiAgent {
             window.println(plateau.toString());
         }));
 
+
+        addBehaviour(new ReceiverBehaviour(this, -1, MessageTemplate.MatchTopic(topicUpdateContinent), true, (a, m)->{
+            window.println("Message recu sur le topic " + topicUpdateContinent.getLocalName() + ". Contenu " + m.getContent()
+                    + " emis par :  " + m.getSender().getLocalName());
+            List<Territoire> tempT = new ArrayList<>();
+            try {
+                tempT.addAll((List<Territoire>) m.getContentObject());
+            } catch (UnreadableException e) {
+                //throw new RuntimeException(e);
+            }
+            List<Continent> continentPossede = new ArrayList<>();
+            for(Continent c: plateau.getContinents()){
+                int nbTerritoire = 0;
+                for(Territoire t:c.getTerritoires()){
+                    for(Territoire ter:tempT){
+                        if(ter.getNomTerritoire().equals(t.getNomTerritoire())){
+                            nbTerritoire++;
+                            System.out.println(nbTerritoire);
+                        }
+                    }
+                }
+                if(nbTerritoire == c.getTerritoires().size()){
+                    continentPossede.add(c);
+                }
+            }
+
+            ACLMessage retour = m.createReply();
+
+            //init du model
+            retour.setConversationId("send update continent");
+
+            try {
+                retour.setContentObject((Serializable) continentPossede);
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
+            send(retour);
+
+            window.println(plateau.toString());
+        }));
 
     }
 
