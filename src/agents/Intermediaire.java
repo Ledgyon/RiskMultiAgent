@@ -40,6 +40,7 @@ public class Intermediaire extends GuiAgent {
     AID topicTerritoire;
     AID topicRegimentTeritoire;
     AID topicRepartition;
+    AID topicAutorisationUpdateRegimentTerritoireAdjacent;
     AID topicUpdateContinent;
     
     /**
@@ -47,7 +48,10 @@ public class Intermediaire extends GuiAgent {
      */
     private ArrayList<AID> joueurs;
     
-    //variables pour gerer qui joue en phase de combat
+    //variable pour lancer updateRegimentTerritoireAjdacent
+    int nbTerritoireUpdate = 0;
+    
+    //variable pour gerer qui joue en phase de combat
     int iJoueurTourCombat = 1;
 
     @SuppressWarnings({ "deprecation", "serial" })
@@ -68,9 +72,11 @@ public class Intermediaire extends GuiAgent {
         try {
             topicHelper =  ( TopicManagementHelper ) getHelper (TopicManagementHelper.SERVICE_NAME) ;
             topicRepartition = topicHelper.createTopic("REPARTITION REGIMENT");
+            topicAutorisationUpdateRegimentTerritoireAdjacent = topicHelper.createTopic("Update Regiment Territoire Adjacent");
             //topicTerritoireRetour = topicHelper.createTopic("RETOUR INFO TERRITOIRE");
             //topicHelper.register(topicTerritoireRetour);
             topicHelper.register(topicRepartition);
+            topicHelper.register(topicAutorisationUpdateRegimentTerritoireAdjacent);
         } catch (ServiceException e) {
             e.printStackTrace();
         }
@@ -119,7 +125,7 @@ public class Intermediaire extends GuiAgent {
         			//Reception message
         			var infos = msg.getContent().split(",");
         			
-                    window.println("Message recu sur le topic " + topicTerritoire.getLocalName() + ". Contenu " + msg.getContent().toString()
+                    window.println("\nMessage recu sur le model " + model0.toString() + ". Contenu " + msg.getContent().toString()
                     + " emis par :  " + msg.getSender().getLocalName());
                     
                     //Recherche territoire voulu du plateau
@@ -155,6 +161,13 @@ public class Intermediaire extends GuiAgent {
 
             plateau.getTerritoireByName(tempT.getNomTerritoire()).setRegimentSurTerritoire(tempT.getRegimentSurTerritoire());
             window.println(plateau.toString());
+            
+            nbTerritoireUpdate += 1;
+            if(nbTerritoireUpdate == 42)
+            {
+            	nbTerritoireUpdate = 0;
+            	autorisationRegimentTerritoireAdjacent();
+            }
         }));
 
 
@@ -196,7 +209,7 @@ public class Intermediaire extends GuiAgent {
 
             send(retour);
 
-            window.println(plateau.toString());
+            //window.println(plateau.toString());
         }));
         
         var model1 = MessageTemplate.MatchConversationId("autorisation phase combat");
@@ -257,6 +270,14 @@ public class Intermediaire extends GuiAgent {
         });
         System.out.println("Liste de joueurs"+joueurs);
 
+    }
+    
+    private void autorisationRegimentTerritoireAdjacent()
+    {
+    	window.println("\nEnvoie autorisation commencement Regiment Territoire Adjacent aux joueurs.");
+    	ACLMessage assignRegiment = new ACLMessage(ACLMessage.INFORM);
+        assignRegiment.addReceiver(topicAutorisationUpdateRegimentTerritoireAdjacent);
+        send(assignRegiment);
     }
     
     /*

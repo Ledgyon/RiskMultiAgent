@@ -64,6 +64,10 @@ public class Joueur extends GuiAgent{
      * topic du joueur permettant de mettre à jour les continents possedes
      */
     AID topicUpdateContinent;
+    /*
+     * OUAIS
+     */
+    AID topicAutorisationUpdateRegimentTerritoireAdjacent;
     /**
      * topic du joueur retournant les informations du territoire
      */
@@ -205,6 +209,16 @@ public class Joueur extends GuiAgent{
             nouveauxRenforts();
             updateContinents();
             window.println(territoires.toString());
+            
+            
+        }));
+        
+        topicAutorisationUpdateRegimentTerritoireAdjacent = AgentServicesTools.generateTopicAID(this, "Update Regiment Territoire Adjacent");
+
+        //ecoute des messages radio
+        addBehaviour(new ReceiverBehaviour(this, -1, MessageTemplate.MatchTopic(topicAutorisationUpdateRegimentTerritoireAdjacent), true, (a, m)->{
+            window.println("Message recu sur le topic " + topicAutorisationUpdateRegimentTerritoireAdjacent.getLocalName() + ". Contenu " + m.getContent()
+                    + " emis par :  " + m.getSender().getLocalName());
             
             //COMBAT
             infoRegimentTerritoireAdjacent();
