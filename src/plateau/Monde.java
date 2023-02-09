@@ -325,7 +325,6 @@ public class Monde {
                                 tempListeTerritoire.clear();
                                 tempListeTerritoire.add(continents.get(4).getTerritoires().get(1));
                                 tempListeTerritoire.add(continents.get(4).getTerritoires().get(2));
-                                tempListeTerritoire.add(continents.get(4).getTerritoires().get(9));
                                 tempListeTerritoire.add(continents.get(5).getTerritoires().get(1));
                                 continents.get(i).getTerritoires().get(j).setTerritoires_adjacents(tempListeTerritoire);
                             }
