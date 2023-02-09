@@ -2,16 +2,12 @@ package agents;
 
 import java.awt.Color;
 import java.io.IOException;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-
-import java.util.*;
-
 
 import carte.CarteMission;
 import carte.CartePioche;
@@ -206,8 +202,6 @@ public class Joueur extends GuiAgent{
             
             //RENFORT
             assignationRegimentTerritoire();
-            nouveauxRenforts();
-            updateContinents();
             window.println(territoires.toString());
             
             
@@ -277,7 +271,7 @@ public class Joueur extends GuiAgent{
                     {
                     	window.println("\n\nTerritoires adjacents regiments update :");
                         window.println(territoires.toString());
-                        autorisationPhaseCombat();
+                        autorisationDebutPartie();
                     }
         		}
         		reset(model2,MsgReceiver.INFINITE,null,null);
@@ -307,7 +301,7 @@ public class Joueur extends GuiAgent{
         });
         
       //init du model
-        var model4 = MessageTemplate.MatchConversationId("debut phase combat");
+        var model4 = MessageTemplate.MatchConversationId("debut tour");
         
         //Reception de la notification du debut de la phase de combat
         addBehaviour(new MsgReceiver(this,model4,MsgReceiver.INFINITE,null,null){
@@ -315,11 +309,76 @@ public class Joueur extends GuiAgent{
         		if(msg!=null)
         		{
                     window.println("\nMessage recu sur le model " + model4.toString() + " emis par :  " + msg.getSender().getLocalName());
+                    
+                    //RENFORT
+                	nouveauxRenforts();
+					updateContinents();
+					//COMBAT
                     phaseCombatJoueur();
+                    //MANOEUVRE
                     manoeuvreRegiment();
+                    
+                    try {
+						Thread.sleep(2000);
+					} catch (InterruptedException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+                    
+                    window.println("\nEnvoie fin de tour a Intermediaire.");
+                	ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+            		message.setConversationId("fin tour joueur");
+            		message.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
+            		send(message);
+                    
+                    
         		}
         		reset(model4,MsgReceiver.INFINITE,null,null);
         	}
+        });
+
+    }
+    
+    private void detectIntermediaire() {
+        var model = AgentServicesTools.createAgentDescription("intermediaire", "link");
+
+        //souscription au service des pages jaunes pour recevoir une alerte en cas mouvement sur le service travel agency'seller
+        addBehaviour(new DFSubscriber(this, model) {
+            @Override
+            public void onRegister(DFAgentDescription dfd) {
+                intermediaire=dfd.getName();
+                window.println(dfd.getName().getLocalName() + " s'est inscrit en tant qu'intermediaire : " + model.getAllServices().get(0));
+            }
+
+            @Override
+            public void onDeregister(DFAgentDescription dfd) {
+                if(dfd.getName().equals(general)) {
+                    intermediaire=null;
+                    window.println(dfd.getName().getLocalName() + " s'est desinscrit de  : " + model.getAllServices().get(0));
+                }
+            }
+        });
+    }
+    
+    private void detectGeneral() {
+        var model = AgentServicesTools.createAgentDescription("general", "link");
+
+        //souscription au service des pages jaunes pour recevoir une alerte en cas mouvement sur le service travel agency'seller
+        addBehaviour(new DFSubscriber(this, model) {
+            @Override
+            public void onRegister(DFAgentDescription dfd) {
+                general=dfd.getName();
+                window.println(dfd.getName().getLocalName() + " s'est inscrit en tant que general : " + model.getAllServices().get(0));
+            }
+
+            @Override
+            public void onDeregister(DFAgentDescription dfd) {
+                if(dfd.getName().equals(general)) {
+                    general=null;
+                    window.println(dfd.getName().getLocalName() + " s'est desinscrit de  : " + model.getAllServices().get(0));
+                }
+            }
+
         });
 
     }
@@ -352,6 +411,60 @@ public class Joueur extends GuiAgent{
         infoRegimentTerritoire.addReceiver(topicRegimentTeritoire);
         send(infoRegimentTerritoire);
     }
+    
+    /*
+     * Fonction pour update les informations des nombres de regiment présent sur les territoires adjacents
+     */
+    public void infoRegimentTerritoireAdjacent()
+    {
+    	int i,j;
+    	for(i = 0; i < this.territoires.size(); i++) // parcours des territoires
+    	{
+    		for(j = 0; j < this.territoires.get(i).getTerritoires_adjacents().size(); j++) // parcours de tous les territoires adjacents
+    		{
+    			//variable pour raccourcir le nom
+    			Territoire t_actuel = this.territoires.get(i).getTerritoires_adjacents().get(j);
+    			if(this.territoires.contains(t_actuel)) // alors on possède déja l'info
+    			{
+    				//affectation nombre de regiment
+    				Territoire temp = getTerritoireByName(this.territoires.get(i).getTerritoires_adjacents().get(j).getNomTerritoire());
+    				this.territoires.get(i).getTerritoires_adjacents().get(j).setRegimentSurTerritoire(temp.getRegimentSurTerritoire());
+    				window.println("Info déjà en notre possession : "+temp);
+    				//si dernier update, alors affichage
+                    if(i == territoires.size()-1 && j == territoires.get(i).getTerritoires_adjacents().size()-1)
+                    {
+                    	window.println("\n\nTerritoires adjacents regiments update :");
+                        window.println(territoires.toString());
+                        
+                        //FIN PHASE D INIT PARTIE
+                        autorisationDebutPartie();
+                    }
+    			}
+    			else // on demande a intermedaire d'update
+    			{
+    				ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+    				message.setConversationId("update regiment territoire adjacent");
+    				message.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
+    				message.setContent(t_actuel.getNomTerritoire()+","+i+","+j);
+    				send(message);
+    				
+    				//le retour ce fera grace au model3 dans setup()
+    			}
+    		}
+    	}
+    }
+    
+    /*
+     * Fonction que tous les joueurs envoie a intermediaire pour notifier qu'ils ont fini leurs phase de renfort
+     */
+    private void autorisationDebutPartie()
+    {
+    	window.println("\nEnvoie autorisation commencement debut de partie a Intermediaire.");
+    	ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+		message.setConversationId("autorisation debut partie");
+		message.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
+		send(message);
+    }
 
     // Permet de rajouter d'obtenir de nouveaux renforts
     public void nouveauxRenforts(){
@@ -366,6 +479,7 @@ public class Joueur extends GuiAgent{
         if(main.size() >= 3)
             nouveauxRenfortsMain();
         window.println(String.valueOf(nombreRegimentMax));
+        
     }
 
     // Permet de rajouter d'obtenir de nouveaux renforts par rapport aux cartes se trouvant dans la main du joueur
@@ -594,27 +708,6 @@ public class Joueur extends GuiAgent{
 
     }
 
-    private void detectIntermediaire() {
-        var model = AgentServicesTools.createAgentDescription("intermediaire", "link");
-
-        //souscription au service des pages jaunes pour recevoir une alerte en cas mouvement sur le service travel agency'seller
-        addBehaviour(new DFSubscriber(this, model) {
-            @Override
-            public void onRegister(DFAgentDescription dfd) {
-                intermediaire=dfd.getName();
-                window.println(dfd.getName().getLocalName() + " s'est inscrit en tant qu'intermediaire : " + model.getAllServices().get(0));
-            }
-
-            @Override
-            public void onDeregister(DFAgentDescription dfd) {
-                if(dfd.getName().equals(general)) {
-                    intermediaire=null;
-                    window.println(dfd.getName().getLocalName() + " s'est desinscrit de  : " + model.getAllServices().get(0));
-                }
-            }
-        });
-    }
-
     // fonction qui permet de mettre à jour les continents possedes
     public void updateContinents(){
         ACLMessage infoRegimentTerritoire = new ACLMessage(ACLMessage.INFORM);
@@ -626,73 +719,19 @@ public class Joueur extends GuiAgent{
         }
         infoRegimentTerritoire.addReceiver(topicUpdateContinent);
         send(infoRegimentTerritoire);
-    }
-
-    private void detectGeneral() {
-        var model = AgentServicesTools.createAgentDescription("general", "link");
-
-        //souscription au service des pages jaunes pour recevoir une alerte en cas mouvement sur le service travel agency'seller
-        addBehaviour(new DFSubscriber(this, model) {
-            @Override
-            public void onRegister(DFAgentDescription dfd) {
-                general=dfd.getName();
-                window.println(dfd.getName().getLocalName() + " s'est inscrit en tant que general : " + model.getAllServices().get(0));
-            }
-
-            @Override
-            public void onDeregister(DFAgentDescription dfd) {
-                if(dfd.getName().equals(general)) {
-                    general=null;
-                    window.println(dfd.getName().getLocalName() + " s'est desinscrit de  : " + model.getAllServices().get(0));
-                }
-            }
-
-        });
 
     }
     
-    /*
-     * Fonction pour update les informations des nombres de regiment présent sur les territoires adjacents
-     */
-    public void infoRegimentTerritoireAdjacent()
+    private void phaseCombatJoueur()
     {
-    	int i,j;
-    	for(i = 0; i < this.territoires.size(); i++) // parcours des territoires
-    	{
-    		for(j = 0; j < this.territoires.get(i).getTerritoires_adjacents().size(); j++) // parcours de tous les territoires adjacents
-    		{
-    			//variable pour raccourcir le nom
-    			Territoire t_actuel = this.territoires.get(i).getTerritoires_adjacents().get(j);
-    			if(this.territoires.contains(t_actuel)) // alors on possède déja l'info
-    			{
-    				//affectation nombre de regiment
-    				Territoire temp = getTerritoireByName(this.territoires.get(i).getTerritoires_adjacents().get(j).getNomTerritoire());
-    				this.territoires.get(i).getTerritoires_adjacents().get(j).setRegimentSurTerritoire(temp.getRegimentSurTerritoire());
-    				window.println("Info déjà en notre possession : "+temp);
-    				//si dernier update, alors affichage
-                    if(i == territoires.size()-1 && j == territoires.get(i).getTerritoires_adjacents().size()-1)
-                    {
-                    	window.println("\n\nTerritoires adjacents regiments update :");
-                        window.println(territoires.toString());
-                        
-                        //FIN PHASE DE RENFORT
-                        autorisationPhaseCombat();
-                    }
-    			}
-    			else // on demande a intermedaire d'update
-    			{
-    				ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
-    				message.setConversationId("update regiment territoire adjacent");
-    				message.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
-    				message.setContent(t_actuel.getNomTerritoire()+","+i+","+j);
-    				send(message);
-    				
-    				//le retour ce fera grace au model3 dans setup()
-    			}
-    		}
-    	}
-    }
+    	window.println("Attaque");
+    	/*
+    	 * Gerer les attaques A FAIRE
+    	 */
+    	
 
+    }
+    
     private void manoeuvreRegiment() {
         Random rand = new Random();
         //boolean manoeuvre = rand.nextBoolean();
@@ -753,32 +792,7 @@ public class Joueur extends GuiAgent{
             }
             System.out.println(territoires);
         }
-    }
-    
-    /*
-     * Fonction que tous les joueurs envoie a intermediaire pour notifier qu'ils ont fini leurs phase de renfort
-     */
-    private void autorisationPhaseCombat()
-    {
-    	window.println("\nEnvoie autorisation commencement phase de combat a Intermediaire.");
-    	ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
-		message.setConversationId("autorisation phase combat");
-		message.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
-		send(message);
-    }
-    
-    private void phaseCombatJoueur()
-    {
-    	/*
-    	 * Gerer les attaques A FAIRE
-    	 */
-    	
-    	//FIN DU TOUR (plus de combat a mener) ON INDIQUE A INTERMEDIAIRE QU'ON A TERMINE POUR QU'UN AUTRE JOUEUR COMMENCE SON TOUR
-    	window.println("\nFin du tour de la phase de combat, Notification a Intermediaire fin de tour");
-    	ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
-		message.setConversationId("fin tour combat joueur");
-		message.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
-		send(message);
+ 
     }
     
     public Territoire getTerritoireByName(String territoire){

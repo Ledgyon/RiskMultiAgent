@@ -212,24 +212,24 @@ public class Intermediaire extends GuiAgent {
             //window.println(plateau.toString());
         }));
         
-        var model1 = MessageTemplate.MatchConversationId("autorisation phase combat");
+        var model1 = MessageTemplate.MatchConversationId("autorisation debut partie");
         
         //Reception des autorisation de cmmencement de la phase de combat, des que tous les joueurs sont pret (fin phase de renfort), on peut lancer
         addBehaviour(new MsgReceiver(this,model1,MsgReceiver.INFINITE,null,null){
         	protected void handleMessage(ACLMessage msg) {
-        		window.println("\nReception autorisation phase de combat de " + msg.getSender().getLocalName() + "\n");
+        		window.println("\nReception autorisation debut de partie de " + msg.getSender().getLocalName() + "\n");
         		nbAutorisation += 1;
         		if(nbAutorisation == 6)
         		{
         			nbAutorisation = 0; // reset pour la prochaine phase
-        			phaseCombat(); //debut phase de combat
+        			debutPartie(); //debut partie
         		}
         		reset(model1,MsgReceiver.INFINITE,null,null);
         	}
         });
         
         //init du model
-        var model2 = MessageTemplate.MatchConversationId("fin tour combat joueur");
+        var model2 = MessageTemplate.MatchConversationId("fin tour joueur");
         
         //Reception des notifications de fin de tour de combat des joueurs, pour permettre au prochain de commencer sa phase de combat
         addBehaviour(new MsgReceiver(this,model2,MsgReceiver.INFINITE,null,null){
@@ -237,9 +237,9 @@ public class Intermediaire extends GuiAgent {
     			if(iJoueurTourCombat < 6) // alors tous les joueurs n'ont pas joue
     			{
     				iJoueurTourCombat++; // pour passer au joueur suivant
-    				phaseCombat(); // nouvel phase de combat pour ce nouveau joueur
+    				debutPartie(); // nouveau tour pour ce nouveau joueur
     			}
-    			else phaseManoeuvre(); // tous le monde a fait sa phase de combat, DEBUT PHASE MANOEUVRE
+    			else window.println("fin 1er tour");; // tous le monde a fait sa phase de combat, DEBUT PHASE MANOEUVRE
         		reset(model2,MsgReceiver.INFINITE,null,null);
         	}
         });
@@ -283,9 +283,9 @@ public class Intermediaire extends GuiAgent {
     /*
      * Notification au Joueur_iTourCombat qu'il peut commencer sa phase d'attaque
      */
-    private void phaseCombat()
+    private void debutPartie()
     {
-    	window.println("\nDebut phase de combat");
+    	window.println("\nDebut tour");
     	String tourJoueur = "Joueur_"+iJoueurTourCombat; // iTourCombat variable globale
     	//window.println("tourJoueur = "+tourJoueur);
 		int iJoueur = 0;
@@ -294,25 +294,13 @@ public class Intermediaire extends GuiAgent {
 			//window.println(joueurs.get(iJoueur).getLocalName().toString() + " != " + tourJoueur);
 			iJoueur++;
 		}
-		window.println("\nEnvoie autorisation commencement phase de combat a " + tourJoueur);
+		window.println("\nEnvoie autorisation commencement du tour de " + tourJoueur);
 		
 		//Envoie du message pour que le joueur commence son tour
     	ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
-		message.setConversationId("debut phase combat");
+		message.setConversationId("debut tour");
 		message.addReceiver(new AID(joueurs.get(iJoueur).getLocalName(), AID.ISLOCALNAME));
 		send(message);
-    }
-    
-    /*
-     * Fonction pour commencer la phase de manoeuvre
-     */
-    private void phaseManoeuvre()
-    {
-    	window.println("\nDebut phase de manoeuvre");
-    	
-    	/*
-    	 * A COMPLETER
-    	 */
     }
 
 
