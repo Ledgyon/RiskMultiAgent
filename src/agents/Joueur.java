@@ -858,16 +858,23 @@ public class Joueur extends GuiAgent{
     	{    		
     		if(this.territoires.get(i).getRegimentSurTerritoire() > 1) // alors assez d unite pour attaque
     		{
-    			tAtt = rand.nextInt(this.territoires.get(i).getTerritoires_adjacents().size());
+                List<Territoire> listTemp = new ArrayList<>(this.territoires.get(i).getTerritoires_adjacents());
+                System.out.println(getLocalName());
+                System.out.println(listTemp);
+                for(Territoire t:territoires)
+                    for(int j=(listTemp.size()-1); j>=0; --j)
+                        if(listTemp.get(j).getNomTerritoire().equals(t.getNomTerritoire()))
+                            listTemp.remove(j);
+    			tAtt = rand.nextInt(listTemp.size());
     			
     			ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
 				message.setConversationId("lancement attaque");
 				message.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
 				
 				nomTerritoireAttaque = this.territoires.get(i).getNomTerritoire();
-				nomTerritoireDefense = this.territoires.get(i).getTerritoires_adjacents().get(tAtt).getNomTerritoire();
+				nomTerritoireDefense = listTemp.get(tAtt).getNomTerritoire();
 				nbRegimentAttaquant = (this.territoires.get(i).getRegimentSurTerritoire()-1);
-				nbRegimentDefenseur = this.territoires.get(i).getTerritoires_adjacents().get(tAtt).getRegimentSurTerritoire();
+				nbRegimentDefenseur = listTemp.get(tAtt).getRegimentSurTerritoire();
 				message.setContent(nomTerritoireAttaque+","+nomTerritoireDefense+","+nbRegimentAttaquant+","+nbRegimentDefenseur);
 				send(message);
     		}
@@ -913,8 +920,6 @@ public class Joueur extends GuiAgent{
                         tempTMinus.add(temp2TMinus);
                 }
             }
-            System.out.println(getLocalName());
-            System.out.println(territoires);
             if(!tempTAdd.isEmpty()) {
                 int indexAdd;
                 noTerritoireListMinus = rand.nextInt(tempTMinus.size());
@@ -932,7 +937,6 @@ public class Joueur extends GuiAgent{
                     getTerritoireByName(tempTAdd.get(indexAdd).get(noTerritoireAdd).getNomTerritoire()).addRegimentSurTerritoire(nbRegiment);
                 }
             }
-            System.out.println(territoires);
         }
  
     }
