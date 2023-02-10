@@ -4,7 +4,12 @@ import java.awt.Color;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 import jade.core.AID;
 import jade.core.AgentServicesTools;
@@ -18,7 +23,6 @@ import jade.gui.GuiEvent;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
-
 import jade.proto.states.MsgReceiver;
 import plateau.Continent;
 import plateau.Monde;
@@ -42,11 +46,17 @@ public class Intermediaire extends GuiAgent {
     AID topicRepartition;
     AID topicAutorisationUpdateRegimentTerritoireAdjacent;
     AID topicUpdateContinent;
+    AID topicUpdateRegimentAdjacent; // apres un combat, envoie a tous les joueurs l'update des regiments pour leurs territoires adjacents
     
     /**
      * liste des joueurs
      */
     private ArrayList<AID> joueurs;
+    
+    /*
+     * map cle : nom du territoire / valeur : adresse du joueur la possedant
+     */
+    private Map<String,AID> mapTerritoireJoueur;
     
     //variable pour lancer updateRegimentTerritoireAjdacent
     int nbTerritoireUpdate = 0;
@@ -65,6 +75,7 @@ public class Intermediaire extends GuiAgent {
         detectJoueurs();
 
         plateau = new Monde();
+        mapTerritoireJoueur = new HashMap<>();
 
         //AgentServicesTools.register(this, "intermediaire", "link");
 
@@ -73,10 +84,12 @@ public class Intermediaire extends GuiAgent {
             topicHelper =  ( TopicManagementHelper ) getHelper (TopicManagementHelper.SERVICE_NAME) ;
             topicRepartition = topicHelper.createTopic("REPARTITION REGIMENT");
             topicAutorisationUpdateRegimentTerritoireAdjacent = topicHelper.createTopic("Update Regiment Territoire Adjacent");
+            topicUpdateRegimentAdjacent = topicHelper.createTopic("UPDATE REGIMENT ADJACENT");
             //topicTerritoireRetour = topicHelper.createTopic("RETOUR INFO TERRITOIRE");
             //topicHelper.register(topicTerritoireRetour);
             topicHelper.register(topicRepartition);
             topicHelper.register(topicAutorisationUpdateRegimentTerritoireAdjacent);
+            topicHelper.register(topicUpdateRegimentAdjacent);
         } catch (ServiceException e) {
             e.printStackTrace();
         }
@@ -111,6 +124,9 @@ public class Intermediaire extends GuiAgent {
 				e.printStackTrace();
 			}
             send(retour);
+            
+            //Attribution de l'adresse du joueur au territoire
+            mapTerritoireJoueur.put(tempT.getNomTerritoire(),m.getSender());
         }));
 
         
@@ -243,6 +259,121 @@ public class Intermediaire extends GuiAgent {
         		reset(model2,MsgReceiver.INFINITE,null,null);
         	}
         });
+        
+      //init du model
+        var model3 = MessageTemplate.MatchConversationId("lancement attaque");
+        
+        //Reception des info du territoire et stockage, fonction ne captant que les messages du model créer precedemment
+        addBehaviour(new MsgReceiver(this,model3,MsgReceiver.INFINITE,null,null){
+        	@SuppressWarnings("null")
+			protected void handleMessage(ACLMessage msg) {
+        		if(msg!=null)
+        		{
+        			var infos = msg.getContent().split(",");
+                    
+                    window.println("Message recu sur le model " + model3.toString() + ". Contenu " + msg.getContent().toString()
+                    + " emis par :  " + msg.getSender().getLocalName());
+                    
+                    String nomTerritoireAttaque = infos[0], nomTerritoireDefense = infos[1];
+                	int nbRegimentAttaquant = Integer.parseInt(infos[2]), nbRegimentDefenseur = Integer.parseInt(infos[3]);
+                	
+                	// savoir combien de des ils peuvent lances
+                	int nbDesAttaquant = nbDes("attaquant",nbRegimentAttaquant);
+                	int nbDesDefenseur = nbDes("defenseur",nbRegimentDefenseur);
+                	
+                	// resultat lancement
+                	Random rand = new Random();
+                	List<Integer> resultatsAtt = new ArrayList<>();
+                	List<Integer> resultatsDef = new ArrayList<>();
+                	int i;
+                	for(i = 0; i < nbDesAttaquant; i++) resultatsAtt.add(rand.nextInt((6 - 1) + 1) + 1); // random entre 1 et 6
+                	for(i = 0; i < nbDesDefenseur; i++) resultatsDef.add(rand.nextInt((6 - 1) + 1) + 1); // random entre 1 et 6
+                	// trie decroissant
+                	Collections.sort(resultatsAtt,Collections.reverseOrder());
+                	Collections.sort(resultatsDef,Collections.reverseOrder());
+                	// confrontation lancement
+                	int nbConfrontation, nbRegimentAttaquantUpdate = nbRegimentAttaquant, nbRegimentDefenseurUpdate = nbRegimentDefenseur;
+                	if(resultatsAtt.size() >= 2 && resultatsDef.size() >= 2) nbConfrontation = 2; // car nbDes max de defenseur = 2, donc max 2 comparaisons
+                	else nbConfrontation = 1;
+                	for(i=0;i<nbConfrontation;i++) 
+                	{
+                		if(resultatsAtt.get(i) > resultatsDef.get(i)) nbRegimentDefenseurUpdate--;
+                		else nbRegimentAttaquantUpdate--;
+                	}
+                	
+                	//update du plateau
+                	plateau.getTerritoireByName(nomTerritoireAttaque).setRegimentSurTerritoire(nbRegimentAttaquantUpdate);
+                	plateau.getTerritoireByName(nomTerritoireDefense).setRegimentSurTerritoire(nbRegimentDefenseurUpdate);
+                	
+                	//Retour des resultats pour l attaquant
+                	ACLMessage message1 = new ACLMessage(ACLMessage.REQUEST);
+    				message1.setConversationId("retour resultat attaque");
+    				message1.addReceiver(new AID(msg.getSender().getLocalName(), AID.ISLOCALNAME));
+    				message1.setEncoding(nomTerritoireAttaque+","+nomTerritoireDefense+","+nbRegimentAttaquant+","+nbRegimentAttaquantUpdate+","+nbRegimentDefenseur+","+nbRegimentDefenseurUpdate);
+    				
+                	//Retour des resultats pour le defenseur
+    				ACLMessage message2 = new ACLMessage(ACLMessage.REQUEST);
+    				message2.setConversationId("retour resultat defense");
+    				message2.addReceiver(new AID(mapTerritoireJoueur.get(nomTerritoireAttaque).getLocalName(), AID.ISLOCALNAME));
+    				message2.setContent(nomTerritoireAttaque+","+nomTerritoireDefense+","+nbRegimentAttaquant+","+nbRegimentAttaquantUpdate+","+nbRegimentDefenseur+","+nbRegimentDefenseurUpdate+","+msg.getSender().getLocalName());
+    				
+    				
+    				if(nbRegimentDefenseurUpdate == 0) //alors attribution du territoire a l'attaquant
+    				{
+    					//changement dans la map
+    					mapTerritoireJoueur.remove(nomTerritoireAttaque);
+    					mapTerritoireJoueur.put(nomTerritoireAttaque, msg.getSender());
+    					//envoie du territoire
+    					try {
+    						plateau.getTerritoireByName(nomTerritoireAttaque).setRegimentSurTerritoire(plateau.getTerritoireByName(nomTerritoireAttaque).getRegimentSurTerritoire() - nbRegimentAttaquantUpdate);
+    	                	plateau.getTerritoireByName(nomTerritoireDefense).setRegimentSurTerritoire(nbRegimentAttaquantUpdate); // les regiments qui ont attaques restent sur le nouveau territoire
+							message1.setContentObject(plateau.getTerritoireByName(nomTerritoireDefense));
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+    					
+    					
+    				}
+    				
+    				send(message1);
+    				send(message2);
+    				
+    				//MESSAGE TOPIC A TOUS LES JOUEURS POUR NOTIFIE DES MODIFS DE REGIMENT
+    				//topic territoire attaque
+					window.println("\nEnvoie topic update regiment adjacent du territoire attaquant");
+			    	ACLMessage topic1 = new ACLMessage(ACLMessage.INFORM);
+			    	topic1.addReceiver(topicUpdateRegimentAdjacent);
+			    	topic1.setContent(nomTerritoireAttaque+","+plateau.getTerritoireByName(nomTerritoireAttaque).getRegimentSurTerritoire());
+			        
+			        //topic territoire defense
+					window.println("\nEnvoie topic update regiment adjacent du territoire defense");
+			    	ACLMessage topic2 = new ACLMessage(ACLMessage.INFORM);
+			    	topic2.addReceiver(topicUpdateRegimentAdjacent);
+			    	topic2.setContent(nomTerritoireDefense+","+plateau.getTerritoireByName(nomTerritoireDefense).getRegimentSurTerritoire()); //var2 = nouveu nombre de regiment a set
+
+    				if(nbRegimentDefenseurUpdate == 0) // alors forcement on envoie les 2 topic car ajout et retrait (attribution nouveau territoire)
+    				{
+    					send(topic1);
+    					send(topic2);
+    				}
+    				else
+    				{
+    					if(nbRegimentAttaquant > nbRegimentAttaquantUpdate)
+    					{
+        			        send(topic1);
+    					}
+    					
+    			        if(nbRegimentDefenseur > nbRegimentDefenseurUpdate)
+    			        {
+    			        	send(topic2);
+    			        }
+    				}
+    				
+        		}
+        		reset(model3,MsgReceiver.INFINITE,null,null);
+        	}
+        });
 
     }
     
@@ -301,6 +432,21 @@ public class Intermediaire extends GuiAgent {
 		message.setConversationId("debut tour");
 		message.addReceiver(new AID(joueurs.get(iJoueur).getLocalName(), AID.ISLOCALNAME));
 		send(message);
+    }
+    
+    private int nbDes (String AttDef, int nbRegiment)
+    {
+    	if(AttDef.equals("attaquant"))
+    	{
+    		if(nbRegiment == 1) return 1;
+    		if(nbRegiment == 2) return 2;
+    		else return 3;
+    	}
+    	else // defenseur
+    	{
+    		if(nbRegiment == 1 || nbRegiment == 2) return 1;
+    		else return 2;
+    	}
     }
 
 

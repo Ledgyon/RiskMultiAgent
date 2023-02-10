@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,6 +70,10 @@ public class Joueur extends GuiAgent{
      * topic du joueur retournant les informations du territoire
      */
     AID topicTerritoireRetour;
+    /*
+     * apres un combat, envoie a tous les joueurs l'update des regiments pour leurs territoires adjacents SI CHANGEMENT
+     */
+    AID topicUpdateRegimentAdjacent;
 
     private gui.JoueurGui window;
 
@@ -317,13 +323,13 @@ public class Joueur extends GuiAgent{
                     phaseCombatJoueur();
                     //MANOEUVRE
                     manoeuvreRegiment();
-                    
+                    /*
                     try {
 						Thread.sleep(2000);
 					} catch (InterruptedException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
-					}
+					}*/
                     
                     window.println("\nEnvoie fin de tour a Intermediaire.");
                 	ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
@@ -336,6 +342,122 @@ public class Joueur extends GuiAgent{
         		reset(model4,MsgReceiver.INFINITE,null,null);
         	}
         });
+        
+      //init du model
+        var model5 = MessageTemplate.MatchConversationId("retour resultat attaque");
+        
+        //Reception des info du territoire et stockage, fonction ne captant que les messages du model créer precedemment
+        addBehaviour(new MsgReceiver(this,model5,MsgReceiver.INFINITE,null,null){
+        	@SuppressWarnings("null")
+			protected void handleMessage(ACLMessage msg) {
+        		if(msg!=null)
+        		{
+        			var infos = msg.getEncoding().split(",");
+                    
+                    window.println("Message recu sur le model " + model5.toString() + ". Contenu " + msg.getEncoding().toString()
+                    + " emis par :  " + msg.getSender().getLocalName());
+                    
+                    String nomTerritoireAttaque = infos[0];
+                    String nomTerritoireDefense = infos[1];
+                    int nbRegimentAttaquant = Integer.parseInt(infos[2]);
+                    int nbRegimentAttaquantUpdate = Integer.parseInt(infos[3]);
+                    int nbRegimentDefenseur = Integer.parseInt(infos[4]);
+                    int nbRegimentDefenseurUpdate = Integer.parseInt(infos[5]);
+                    
+                    window.println("Bilan de l'attaque de notre territoire"+ nomTerritoireAttaque +"sur le territoire "+nomTerritoireDefense+" :");
+                    //Perte personnel
+                    if(nbRegimentAttaquant == nbRegimentAttaquantUpdate) window.println("Aucune perte de regiment subit");
+                    else window.println("Vous avez perdu "+(nbRegimentAttaquant - nbRegimentAttaquantUpdate) + " regiment");
+                    //Perte ennemi
+                    if(nbRegimentDefenseur == nbRegimentDefenseurUpdate) window.println("Aucune perte ennemi");
+                    else window.println("L ennemi a perdu "+(nbRegimentDefenseur - nbRegimentDefenseurUpdate) + " regiment");
+                    
+                    if(nbRegimentDefenseurUpdate == 0) { //Nouveau territoire 
+                    	try {
+							Territoire tempT = (Territoire) msg.getContentObject();
+							territoires.add(tempT);
+							getTerritoireByName(nomTerritoireAttaque).setRegimentSurTerritoire(getTerritoireByName(nomTerritoireAttaque).getRegimentSurTerritoire() - nbRegimentAttaquant); // car peu importe si perte ou non -> regiment soit mort, soit sur le nouveau territoire concquis
+							 
+						} catch (UnreadableException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+                    	
+                    }
+                    else // pas de nouveau territoire
+                    {
+                    	if(nbRegimentAttaquant > nbRegimentAttaquantUpdate) getTerritoireByName(nomTerritoireAttaque).setRegimentSurTerritoire(nbRegimentAttaquantUpdate);
+                    }
+                	
+        		}
+        		reset(model5,MsgReceiver.INFINITE,null,null);
+        	}
+        });
+        
+      //init du model
+        var model6 = MessageTemplate.MatchConversationId("retour resultat defense");
+        
+        //Reception des info du territoire et stockage, fonction ne captant que les messages du model créer precedemment
+        addBehaviour(new MsgReceiver(this,model6,MsgReceiver.INFINITE,null,null){
+        	@SuppressWarnings("null")
+			protected void handleMessage(ACLMessage msg) {
+        		if(msg!=null)
+        		{
+        			var infos = msg.getContent().split(",");
+                    
+                    window.println("Message recu sur le model " + model6.toString() + ". Contenu " + msg.getContent().toString()
+                    + " emis par :  " + msg.getSender().getLocalName());
+                    
+                    String nomTerritoireAttaque = infos[0];
+                    String nomTerritoireDefense = infos[1];
+                    int nbRegimentAttaquant = Integer.parseInt(infos[2]);
+                    int nbRegimentAttaquantUpdate = Integer.parseInt(infos[3]);
+                    int nbRegimentDefenseur = Integer.parseInt(infos[4]);
+                    int nbRegimentDefenseurUpdate = Integer.parseInt(infos[5]);
+                    String joueurAttaque = infos[6];
+                    
+                    window.println("Le "+ joueurAttaque +" a attaque "+ nomTerritoireDefense +" via le territoire "+nomTerritoireAttaque);
+                    //Perte personnel
+                    if(nbRegimentDefenseur == nbRegimentDefenseurUpdate) window.println("Aucune perte de regiment subit");
+                    else window.println("Vous avez perdu "+(nbRegimentDefenseur - nbRegimentDefenseurUpdate) + " regiment");
+                    //Perte ennemi
+                    if(nbRegimentAttaquant == nbRegimentAttaquantUpdate) window.println("Aucune perte ennemi");
+                    else window.println("L ennemi a perdu "+(nbRegimentAttaquant - nbRegimentAttaquantUpdate) + " regiment");
+                    
+                    
+                    if(nbRegimentDefenseurUpdate == 0) { //Perte territoire 
+                    	territoires.remove(getTerritoireByName(nomTerritoireDefense));
+                    }
+        		}
+        		reset(model6,MsgReceiver.INFINITE,null,null);
+        	}
+        });
+        
+        topicUpdateRegimentAdjacent = AgentServicesTools.generateTopicAID(this, "UPDATE REGIMENT ADJACENT");
+
+        //ecoute des messages radio
+        addBehaviour(new ReceiverBehaviour(this, -1, MessageTemplate.MatchTopic(topicUpdateRegimentAdjacent), true, (a, m)->{
+            window.println("Message recu sur le topic " + topicUpdateRegimentAdjacent.getLocalName() + ". Contenu " + m.getContent()
+                    + " emis par :  " + m.getSender().getLocalName());
+            
+            var infos = m.getContent().split(",");
+            
+            String nomTerritoire = infos[0];
+            int nbRegimentUpdate = Integer.parseInt(infos[1]);
+            
+            int i,j;
+        	for(i = 0; i < this.territoires.size(); i++) // parcours des territoires
+        	{
+        		for(j = 0; j < this.territoires.get(i).getTerritoires_adjacents().size(); j++) // parcours de tous les territoires adjacents
+        		{
+        			if(this.territoires.get(i).getTerritoires_adjacents().get(j).getNomTerritoire().equals(nomTerritoire))
+        			{
+        				this.territoires.get(i).getTerritoires_adjacents().get(j).setRegimentSurTerritoire(nbRegimentUpdate);
+        			}
+        		}
+        		
+        	}
+        }));
 
     }
     
@@ -728,8 +850,28 @@ public class Joueur extends GuiAgent{
     	/*
     	 * Gerer les attaques A FAIRE
     	 */
-    	
-
+    	Random rand = new Random();
+    	String nomTerritoireAttaque, nomTerritoireDefense;
+    	int nbRegimentAttaquant, nbRegimentDefenseur;
+    	int tAtt; // indice du territoire adjacent a attaque
+    	for(int i = 0 ; i<this.territoires.size(); i++)// parcours de tous les territoires possedes
+    	{    		
+    		if(this.territoires.get(i).getRegimentSurTerritoire() > 1) // alors assez d unite pour attaque
+    		{
+    			tAtt = rand.nextInt(this.territoires.get(i).getTerritoires_adjacents().size());
+    			
+    			ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+				message.setConversationId("lancement attaque");
+				message.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
+				
+				nomTerritoireAttaque = this.territoires.get(i).getNomTerritoire();
+				nomTerritoireDefense = this.territoires.get(i).getTerritoires_adjacents().get(tAtt).getNomTerritoire();
+				nbRegimentAttaquant = (this.territoires.get(i).getRegimentSurTerritoire()-1);
+				nbRegimentDefenseur = this.territoires.get(i).getTerritoires_adjacents().get(tAtt).getRegimentSurTerritoire();
+				message.setContent(nomTerritoireAttaque+","+nomTerritoireDefense+","+nbRegimentAttaquant+","+nbRegimentDefenseur);
+				send(message);
+    		}
+    	}
     }
     
     private void manoeuvreRegiment() {
