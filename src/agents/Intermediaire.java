@@ -286,8 +286,8 @@ public class Intermediaire extends GuiAgent {
                 	List<Integer> resultatsAtt = new ArrayList<>();
                 	List<Integer> resultatsDef = new ArrayList<>();
                 	int i;
-                	for(i = 0; i < nbDesAttaquant; i++) resultatsAtt.add(rand.nextInt((6 - 1) + 1) + 1); // random entre 1 et 6
-                	for(i = 0; i < nbDesDefenseur; i++) resultatsDef.add(rand.nextInt((6 - 1) + 1) + 1); // random entre 1 et 6
+                	for(i = 0; i < nbDesAttaquant; i++) resultatsAtt.add(rand.nextInt(6) + 1); // random entre 1 et 6
+                	for(i = 0; i < nbDesDefenseur; i++) resultatsDef.add(rand.nextInt(6) + 1); // random entre 1 et 6
                 	// trie decroissant
                 	Collections.sort(resultatsAtt,Collections.reverseOrder());
                 	Collections.sort(resultatsDef,Collections.reverseOrder());
@@ -434,9 +434,9 @@ public class Intermediaire extends GuiAgent {
 		send(message);
     }
     
-    private int nbDes (String AttDef, int nbRegiment)
+    private int nbDes (String attDef, int nbRegiment)
     {
-    	if(AttDef.equals("attaquant"))
+    	if(attDef.equals("attaquant"))
     	{
     		if(nbRegiment == 1) return 1;
     		if(nbRegiment == 2) return 2;
