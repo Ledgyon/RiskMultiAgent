@@ -28,6 +28,7 @@ import plateau.enumerations.NomTerritoireOC;
 
 public class General extends GuiAgent {
 	private List<CartePioche> pioche;
+	private List<CartePioche> defaussePioche;
 	private List<CarteMission> objectifs;
 	private gui.GeneralGui window;
 	
@@ -64,7 +65,7 @@ public class General extends GuiAgent {
 				 if (msg != null) {
 					 try {
 						 CartePioche temp = (CartePioche)msg.getContentObject();
-						 pioche.add(temp);
+						 defaussePioche.add(temp);
 					 } catch (UnreadableException e) {
 						 //throw new RuntimeException(e);
 					 }
@@ -117,9 +118,35 @@ public class General extends GuiAgent {
 		
 		*/
 		
-		//System.out.println("Liste de joueurs"+joueurs);
+		var model1 = MessageTemplate.MatchConversationId("demande carte pioche");
 
-		//sendCarteTerritoire();
+		addBehaviour(new MsgReceiver(this,model1,MsgReceiver.INFINITE,null,null) {
+			 protected void handleMessage(ACLMessage msg) {
+				 if (msg != null) {
+					 
+					 if(pioche.isEmpty() == true)
+	     				{
+						 	pioche.addAll(defaussePioche);
+						 	defaussePioche.clear();
+	     				}
+					 
+					ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+     				message.setConversationId("envoie carte pioche");
+     				message.addReceiver(new AID(msg.getSender().getLocalName(), AID.ISLOCALNAME));
+     				try {
+						message.setContentObject(pioche.get(0));
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+     				
+     				pioche.remove(0);
+     				     				
+     				send(message);
+				 }
+				 reset(model1,MsgReceiver.INFINITE,null,null);
+			 }
+		});
 	}
 	
 	/**

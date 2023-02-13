@@ -260,7 +260,7 @@ public class Intermediaire extends GuiAgent {
         	}
         });
         
-      //init du model
+        //init du model
         var model3 = MessageTemplate.MatchConversationId("lancement attaque");
         
         //Reception des info du territoire et stockage, fonction ne captant que les messages du model créer precedemment

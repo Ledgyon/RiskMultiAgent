@@ -388,6 +388,14 @@ public class Joueur extends GuiAgent{
 							e.printStackTrace();
 						}
                     	
+                    	window.println("\nN'ayant plus d ennemis sur le territoire, vous avez concquis le territoire : " + nomTerritoireDefense);
+                    	
+                    	//Demande d'une nouvelle carte au General
+                    	ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+        				message.setConversationId("demande carte pioche");
+        				message.addReceiver(new AID(general.getLocalName(), AID.ISLOCALNAME));
+        				send(message);
+        				
                     }
                     else // pas de nouveau territoire
                     {
@@ -463,6 +471,24 @@ public class Joueur extends GuiAgent{
         		
         	}
         }));
+        
+        var model7 = MessageTemplate.MatchConversationId("envoie carte pioche");
+
+		addBehaviour(new MsgReceiver(this,model7,MsgReceiver.INFINITE,null,null) {
+			 protected void handleMessage(ACLMessage msg) {
+				 if (msg != null) {
+					try {
+						CartePioche tempCP = (CartePioche) msg.getContentObject();
+						main.add(tempCP);
+						window.println("\nUn territoire a ete concquis.\nReception d'une nouvelle carte = " + tempCP + ".\n");
+					} catch (UnreadableException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				 }
+				 reset(model7,MsgReceiver.INFINITE,null,null);
+			 }
+		});
 
     }
     
