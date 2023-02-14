@@ -423,7 +423,7 @@ public class Joueur extends GuiAgent{
                     	
                     	window.println("\nN'ayant plus d ennemis sur le territoire, vous avez concquis le territoire : " + nomTerritoireDefense);
                     	
-                    	if(territoireConcquis == false)
+                    	if(!territoireConcquis)
                     	{
                     		territoireConcquis = true;
                     		
@@ -1010,18 +1010,21 @@ public class Joueur extends GuiAgent{
                         for (int j = (listTemp.size() - 1); j >= 0; --j)
                             if (listTemp.get(j).getNomTerritoire().equals(t.getNomTerritoire()))
                                 listTemp.remove(j);
-                    tAtt = rand.nextInt(listTemp.size());
+                    System.out.println(listTemp);
+                    if(!listTemp.isEmpty()) {
+                        tAtt = rand.nextInt(listTemp.size());
 
-                    ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
-                    message.setConversationId("lancement attaque");
-                    message.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
+                        ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+                        message.setConversationId("lancement attaque");
+                        message.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
 
-                    nomTerritoireAttaque = this.territoires.get(i).getNomTerritoire();
-                    nomTerritoireDefense = listTemp.get(tAtt).getNomTerritoire();
-                    nbRegimentAttaquant = this.territoires.get(i).getRegimentSurTerritoire() - 1;
-                    nbRegimentDefenseur = listTemp.get(tAtt).getRegimentSurTerritoire();
-                    message.setContent(nomTerritoireAttaque + "," + nomTerritoireDefense + "," + nbRegimentAttaquant + "," + nbRegimentDefenseur);
-                    send(message);
+                        nomTerritoireAttaque = this.territoires.get(i).getNomTerritoire();
+                        nomTerritoireDefense = listTemp.get(tAtt).getNomTerritoire();
+                        nbRegimentAttaquant = this.territoires.get(i).getRegimentSurTerritoire() - 1;
+                        nbRegimentDefenseur = listTemp.get(tAtt).getRegimentSurTerritoire();
+                        message.setContent(nomTerritoireAttaque + "," + nomTerritoireDefense + "," + nbRegimentAttaquant + "," + nbRegimentDefenseur);
+                        send(message);
+                    }
                 }
                 else
                 {
@@ -1131,12 +1134,14 @@ public class Joueur extends GuiAgent{
                         int indexAdd;
                         noTerritoireListMinus = rand.nextInt(tempTMinus.size());
                         List<Territoire> listTemp = new ArrayList<>(tempTMinus.get(noTerritoireListMinus));
-                        for (List<Territoire> listT : tempTMinus)
-                            listT.removeIf(t -> (t.getRegimentSurTerritoire() == 1));
+                        for(int k=(tempTMinus.size()-1); k>=0; --k){
+                            tempTMinus.get(k).removeIf(t -> (t.getRegimentSurTerritoire() == 1));
+                            if(tempTMinus.get(k).isEmpty()){
+                                tempTMinus.remove(k);
+                            }
+                        }
                         if (!tempTMinus.isEmpty()) {
-                        	System.out.println("Rand 1 : " + tempTMinus.get(noTerritoireListMinus).size());
                             noTerritoireMinus = rand.nextInt(tempTMinus.get(noTerritoireListMinus).size());
-                            System.out.println("Rand 2 : " + tempTMinus.get(noTerritoireListMinus).get(noTerritoireMinus).getRegimentSurTerritoire());
                             nbRegiment = rand.nextInt((tempTMinus.get(noTerritoireListMinus).get(noTerritoireMinus).getRegimentSurTerritoire() - 1)) + 1;
                             Territoire terMinus = getTerritoireByName(tempTMinus.get(noTerritoireListMinus).get(noTerritoireMinus).getNomTerritoire());
                             terMinus.addRegimentSurTerritoire(-nbRegiment);
