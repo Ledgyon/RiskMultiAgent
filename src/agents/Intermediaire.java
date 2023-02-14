@@ -309,7 +309,7 @@ public class Intermediaire extends GuiAgent {
                 	ACLMessage message1 = new ACLMessage(ACLMessage.REQUEST);
     				message1.setConversationId("retour resultat attaque");
     				message1.addReceiver(new AID(msg.getSender().getLocalName(), AID.ISLOCALNAME));
-    				message1.setEncoding(nomTerritoireAttaque+","+nomTerritoireDefense+","+nbRegimentAttaquant+","+nbRegimentAttaquantUpdate+","+nbRegimentDefenseur+","+nbRegimentDefenseurUpdate);
+    				message1.setEncoding(nomTerritoireAttaque+","+nomTerritoireDefense+","+nbRegimentAttaquant+","+nbRegimentAttaquantUpdate+","+nbRegimentDefenseur+","+nbRegimentDefenseurUpdate+","+msg.getSender().getLocalName()+","+joueurs.size());
     				
                 	//Retour des resultats pour le defenseur
     				ACLMessage message2 = new ACLMessage(ACLMessage.REQUEST);
@@ -344,13 +344,13 @@ public class Intermediaire extends GuiAgent {
 					window.println("\nEnvoie topic update regiment adjacent du territoire attaquant");
 			    	ACLMessage topic1 = new ACLMessage(ACLMessage.INFORM);
 			    	topic1.addReceiver(topicUpdateRegimentAdjacent);
-			    	topic1.setContent(nomTerritoireAttaque+","+plateau.getTerritoireByName(nomTerritoireAttaque).getRegimentSurTerritoire());
+			    	topic1.setContent(nomTerritoireAttaque+","+plateau.getTerritoireByName(nomTerritoireAttaque).getRegimentSurTerritoire()+","+msg.getSender().getLocalName());
 			        
 			        //topic territoire defense
 					window.println("\nEnvoie topic update regiment adjacent du territoire defense");
 			    	ACLMessage topic2 = new ACLMessage(ACLMessage.INFORM);
 			    	topic2.addReceiver(topicUpdateRegimentAdjacent);
-			    	topic2.setContent(nomTerritoireDefense+","+plateau.getTerritoireByName(nomTerritoireDefense).getRegimentSurTerritoire()); //var2 = nouveu nombre de regiment a set
+			    	topic2.setContent(nomTerritoireDefense+","+plateau.getTerritoireByName(nomTerritoireDefense).getRegimentSurTerritoire()+","+msg.getSender().getLocalName()); //var2 = nouveu nombre de regiment a set
 
     				if(nbRegimentDefenseurUpdate == 0) // alors forcement on envoie les 2 topic car ajout et retrait (attribution nouveau territoire)
     				{

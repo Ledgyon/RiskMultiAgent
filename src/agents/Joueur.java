@@ -39,9 +39,21 @@ public class Joueur extends GuiAgent{
     private CarteMission objectif; // objectif du joueur pour remporter la partie
     
     private List<Territoire> territoires; // territoires possedes par le joueur
+    private List<Integer> territoiresPouvantAttaquer; //indices de la liste "territoires" des territoires n'ayant pas encore attaque au tour actuel
     private List<Continent> continents; // permet de savoir quel continent le joueur a conquis pour l'attribution des renforts et pour les objectifs
     public static final int EXIT = 0;
     public static final int GET_INFO_TERRITOIRE = 1;
+    
+    /*
+     * VARIABLES controlant la bonne reception des messages permettant l'autorisation de lancer une nouvelle attaque
+     */
+    private boolean autorAtt = false;
+    private boolean autorDef = false;
+    private boolean autorTopicTerrAdj = false;
+    private int nbAutorTopicTerrAdjRecquis = 20; // set a une valeur trop elevee expres pour ne pas cut la validation des autorisation
+    private int nbAutorTopicTerrAdj = 0;
+    //bonus boolean pour ne piocher que 1 carte
+    private boolean territoireConcquis = false;
     
     private AID intermediaire;
     private AID general;
@@ -84,6 +96,7 @@ public class Joueur extends GuiAgent{
         Random rand = new Random();
         
         this.territoires = new ArrayList<>();
+        this.territoiresPouvantAttaquer = new ArrayList<>();
         this.continents = new ArrayList<>();
         this.main = new ArrayList<>();
         this.nombreRegimentAPlacer = nombreRegimentMax = 20;
@@ -325,9 +338,11 @@ public class Joueur extends GuiAgent{
                     updateContinents();
                 	nouveauxRenforts();
 					//COMBAT
+                	for(int i = 0; i < territoires.size(); i++)
+                	{
+                		territoiresPouvantAttaquer.add(i);
+                	}
                     phaseCombatJoueur();
-                    //MANOEUVRE
-                    manoeuvreRegiment();
                     /*
                     try {
 						Thread.sleep(2000);
@@ -336,11 +351,7 @@ public class Joueur extends GuiAgent{
 						e.printStackTrace();
 					}*/
                     
-                    window.println("\nEnvoie fin de tour a Intermediaire.");
-                	ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
-            		message.setConversationId("fin tour joueur");
-            		message.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
-            		send(message);
+                    
                     
                     
         		}
@@ -368,6 +379,28 @@ public class Joueur extends GuiAgent{
                     int nbRegimentAttaquantUpdate = Integer.parseInt(infos[3]);
                     int nbRegimentDefenseur = Integer.parseInt(infos[4]);
                     int nbRegimentDefenseurUpdate = Integer.parseInt(infos[5]);
+                    String joueurAttaque = infos[6];
+                    String nbJoueurs = infos[7];
+                    
+                    // Set du nombre d'autorisations requis
+                    int nbAutorTopic = 0;
+    				if(nbRegimentDefenseurUpdate == 0) // alors forcement les 2 topic ont ete envoyes car ajout et retrait (attribution nouveau territoire)
+    				{
+    					nbAutorTopic = Integer.parseInt(nbJoueurs) + Integer.parseInt(nbJoueurs);
+    				}
+    				else
+    				{
+    					if(nbRegimentAttaquant > nbRegimentAttaquantUpdate)
+    					{
+    						nbAutorTopic += Integer.parseInt(nbJoueurs);
+    					}
+    					
+    			        if(nbRegimentDefenseur > nbRegimentDefenseurUpdate)
+    			        {
+    			        	nbAutorTopic += Integer.parseInt(nbJoueurs);
+    			        }
+    				}
+    				nbAutorTopicTerrAdjRecquis = nbAutorTopic; // avec 6 joueurs, il faut 6 ou 12 autorisations
                     
                     window.println("Bilan de l'attaque de notre territoire"+ nomTerritoireAttaque +"sur le territoire "+nomTerritoireDefense+" :");
                     //Perte personnel
@@ -390,24 +423,35 @@ public class Joueur extends GuiAgent{
                     	
                     	window.println("\nN'ayant plus d ennemis sur le territoire, vous avez concquis le territoire : " + nomTerritoireDefense);
                     	
-                    	//Demande d'une nouvelle carte au General
-                    	ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
-        				message.setConversationId("demande carte pioche");
-        				message.addReceiver(new AID(general.getLocalName(), AID.ISLOCALNAME));
-        				send(message);
+                    	if(territoireConcquis == false)
+                    	{
+                    		territoireConcquis = true;
+                    		
+                    		//Demande d'une nouvelle carte au General
+                        	ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+            				message.setConversationId("demande carte pioche");
+            				message.addReceiver(new AID(general.getLocalName(), AID.ISLOCALNAME));
+            				send(message);
+                    	}
         				
                     }
                     else // pas de nouveau territoire
                     {
                     	if(nbRegimentAttaquant > nbRegimentAttaquantUpdate) getTerritoireByName(nomTerritoireAttaque).setRegimentSurTerritoire(nbRegimentAttaquantUpdate);
                     }
-                	
+                    
+                    //Lancement de l autorisation d une nouvelle attaque
+                    ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+    				message.setConversationId("autorisation nouvelle attaque");
+    				message.addReceiver(new AID(joueurAttaque, AID.ISLOCALNAME));
+    				message.setContent("autorisation attaquant");
+    				send(message);
         		}
         		reset(model5,MsgReceiver.INFINITE,null,null);
         	}
         });
         
-      //init du model
+        //init du model
         var model6 = MessageTemplate.MatchConversationId("retour resultat defense");
         
         //Reception des info du territoire et stockage, fonction ne captant que les messages du model créer precedemment
@@ -441,6 +485,13 @@ public class Joueur extends GuiAgent{
                     if(nbRegimentDefenseurUpdate == 0) { //Perte territoire 
                     	territoires.remove(getTerritoireByName(nomTerritoireDefense));
                     }
+                    
+                    //Lancement de l autorisation d une nouvelle attaque
+                    ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+    				message.setConversationId("autorisation nouvelle attaque");
+    				message.addReceiver(new AID(joueurAttaque, AID.ISLOCALNAME));
+    				message.setContent("autorisation defenseur");
+    				send(message);
         		}
         		reset(model6,MsgReceiver.INFINITE,null,null);
         	}
@@ -457,6 +508,7 @@ public class Joueur extends GuiAgent{
             
             String nomTerritoire = infos[0];
             int nbRegimentUpdate = Integer.parseInt(infos[1]);
+            String joueurAttaque = infos[2];
             
             int i,j;
         	for(i = 0; i < this.territoires.size(); i++) // parcours des territoires
@@ -470,11 +522,71 @@ public class Joueur extends GuiAgent{
         		}
         		
         	}
+        	
+        	//Lancement de l autorisation d une nouvelle attaque
+            ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+			message.setConversationId("autorisation nouvelle attaque");
+			message.addReceiver(new AID(joueurAttaque, AID.ISLOCALNAME));
+			message.setContent("autorisation topic");
+			send(message);        	
         }));
         
-        var model7 = MessageTemplate.MatchConversationId("envoie carte pioche");
+        var model7 = MessageTemplate.MatchConversationId("autorisation nouvelle attaque");
 
 		addBehaviour(new MsgReceiver(this,model7,MsgReceiver.INFINITE,null,null) {
+			 protected void handleMessage(ACLMessage msg) {
+				 if (msg != null) {
+					if(msg.getContent().equals("autorisation attaquant"))
+					{
+						//Autorisation nouvel attaque de l attaquant
+	    				autorAtt = true;
+	    				window.println("Attaquant a envoye son autorisation");
+					}
+					if(msg.getContent().equals("autorisation defenseur"))
+					{
+						//Autorisation nouvel attaque du defenseur
+	    				autorDef = true;
+	    				window.println("Defenseur a envoye son autorisation");
+					}
+					if(msg.getContent().equals("autorisation topic"))
+					{
+						//Autorisation nouvel attaque de l attaquant
+						nbAutorTopicTerrAdj++;
+						window.println(msg.getSender().getLocalName() + " a envoye son autorisation. NbTopic = " + nbAutorTopicTerrAdj + " / NbTopicRecquis = " + nbAutorTopicTerrAdjRecquis );
+						if(nbAutorTopicTerrAdjRecquis == nbAutorTopicTerrAdj)
+						{
+							autorTopicTerrAdj = true;
+							window.println("Tous les topics ont envoyes son autorisation");
+						}
+					}
+					
+					if(autorAtt && autorDef && autorTopicTerrAdj) // alors nouvelle attaque
+					{
+						//reset des variables
+						autorAtt = false;
+						autorDef = false;
+						autorTopicTerrAdj = false;
+						nbAutorTopicTerrAdjRecquis = 20;
+					    nbAutorTopicTerrAdj = 0;
+					    territoireConcquis = false;
+					    
+					    window.println("Tous les AGENTS ont envoyes leur autorisation");
+					    
+					    //verif nouvelle attaque
+					    if(!territoiresPouvantAttaquer.isEmpty())
+					    {
+					    	phaseCombatJoueur();
+					    }
+					    else manoeuvreRegiment(); // lancement phase manoeuvre
+					}
+				 }
+				 reset(model7,MsgReceiver.INFINITE,null,null);
+			 }
+		});
+		
+		var model8 = MessageTemplate.MatchConversationId("envoie carte pioche");
+
+		addBehaviour(new MsgReceiver(this,model8,MsgReceiver.INFINITE,null,null) {
 			 protected void handleMessage(ACLMessage msg) {
 				 if (msg != null) {
 					try {
@@ -486,7 +598,7 @@ public class Joueur extends GuiAgent{
 						e.printStackTrace();
 					}
 				 }
-				 reset(model7,MsgReceiver.INFINITE,null,null);
+				 reset(model8,MsgReceiver.INFINITE,null,null);
 			 }
 		});
 
@@ -877,7 +989,7 @@ public class Joueur extends GuiAgent{
     
     private void phaseCombatJoueur()
     {
-    	window.println("Attaque");
+    	window.println("\nAttaque");
     	/*
     	 * Gerer les attaques A FAIRE
     	 */
@@ -887,33 +999,44 @@ public class Joueur extends GuiAgent{
         int tAtt; // indice du territoire adjacent a attaque
         switch (this.strategie) {
             case "aleatoire" -> {
-                for (int i = 0; i < this.territoires.size(); i++)// parcours de tous les territoires possedes
+            	// on attaque avec le 1er territoire de la liste
+                int i = territoiresPouvantAttaquer.get(0);
+                // on remove pour ne plus attaquer ce territoire
+                territoiresPouvantAttaquer.remove(0);
+                if (this.territoires.get(i).getRegimentSurTerritoire() > 1) // alors assez d unite pour attaque
                 {
-                    if (this.territoires.get(i).getRegimentSurTerritoire() > 1) // alors assez d unite pour attaque
-                    {
-                        List<Territoire> listTemp = new ArrayList<>(this.territoires.get(i).getTerritoires_adjacents());
-                        for (Territoire t : territoires)
-                            for (int j = (listTemp.size() - 1); j >= 0; --j)
-                                if (listTemp.get(j).getNomTerritoire().equals(t.getNomTerritoire()))
-                                    listTemp.remove(j);
-                        tAtt = rand.nextInt(listTemp.size());
+                    List<Territoire> listTemp = new ArrayList<>(this.territoires.get(i).getTerritoires_adjacents());
+                    for (Territoire t : territoires)
+                        for (int j = (listTemp.size() - 1); j >= 0; --j)
+                            if (listTemp.get(j).getNomTerritoire().equals(t.getNomTerritoire()))
+                                listTemp.remove(j);
+                    tAtt = rand.nextInt(listTemp.size());
 
-                        ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
-                        message.setConversationId("lancement attaque");
-                        message.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
+                    ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+                    message.setConversationId("lancement attaque");
+                    message.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
 
-                        nomTerritoireAttaque = this.territoires.get(i).getNomTerritoire();
-                        nomTerritoireDefense = listTemp.get(tAtt).getNomTerritoire();
-                        nbRegimentAttaquant = this.territoires.get(i).getRegimentSurTerritoire() - 1;
-                        nbRegimentDefenseur = listTemp.get(tAtt).getRegimentSurTerritoire();
-                        message.setContent(nomTerritoireAttaque + "," + nomTerritoireDefense + "," + nbRegimentAttaquant + "," + nbRegimentDefenseur);
-                        send(message);
-                    }
+                    nomTerritoireAttaque = this.territoires.get(i).getNomTerritoire();
+                    nomTerritoireDefense = listTemp.get(tAtt).getNomTerritoire();
+                    nbRegimentAttaquant = this.territoires.get(i).getRegimentSurTerritoire() - 1;
+                    nbRegimentDefenseur = listTemp.get(tAtt).getRegimentSurTerritoire();
+                    message.setContent(nomTerritoireAttaque + "," + nomTerritoireDefense + "," + nbRegimentAttaquant + "," + nbRegimentDefenseur);
+                    send(message);
+                }
+                else
+                {
+                	window.println("Le territoire " + this.territoires.get(i).getNomTerritoire() + " n a pas assez d unite pour attaquer");
+                	//verif nouvelle attaque
+				    if(!territoiresPouvantAttaquer.isEmpty())
+				    {
+				    	phaseCombatJoueur();
+				    }
+				    else manoeuvreRegiment(); // lancement phase manoeuvre
                 }
             }
             case "attaque" -> {
-                boolean attaque = true;
-                while(attaque) {
+                boolean attaque = rand.nextBoolean();
+                if(attaque) {
                     int position = findPositionLowestValue(), i, j;
                     i = position / 10;
                     j = position % 10;
@@ -929,6 +1052,7 @@ public class Joueur extends GuiAgent{
                     send(message);
                     attaque = rand.nextBoolean();
                 }
+                else manoeuvreRegiment();
             }
         }
     }
@@ -963,6 +1087,7 @@ public class Joueur extends GuiAgent{
     }
     
     private void manoeuvreRegiment() {
+    	window.println("\nDebut phase manoeuvre");
         Random rand = new Random();
         boolean manoeuvre = rand.nextBoolean();
         boolean alreadyIn = false;
@@ -1009,7 +1134,9 @@ public class Joueur extends GuiAgent{
                         for (List<Territoire> listT : tempTMinus)
                             listT.removeIf(t -> (t.getRegimentSurTerritoire() == 1));
                         if (!tempTMinus.isEmpty()) {
+                        	System.out.println("Rand 1 : " + tempTMinus.get(noTerritoireListMinus).size());
                             noTerritoireMinus = rand.nextInt(tempTMinus.get(noTerritoireListMinus).size());
+                            System.out.println("Rand 2 : " + tempTMinus.get(noTerritoireListMinus).get(noTerritoireMinus).getRegimentSurTerritoire());
                             nbRegiment = rand.nextInt((tempTMinus.get(noTerritoireListMinus).get(noTerritoireMinus).getRegimentSurTerritoire() - 1)) + 1;
                             Territoire terMinus = getTerritoireByName(tempTMinus.get(noTerritoireListMinus).get(noTerritoireMinus).getNomTerritoire());
                             terMinus.addRegimentSurTerritoire(-nbRegiment);
@@ -1026,6 +1153,12 @@ public class Joueur extends GuiAgent{
             }
         }
  
+        
+        window.println("\nEnvoie fin de tour a Intermediaire.");
+    	ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+		message.setConversationId("fin tour joueur");
+		message.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
+		send(message);
     }
     
     public Territoire getTerritoireByName(String territoire){
