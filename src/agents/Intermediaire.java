@@ -213,8 +213,8 @@ public class Intermediaire extends GuiAgent {
                     continentPossede.add(c);
                 }
             }
-
-            ACLMessage retour = m.createReply();
+			
+			ACLMessage retour = m.createReply();
 
             //init du model
             retour.setConversationId("send update continent");

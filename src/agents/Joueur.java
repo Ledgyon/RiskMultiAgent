@@ -759,7 +759,7 @@ public class Joueur extends GuiAgent{
         if(nbAddRegiment<3)
             nbAddRegiment=3;
         nombreRegimentMax += nbAddRegiment;
-        if(this.continents!=null)
+        if(!this.continents.isEmpty())
             for(Continent c:continents)
                 nombreRegimentMax += c.getRenfortObtenu();
         if(main.size() >= 3)
@@ -996,15 +996,15 @@ public class Joueur extends GuiAgent{
 
     // fonction qui permet de mettre à jour les continents possedes
     public void updateContinents(){
-        ACLMessage infoRegimentTerritoire = new ACLMessage(ACLMessage.INFORM);
+        ACLMessage continent = new ACLMessage(ACLMessage.INFORM);
         try {
-            infoRegimentTerritoire.setContentObject((Serializable) territoires);
+            continent.setContentObject((Serializable) territoires);
         } catch (IOException e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-        infoRegimentTerritoire.addReceiver(topicUpdateContinent);
-        send(infoRegimentTerritoire);
+        continent.addReceiver(topicUpdateContinent);
+        send(continent);
 
     }
     
@@ -1031,7 +1031,6 @@ public class Joueur extends GuiAgent{
                         for (int j = (listTemp.size() - 1); j >= 0; --j)
                             if (listTemp.get(j).getNomTerritoire().equals(t.getNomTerritoire()))
                                 listTemp.remove(j);
-                    System.out.println(listTemp);
                     if(!listTemp.isEmpty()) {
                         tAtt = rand.nextInt(listTemp.size());
 
@@ -1116,63 +1115,56 @@ public class Joueur extends GuiAgent{
     	window.println("\nDebut phase manoeuvre");
         Random rand = new Random();
         boolean manoeuvre = rand.nextBoolean();
-        boolean alreadyIn = false;
         int noTerritoireListMinus,noTerritoireMinus,noTerritoireAdd,nbRegiment;
         Territoire terAdd = null, terMinus = null;
         if(manoeuvre){
             List<List<Territoire>> tempTAdd = new ArrayList<>();        //  Liste temporaire des territoires qui pourront recevoir des regiments
             List<List<Territoire>> tempTMinus = new ArrayList<>();      //  Liste temporaire des territoires qui pourront retirer des regiments
             for(Territoire t1:territoires){
-                for(List <Territoire> tempList:tempTAdd){
-                    for(Territoire temp2List : tempList){
-                        if (temp2List.getNomTerritoire().equals(t1.getNomTerritoire())) {
-                            alreadyIn = true;
-                            break;
-                        }
-                    }
-                }
-                if(!alreadyIn) {
-                    List<Territoire> temp2TAdd = new ArrayList<>();
-                    List<Territoire> temp2TMinus = new ArrayList<>();
-                    for (Territoire t2 : t1.getTerritoires_adjacents()) {
-                        for(Territoire t3 : territoires) {
-                            if (t3.getNomTerritoire().equals(t2.getNomTerritoire())) {
-                                if (!temp2TAdd.contains(t1)) {
-                                    temp2TMinus.add(t1);
-                                    temp2TAdd.add(t1);
-                                }
-                                temp2TMinus.add(t2);
-                                temp2TAdd.add(t2);
+                List<Territoire> temp2TAdd = new ArrayList<>();
+                List<Territoire> temp2TMinus = new ArrayList<>();
+                for (Territoire t2 : t1.getTerritoires_adjacents()) {
+                    for(Territoire t3 : territoires) {
+                        if (t3.getNomTerritoire().equals(t2.getNomTerritoire())) {
+                            if (!temp2TAdd.contains(t1)) {
+                                temp2TMinus.add(t1);
+                                temp2TAdd.add(t1);
                             }
+                            temp2TMinus.add(t2);
+                            temp2TAdd.add(t2);
                         }
                     }
-                    if(!temp2TAdd.isEmpty())
-                        tempTAdd.add(temp2TAdd);
-                    if(!temp2TMinus.isEmpty())
-                        tempTMinus.add(temp2TMinus);
                 }
+                if(!temp2TAdd.isEmpty())
+                    tempTAdd.add(temp2TAdd);
+                if(!temp2TMinus.isEmpty())
+                    tempTMinus.add(temp2TMinus);
             }
             if(!tempTAdd.isEmpty()) {
                 switch(this.strategie) {
                     case "aleatoire" -> {
                         int indexAdd;
-                        noTerritoireListMinus = rand.nextInt(tempTMinus.size());
-                        List<Territoire> listTemp = new ArrayList<>(tempTMinus.get(noTerritoireListMinus));
+                        List<Integer> indexRemove = new ArrayList<>();
                         for(int k=(tempTMinus.size()-1); k>=0; --k){
                             tempTMinus.get(k).removeIf(t -> (t.getRegimentSurTerritoire() == 1));
                             if(tempTMinus.get(k).isEmpty()){
                                 tempTMinus.remove(k);
+                                indexRemove.add(k);
                             }
                         }
+                        for(int i:indexRemove){
+                            tempTAdd.remove(i);
+                        }
                         if (!tempTMinus.isEmpty()) {
-                            noTerritoireMinus = rand.nextInt(tempTMinus.get(noTerritoireListMinus).size());
-                            nbRegiment = rand.nextInt((tempTMinus.get(noTerritoireListMinus).get(noTerritoireMinus).getRegimentSurTerritoire() - 1)) + 1;
-                            terMinus = getTerritoireByName(tempTMinus.get(noTerritoireListMinus).get(noTerritoireMinus).getNomTerritoire());
+                            noTerritoireListMinus = rand.nextInt(tempTMinus.size());
+                            List<Territoire> listTemp = new ArrayList<>(tempTMinus.get(noTerritoireListMinus));
+                            noTerritoireMinus = rand.nextInt(listTemp.size());
+                            nbRegiment = rand.nextInt((listTemp.get(noTerritoireMinus).getRegimentSurTerritoire() - 1)) + 1;
+                            terMinus = getTerritoireByName(listTemp.get(noTerritoireMinus).getNomTerritoire());
                             terMinus.addRegimentSurTerritoire(-nbRegiment);
-                            indexAdd = tempTAdd.indexOf(listTemp);
-                            tempTAdd.get(indexAdd).remove(terMinus);
-                            noTerritoireAdd = rand.nextInt(tempTAdd.get(indexAdd).size());
-                            terAdd = getTerritoireByName(tempTAdd.get(indexAdd).get(noTerritoireAdd).getNomTerritoire());
+                            tempTAdd.get(noTerritoireListMinus).remove(terMinus);
+                            noTerritoireAdd = rand.nextInt(tempTAdd.get(noTerritoireListMinus).size());
+                            terAdd = getTerritoireByName(tempTAdd.get(noTerritoireListMinus).get(noTerritoireAdd).getNomTerritoire());
                             terAdd.addRegimentSurTerritoire(nbRegiment);
             				window.println("\nManoeuvre effectue\n");
                         }
