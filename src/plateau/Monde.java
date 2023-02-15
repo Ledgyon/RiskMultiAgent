@@ -319,6 +319,7 @@ public class Monde {
                                 tempListeTerritoire.add(continents.get(4).getTerritoires().get(3));
                                 tempListeTerritoire.add(continents.get(4).getTerritoires().get(4));
                                 tempListeTerritoire.add(continents.get(4).getTerritoires().get(5));
+                                tempListeTerritoire.add(continents.get(4).getTerritoires().get(9));
                                 continents.get(i).getTerritoires().get(j).setTerritoires_adjacents(tempListeTerritoire);
                             }
                             case 8 -> {                   //TERRITOIRE SIAM
@@ -332,6 +333,7 @@ public class Monde {
                                 tempListeTerritoire.clear();
                                 tempListeTerritoire.add(continents.get(4).getTerritoires().get(1));
                                 tempListeTerritoire.add(continents.get(4).getTerritoires().get(3));
+                                tempListeTerritoire.add(continents.get(4).getTerritoires().get(7));
                                 tempListeTerritoire.add(continents.get(4).getTerritoires().get(10));
                                 tempListeTerritoire.add(continents.get(4).getTerritoires().get(11));
                                 continents.get(i).getTerritoires().get(j).setTerritoires_adjacents(tempListeTerritoire);
@@ -340,7 +342,6 @@ public class Monde {
                                 tempListeTerritoire.clear();
                                 tempListeTerritoire.add(continents.get(4).getTerritoires().get(0));
                                 tempListeTerritoire.add(continents.get(4).getTerritoires().get(1));
-                                tempListeTerritoire.add(continents.get(4).getTerritoires().get(7));
                                 tempListeTerritoire.add(continents.get(4).getTerritoires().get(9));
                                 tempListeTerritoire.add(continents.get(2).getTerritoires().get(5));
                                 continents.get(i).getTerritoires().get(j).setTerritoires_adjacents(tempListeTerritoire);

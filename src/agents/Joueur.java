@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import carte.CarteMission;
 import carte.CartePioche;
@@ -105,9 +106,10 @@ public class Joueur extends GuiAgent{
         this.main = new ArrayList<>();
         this.nombreRegimentAPlacer = nombreRegimentMax = 20;
 
-        switch(rand.nextInt(2)){
+        switch(rand.nextInt(3)){
             case(0) -> strategie = "aleatoire";
             case(1) -> strategie = "attaque";
+            case(2) -> strategie = "defense";
         }
         //strategie = "aleatoire";
         window.println(strategie);
@@ -1061,9 +1063,12 @@ public class Joueur extends GuiAgent{
             case "attaque" -> {
                 boolean attaque = rand.nextBoolean();
                 if(attaque) {
-                    int position = findPositionLowestValue(), i, j;
-                    i = position / 10;
-                    j = position % 10;
+                    int i, j;
+                    String position = findPositionLowestValue();
+                    String[] string = position.split(",");
+                    i = Integer.parseInt(string[0]);
+                    j = Integer.parseInt(string[1]);
+                    window.println("\n Position de l'attaque \n" + i + "\t" +j);
                     ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
                     message.setConversationId("lancement attaque");
                     message.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
@@ -1074,7 +1079,16 @@ public class Joueur extends GuiAgent{
                     nbRegimentDefenseur = this.territoires.get(i).getTerritoires_adjacents().get(j).getRegimentSurTerritoire();
                     message.setContent(nomTerritoireAttaque + "," + nomTerritoireDefense + "," + nbRegimentAttaquant + "," + nbRegimentDefenseur);
                     send(message);
-                    attaque = rand.nextBoolean();
+                    phaseCombatJoueur();
+                }
+                else manoeuvreRegiment();
+            }
+            case "defense" -> {
+                boolean attaque = rand.nextBoolean();
+                if(attaque) {
+                    /**
+                     * TO DO
+                     */
                     if(attaque)
                         phaseCombatJoueur();
                 }
@@ -1084,7 +1098,7 @@ public class Joueur extends GuiAgent{
     }
 
     // fonction permettant d'obtenir le territoire adjacent ayant le moins de regiment et ayant le plus d'ecart avec le territoire qui peut l'attaquer
-    private int findPositionLowestValue(){
+    private String findPositionLowestValue(){
         String position ="";
         int minValue = Integer.MAX_VALUE, ecart = Integer.MIN_VALUE;
         for(int i=0; i<territoires.size(); i++){
@@ -1092,19 +1106,19 @@ public class Joueur extends GuiAgent{
                 Territoire courantTerritoire = this.territoires.get(i).getTerritoires_adjacents().get(j);
                 if(!territoireContains(courantTerritoire)) {
                     if ((courantTerritoire.getRegimentSurTerritoire() <= minValue)&&
-                            (this.territoires.get(i).getRegimentSurTerritoire() - courantTerritoire.getRegimentSurTerritoire() > ecart)&&
+                            (this.territoires.get(i).getRegimentSurTerritoire() - courantTerritoire.getRegimentSurTerritoire() >= ecart)&&
                     				(this.territoires.get(i).getRegimentSurTerritoire() > 1) /* alors assez d unite pour attaque */) {
                         ecart = this.territoires.get(i).getRegimentSurTerritoire() - courantTerritoire.getRegimentSurTerritoire();
                         minValue = courantTerritoire.getRegimentSurTerritoire();
-                        position = i +""+ j;
+                        position = i +","+ j;
                     }
                 }
             }
         }
-        return Integer.parseInt(position);
+        return position;
     }
 
-    // fonction qui permet de renseigner si un territoire est compris dans la variable territoires
+    // fonction qui permet de renseigner si un territoire est contenu dans la variable territoires
     private boolean territoireContains(Territoire t){
         for(Territoire ter:territoires){
             if(ter.getNomTerritoire().equals(t.getNomTerritoire()))
@@ -1172,8 +1186,10 @@ public class Joueur extends GuiAgent{
                         }
                     }
                     case "attaque" -> {
-                        int position = findPositionLowestValue();
-                        Territoire t = territoires.get(position/10);
+                        String position = findPositionLowestValue();
+                        String[] string = position.split(",");
+                        int posT = Integer.parseInt(string[0]);
+                        Territoire t = territoires.get(posT);
                         int indexList = 0;
                         for(List<Territoire> listTemp:tempTAdd){
                             if(listTemp.get(0).getNomTerritoire().equals(t.getNomTerritoire())){
@@ -1185,6 +1201,19 @@ public class Joueur extends GuiAgent{
                             int indexMinus = indexOfBiggestValue(tempTMinus.get(indexList),t);
                             if(indexMinus != -1){
                                 terMinus = getTerritoireByName(tempTMinus.get(indexList).get(indexMinus).getNomTerritoire());
+                                nbRegiment = terMinus.getRegimentSurTerritoire() - 1;
+                                terMinus.addRegimentSurTerritoire(-nbRegiment);
+                                terAdd.addRegimentSurTerritoire(nbRegiment);
+                            }
+                        }
+                    }
+                    case "defense" -> {
+                        int indexAdd = indexGreatestDanger(tempTAdd);
+                        terAdd = getTerritoireByName(tempTAdd.get(indexAdd).get(0).getNomTerritoire());
+                        if(!tempTMinus.get(indexAdd).isEmpty()){
+                            int indexMinus = indexOfBiggestValue(tempTMinus.get(indexAdd),terAdd);
+                            if(indexMinus != -1){
+                                terMinus = getTerritoireByName(tempTMinus.get(indexAdd).get(indexMinus).getNomTerritoire());
                                 nbRegiment = terMinus.getRegimentSurTerritoire() - 1;
                                 terMinus.addRegimentSurTerritoire(-nbRegiment);
                                 terAdd.addRegimentSurTerritoire(nbRegiment);
@@ -1207,12 +1236,29 @@ public class Joueur extends GuiAgent{
 		send(message);
     }
 
+    // fonction recuperant l'index du territoire avec le plus grand nombre de regiment d'une liste
     public int indexOfBiggestValue(List<Territoire> listTer, Territoire terAvoid){
         int index = -1, maxValue = Integer.MIN_VALUE;
         for(Territoire ter:listTer){
             if(!ter.getNomTerritoire().equals(terAvoid.getNomTerritoire()) && maxValue < ter.getRegimentSurTerritoire()){
                 maxValue = ter.getRegimentSurTerritoire();
                 index = listTer.indexOf(ter);
+            }
+        }
+        return index;
+    }
+
+    // fonction recuperant le territoire le plus en danger (qui a le plus de regiment ennemi adjacent)
+    public int indexGreatestDanger(List<List<Territoire>> listTer){
+        int index = 0, regimentEnnemi = Integer.MIN_VALUE;
+        for(List<Territoire> listTemp:listTer){
+            for(Territoire ter:listTemp){
+                AtomicInteger tempReg = new AtomicInteger();
+                ter.getTerritoires_adjacents().forEach(t -> tempReg.addAndGet(t.getRegimentSurTerritoire()));
+                if(tempReg.get() > regimentEnnemi){
+                    regimentEnnemi = tempReg.get();
+                    index = listTer.indexOf(listTemp);
+                }
             }
         }
         return index;
