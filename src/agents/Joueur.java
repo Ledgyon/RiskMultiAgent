@@ -104,12 +104,12 @@ public class Joueur extends GuiAgent{
         this.continents = new ArrayList<>();
         this.main = new ArrayList<>();
         this.nombreRegimentAPlacer = nombreRegimentMax = 20;
-        /*
+
         switch(rand.nextInt(2)){
             case(0) -> strategie = "aleatoire";
             case(1) -> strategie = "attaque";
-        }*/
-        strategie = "aleatoire";
+        }
+        //strategie = "aleatoire";
         window.println(strategie);
 
         //gestion couleur des joueurs
@@ -1075,6 +1075,8 @@ public class Joueur extends GuiAgent{
                     message.setContent(nomTerritoireAttaque + "," + nomTerritoireDefense + "," + nbRegimentAttaquant + "," + nbRegimentDefenseur);
                     send(message);
                     attaque = rand.nextBoolean();
+                    if(attaque)
+                        phaseCombatJoueur();
                 }
                 else manoeuvreRegiment();
             }
@@ -1120,7 +1122,7 @@ public class Joueur extends GuiAgent{
         if(manoeuvre){
             List<List<Territoire>> tempTAdd = new ArrayList<>();        //  Liste temporaire des territoires qui pourront recevoir des regiments
             List<List<Territoire>> tempTMinus = new ArrayList<>();      //  Liste temporaire des territoires qui pourront retirer des regiments
-            for(Territoire t1:territoires){
+            for(Territoire t1:territoires){     //  cherche si une manoeuvre est disponible
                 List<Territoire> temp2TAdd = new ArrayList<>();
                 List<Territoire> temp2TMinus = new ArrayList<>();
                 for (Territoire t2 : t1.getTerritoires_adjacents()) {
@@ -1140,21 +1142,21 @@ public class Joueur extends GuiAgent{
                 if(!temp2TMinus.isEmpty())
                     tempTMinus.add(temp2TMinus);
             }
+            List<Integer> indexRemove = new ArrayList<>();
+            for(int k=(tempTMinus.size()-1); k>=0; --k){    // remove territoire avec 1 regiment de tempTMinus
+                tempTMinus.get(k).removeIf(t -> (t.getRegimentSurTerritoire() == 1));
+                if(tempTMinus.get(k).isEmpty()){    // remove liste de tempTMinus si vide
+                    tempTMinus.remove(k);
+                    indexRemove.add(k);
+                }
+            }
+            for(int i:indexRemove){     // remove liste de tempTAdd si une liste de tempTMinus a ete remove
+                tempTAdd.remove(i);
+            }
             if(!tempTAdd.isEmpty()) {
                 switch(this.strategie) {
                     case "aleatoire" -> {
-                        int indexAdd;
-                        List<Integer> indexRemove = new ArrayList<>();
-                        for(int k=(tempTMinus.size()-1); k>=0; --k){
-                            tempTMinus.get(k).removeIf(t -> (t.getRegimentSurTerritoire() == 1));
-                            if(tempTMinus.get(k).isEmpty()){
-                                tempTMinus.remove(k);
-                                indexRemove.add(k);
-                            }
-                        }
-                        for(int i:indexRemove){
-                            tempTAdd.remove(i);
-                        }
+
                         if (!tempTMinus.isEmpty()) {
                             noTerritoireListMinus = rand.nextInt(tempTMinus.size());
                             List<Territoire> listTemp = new ArrayList<>(tempTMinus.get(noTerritoireListMinus));
@@ -1170,7 +1172,24 @@ public class Joueur extends GuiAgent{
                         }
                     }
                     case "attaque" -> {
-                        
+                        int position = findPositionLowestValue();
+                        Territoire t = territoires.get(position/10);
+                        int indexList = 0;
+                        for(List<Territoire> listTemp:tempTAdd){
+                            if(listTemp.get(0).getNomTerritoire().equals(t.getNomTerritoire())){
+                                indexList = tempTAdd.indexOf(listTemp);
+                            }
+                        }
+                        terAdd = getTerritoireByName(tempTAdd.get(indexList).get(0).getNomTerritoire());
+                        if(!tempTMinus.get(indexList).isEmpty()){
+                            int indexMinus = indexOfBiggestValue(tempTMinus.get(indexList),t);
+                            if(indexMinus != -1){
+                                terMinus = getTerritoireByName(tempTMinus.get(indexList).get(indexMinus).getNomTerritoire());
+                                nbRegiment = terMinus.getRegimentSurTerritoire() - 1;
+                                terMinus.addRegimentSurTerritoire(-nbRegiment);
+                                terAdd.addRegimentSurTerritoire(nbRegiment);
+                            }
+                        }
                     }
                 }
             }
@@ -1187,7 +1206,18 @@ public class Joueur extends GuiAgent{
 		}
 		send(message);
     }
-    
+
+    public int indexOfBiggestValue(List<Territoire> listTer, Territoire terAvoid){
+        int index = -1, maxValue = Integer.MIN_VALUE;
+        for(Territoire ter:listTer){
+            if(!ter.getNomTerritoire().equals(terAvoid.getNomTerritoire()) && maxValue < ter.getRegimentSurTerritoire()){
+                maxValue = ter.getRegimentSurTerritoire();
+                index = listTer.indexOf(ter);
+            }
+        }
+        return index;
+    }
+
     public Territoire getTerritoireByName(String territoire){
         for(Territoire t:territoires)
                 if (t.getNomTerritoire().equals(territoire))
