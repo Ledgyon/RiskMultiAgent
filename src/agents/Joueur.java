@@ -85,6 +85,10 @@ public class Joueur extends GuiAgent{
      * apres un combat, envoie a tous les joueurs l'update des regiments pour leurs territoires adjacents SI CHANGEMENT
      */
     AID topicUpdateRegimentAdjacent;
+    /*
+     * topic affichage a chaque fin de tour
+     */
+    AID topicAffichageFinTour;
 
     private gui.JoueurGui window;
 
@@ -100,10 +104,12 @@ public class Joueur extends GuiAgent{
         this.continents = new ArrayList<>();
         this.main = new ArrayList<>();
         this.nombreRegimentAPlacer = nombreRegimentMax = 20;
+        /*
         switch(rand.nextInt(2)){
             case(0) -> strategie = "aleatoire";
             case(1) -> strategie = "attaque";
-        }
+        }*/
+        strategie = "aleatoire";
         window.println(strategie);
 
         //gestion couleur des joueurs
@@ -437,7 +443,7 @@ public class Joueur extends GuiAgent{
                     }
                     else // pas de nouveau territoire
                     {
-                    	if(nbRegimentAttaquant > nbRegimentAttaquantUpdate) getTerritoireByName(nomTerritoireAttaque).setRegimentSurTerritoire(nbRegimentAttaquantUpdate);
+                    	if(nbRegimentAttaquant > nbRegimentAttaquantUpdate) getTerritoireByName(nomTerritoireAttaque).setRegimentSurTerritoire(getTerritoireByName(nomTerritoireAttaque).getRegimentSurTerritoire() - (nbRegimentAttaquant - nbRegimentAttaquantUpdate));
                     }
                     
                     //Lancement de l autorisation d une nouvelle attaque
@@ -476,7 +482,12 @@ public class Joueur extends GuiAgent{
                     window.println("Le "+ joueurAttaque +" a attaque "+ nomTerritoireDefense +" via le territoire "+nomTerritoireAttaque);
                     //Perte personnel
                     if(nbRegimentDefenseur == nbRegimentDefenseurUpdate) window.println("Aucune perte de regiment subit");
-                    else window.println("Vous avez perdu "+(nbRegimentDefenseur - nbRegimentDefenseurUpdate) + " regiment");
+                    else 
+                    {
+                    	window.println("Vous avez perdu "+(nbRegimentDefenseur - nbRegimentDefenseurUpdate) + " regiment");
+                    	//update de la perte
+                    	getTerritoireByName(nomTerritoireDefense).setRegimentSurTerritoire(getTerritoireByName(nomTerritoireDefense).getRegimentSurTerritoire() - (nbRegimentDefenseur - nbRegimentDefenseurUpdate));
+                    }
                     //Perte ennemi
                     if(nbRegimentAttaquant == nbRegimentAttaquantUpdate) window.println("Aucune perte ennemi");
                     else window.println("L ennemi a perdu "+(nbRegimentAttaquant - nbRegimentAttaquantUpdate) + " regiment");
@@ -553,11 +564,11 @@ public class Joueur extends GuiAgent{
 						//Autorisation nouvel attaque de l attaquant
 						nbAutorTopicTerrAdj++;
 						window.println(msg.getSender().getLocalName() + " a envoye son autorisation. NbTopic = " + nbAutorTopicTerrAdj + " / NbTopicRecquis = " + nbAutorTopicTerrAdjRecquis );
-						if(nbAutorTopicTerrAdjRecquis == nbAutorTopicTerrAdj)
-						{
-							autorTopicTerrAdj = true;
-							window.println("Tous les topics ont envoyes son autorisation");
-						}
+					}
+					if(nbAutorTopicTerrAdjRecquis == nbAutorTopicTerrAdj && !autorTopicTerrAdj)
+					{
+						autorTopicTerrAdj = true;
+						window.println("Tous les topics ont envoyes son autorisation");
 					}
 					
 					if(autorAtt && autorDef && autorTopicTerrAdj) // alors nouvelle attaque
@@ -601,6 +612,16 @@ public class Joueur extends GuiAgent{
 				 reset(model8,MsgReceiver.INFINITE,null,null);
 			 }
 		});
+		
+		topicAffichageFinTour = AgentServicesTools.generateTopicAID(this, "AFFICHAGE FIN TOUR");
+
+        //ecoute des messages radio
+        addBehaviour(new ReceiverBehaviour(this, -1, MessageTemplate.MatchTopic(topicAffichageFinTour), true, (a, m)->{
+            window.println("Message recu sur le topic " + topicAffichageFinTour.getLocalName() + ". Contenu " + m.getContent()
+                    + " emis par :  " + m.getSender().getLocalName());
+            
+            window.println(territoires.toString());
+        }));
 
     }
     
@@ -1023,6 +1044,7 @@ public class Joueur extends GuiAgent{
                         nbRegimentAttaquant = this.territoires.get(i).getRegimentSurTerritoire() - 1;
                         nbRegimentDefenseur = listTemp.get(tAtt).getRegimentSurTerritoire();
                         message.setContent(nomTerritoireAttaque + "," + nomTerritoireDefense + "," + nbRegimentAttaquant + "," + nbRegimentDefenseur);
+                        window.println("Attente retour de l'attaque de "+ nomTerritoireAttaque +" sur "+ nomTerritoireDefense +" de Intermediaire");
                         send(message);
                     }
                 }
@@ -1069,7 +1091,8 @@ public class Joueur extends GuiAgent{
                 Territoire courantTerritoire = this.territoires.get(i).getTerritoires_adjacents().get(j);
                 if(!territoireContains(courantTerritoire)) {
                     if ((courantTerritoire.getRegimentSurTerritoire() <= minValue)&&
-                            (this.territoires.get(i).getRegimentSurTerritoire() - courantTerritoire.getRegimentSurTerritoire() > ecart)) {
+                            (this.territoires.get(i).getRegimentSurTerritoire() - courantTerritoire.getRegimentSurTerritoire() > ecart)&&
+                    				(this.territoires.get(i).getRegimentSurTerritoire() > 1) /* alors assez d unite pour attaque */) {
                         ecart = this.territoires.get(i).getRegimentSurTerritoire() - courantTerritoire.getRegimentSurTerritoire();
                         minValue = courantTerritoire.getRegimentSurTerritoire();
                         position = i +""+ j;
@@ -1095,6 +1118,7 @@ public class Joueur extends GuiAgent{
         boolean manoeuvre = rand.nextBoolean();
         boolean alreadyIn = false;
         int noTerritoireListMinus,noTerritoireMinus,noTerritoireAdd,nbRegiment;
+        Territoire terAdd = null, terMinus = null;
         if(manoeuvre){
             List<List<Territoire>> tempTAdd = new ArrayList<>();        //  Liste temporaire des territoires qui pourront recevoir des regiments
             List<List<Territoire>> tempTMinus = new ArrayList<>();      //  Liste temporaire des territoires qui pourront retirer des regiments
@@ -1143,12 +1167,14 @@ public class Joueur extends GuiAgent{
                         if (!tempTMinus.isEmpty()) {
                             noTerritoireMinus = rand.nextInt(tempTMinus.get(noTerritoireListMinus).size());
                             nbRegiment = rand.nextInt((tempTMinus.get(noTerritoireListMinus).get(noTerritoireMinus).getRegimentSurTerritoire() - 1)) + 1;
-                            Territoire terMinus = getTerritoireByName(tempTMinus.get(noTerritoireListMinus).get(noTerritoireMinus).getNomTerritoire());
+                            terMinus = getTerritoireByName(tempTMinus.get(noTerritoireListMinus).get(noTerritoireMinus).getNomTerritoire());
                             terMinus.addRegimentSurTerritoire(-nbRegiment);
                             indexAdd = tempTAdd.indexOf(listTemp);
                             tempTAdd.get(indexAdd).remove(terMinus);
                             noTerritoireAdd = rand.nextInt(tempTAdd.get(indexAdd).size());
-                            getTerritoireByName(tempTAdd.get(indexAdd).get(noTerritoireAdd).getNomTerritoire()).addRegimentSurTerritoire(nbRegiment);
+                            terAdd = getTerritoireByName(tempTAdd.get(indexAdd).get(noTerritoireAdd).getNomTerritoire());
+                            terAdd.addRegimentSurTerritoire(nbRegiment);
+            				window.println("\nManoeuvre effectue\n");
                         }
                     }
                     case "attaque" -> {
@@ -1158,11 +1184,15 @@ public class Joueur extends GuiAgent{
             }
         }
  
-        
         window.println("\nEnvoie fin de tour a Intermediaire.");
     	ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
 		message.setConversationId("fin tour joueur");
 		message.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
+		if(terAdd != null && terMinus != null )
+		{
+			window.println("Envoie changement a cause de la manoeuvre");
+			message.setContent(terAdd.getNomTerritoire()+","+terAdd.getRegimentSurTerritoire()+","+terMinus.getNomTerritoire()+","+terMinus.getRegimentSurTerritoire());
+		}
 		send(message);
     }
     

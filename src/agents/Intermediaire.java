@@ -47,6 +47,7 @@ public class Intermediaire extends GuiAgent {
     AID topicAutorisationUpdateRegimentTerritoireAdjacent;
     AID topicUpdateContinent;
     AID topicUpdateRegimentAdjacent; // apres un combat, envoie a tous les joueurs l'update des regiments pour leurs territoires adjacents
+    AID topicAffichageFinTour;
     
     /**
      * liste des joueurs
@@ -85,11 +86,13 @@ public class Intermediaire extends GuiAgent {
             topicRepartition = topicHelper.createTopic("REPARTITION REGIMENT");
             topicAutorisationUpdateRegimentTerritoireAdjacent = topicHelper.createTopic("Update Regiment Territoire Adjacent");
             topicUpdateRegimentAdjacent = topicHelper.createTopic("UPDATE REGIMENT ADJACENT");
+            topicAffichageFinTour = topicHelper.createTopic("AFFICHAGE FIN TOUR");
             //topicTerritoireRetour = topicHelper.createTopic("RETOUR INFO TERRITOIRE");
             //topicHelper.register(topicTerritoireRetour);
             topicHelper.register(topicRepartition);
             topicHelper.register(topicAutorisationUpdateRegimentTerritoireAdjacent);
             topicHelper.register(topicUpdateRegimentAdjacent);
+            topicHelper.register(topicAffichageFinTour);
         } catch (ServiceException e) {
             e.printStackTrace();
         }
@@ -250,12 +253,36 @@ public class Intermediaire extends GuiAgent {
         //Reception des notifications de fin de tour de combat des joueurs, pour permettre au prochain de commencer sa phase de combat
         addBehaviour(new MsgReceiver(this,model2,MsgReceiver.INFINITE,null,null){
         	protected void handleMessage(ACLMessage msg) {
+        		
+        		//update de plateau si manoeuvre
+        		if(msg.getContent() != null)
+        		{
+        			window.println("Bonne reception de la manoeuvre");
+        			
+        			var infos = msg.getContent().split(",");
+        			
+        			plateau.getTerritoireByName(infos[0]).setRegimentSurTerritoire(Integer.parseInt(infos[1]));
+            		updatePlateauRegimentTerrAdj(infos[0],Integer.parseInt(infos[1]));
+            		
+            		plateau.getTerritoireByName(infos[2]).setRegimentSurTerritoire(Integer.parseInt(infos[3]));
+            		updatePlateauRegimentTerrAdj(infos[2],Integer.parseInt(infos[3]));
+        		}
+        		
     			if(iJoueurTourCombat < 6) // alors tous les joueurs n'ont pas joue
     			{
     				iJoueurTourCombat++; // pour passer au joueur suivant
     				debutPartie(); // nouveau tour pour ce nouveau joueur
     			}
-    			else window.println("fin 1er tour");; // tous le monde a fait sa phase de combat, DEBUT PHASE MANOEUVRE
+    			else 
+    			{
+    				window.println("fin 1er tour");; // tous le monde a fait sa phase de combat, DEBUT PHASE MANOEUVRE
+    				
+    				ACLMessage assignRegiment = new ACLMessage(ACLMessage.INFORM);
+    		        assignRegiment.addReceiver(topicAffichageFinTour);
+    		        send(assignRegiment);
+    		        
+    		        window.println("\n" + plateau.toString());
+    			}
         		reset(model2,MsgReceiver.INFINITE,null,null);
         	}
         });
@@ -301,9 +328,7 @@ public class Intermediaire extends GuiAgent {
                 		else nbRegimentAttaquantUpdate--;
                 	}
                 	
-                	//update du plateau
-                	plateau.getTerritoireByName(nomTerritoireAttaque).setRegimentSurTerritoire(nbRegimentAttaquantUpdate);
-                	plateau.getTerritoireByName(nomTerritoireDefense).setRegimentSurTerritoire(nbRegimentDefenseurUpdate);
+                	
                 	
                 	//Retour des resultats pour l attaquant
                 	ACLMessage message1 = new ACLMessage(ACLMessage.REQUEST);
@@ -314,26 +339,47 @@ public class Intermediaire extends GuiAgent {
                 	//Retour des resultats pour le defenseur
     				ACLMessage message2 = new ACLMessage(ACLMessage.REQUEST);
     				message2.setConversationId("retour resultat defense");
-    				message2.addReceiver(new AID(mapTerritoireJoueur.get(nomTerritoireAttaque).getLocalName(), AID.ISLOCALNAME));
+    				message2.addReceiver(new AID(mapTerritoireJoueur.get(nomTerritoireDefense).getLocalName(), AID.ISLOCALNAME));
     				message2.setContent(nomTerritoireAttaque+","+nomTerritoireDefense+","+nbRegimentAttaquant+","+nbRegimentAttaquantUpdate+","+nbRegimentDefenseur+","+nbRegimentDefenseurUpdate+","+msg.getSender().getLocalName());
     				
     				
     				if(nbRegimentDefenseurUpdate == 0) //alors attribution du territoire a l'attaquant
     				{
     					//changement dans la map
-    					mapTerritoireJoueur.remove(nomTerritoireAttaque);
-    					mapTerritoireJoueur.put(nomTerritoireAttaque, msg.getSender());
+    					mapTerritoireJoueur.remove(nomTerritoireDefense);
+    					mapTerritoireJoueur.put(nomTerritoireDefense, msg.getSender());
+    					
+    					//update du plateau (nouveau territoire donc forcement update pour territoire Att et Def
+                    	//attaque
+        				plateau.getTerritoireByName(nomTerritoireAttaque).setRegimentSurTerritoire(plateau.getTerritoireByName(nomTerritoireAttaque).getRegimentSurTerritoire() - nbRegimentAttaquant);
+                    	updatePlateauRegimentTerrAdj(nomTerritoireAttaque,plateau.getTerritoireByName(nomTerritoireAttaque).getRegimentSurTerritoire()); //update territoires adjacents du plateau si contient un territoire ayant change
+                    	//defense
+    	                plateau.getTerritoireByName(nomTerritoireDefense).setRegimentSurTerritoire(nbRegimentAttaquantUpdate); // les regiments qui ont attaques restent sur le nouveau territoire
+                    	updatePlateauRegimentTerrAdj(nomTerritoireDefense,nbRegimentAttaquantUpdate);
+                    	
+                    	
     					//envoie du territoire
     					try {
-    						plateau.getTerritoireByName(nomTerritoireAttaque).setRegimentSurTerritoire(plateau.getTerritoireByName(nomTerritoireAttaque).getRegimentSurTerritoire() - nbRegimentAttaquantUpdate);
-    	                	plateau.getTerritoireByName(nomTerritoireDefense).setRegimentSurTerritoire(nbRegimentAttaquantUpdate); // les regiments qui ont attaques restent sur le nouveau territoire
 							message1.setContentObject(plateau.getTerritoireByName(nomTerritoireDefense));
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
-    					
-    					
+    				}
+    				else
+    				{
+    					//update du plateau
+                    	if(nbRegimentAttaquant > nbRegimentAttaquantUpdate) 
+                    	{
+                    		int regimentsAttRestant = plateau.getTerritoireByName(nomTerritoireAttaque).getRegimentSurTerritoire() - (nbRegimentAttaquant - nbRegimentAttaquantUpdate);
+                    		plateau.getTerritoireByName(nomTerritoireAttaque).setRegimentSurTerritoire(regimentsAttRestant);
+                    		updatePlateauRegimentTerrAdj(nomTerritoireAttaque,regimentsAttRestant); //update territoires adjacents du plateau si contient un territoire ayant change
+                    	}
+                    	if(nbRegimentDefenseur > nbRegimentDefenseurUpdate) 
+                    	{
+                    		plateau.getTerritoireByName(nomTerritoireDefense).setRegimentSurTerritoire(nbRegimentDefenseurUpdate);
+                    		updatePlateauRegimentTerrAdj(nomTerritoireDefense,nbRegimentDefenseurUpdate);
+                    	}
     				}
     				
     				send(message1);
@@ -374,6 +420,7 @@ public class Intermediaire extends GuiAgent {
         		reset(model3,MsgReceiver.INFINITE,null,null);
         	}
         });
+        
 
     }
     
@@ -446,6 +493,28 @@ public class Intermediaire extends GuiAgent {
     	{
     		if(nbRegiment == 1 || nbRegiment == 2) return 1;
     		else return 2;
+    	}
+    }
+    
+    /*
+     * update territoires adjacents du plateau si contient un territoire ayant change
+     */
+    private void updatePlateauRegimentTerrAdj (String nomTerritoire, int nbRegimentUpdate)
+    {
+    	int i,j,k;
+    	for(i = 0; i < this.plateau.getContinents().size(); i++) // parcours des territoires
+    	{
+    		for(j = 0; j < this.plateau.getContinents().get(i).getTerritoires().size(); j++) // parcours de tous les territoires adjacents
+    		{
+    			for(k = 0; k < this.plateau.getContinents().get(i).getTerritoires().get(j).getTerritoires_adjacents().size(); k++) // parcours de tous les territoires adjacents
+        		{
+	    			if(this.plateau.getContinents().get(i).getTerritoires().get(j).getTerritoires_adjacents().get(k).getNomTerritoire().equals(nomTerritoire))
+	    			{
+	    				this.plateau.getContinents().get(i).getTerritoires().get(j).getTerritoires_adjacents().get(k).setRegimentSurTerritoire(nbRegimentUpdate);
+	    			}
+        		}
+    		}
+    		
     	}
     }
 
