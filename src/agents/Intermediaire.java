@@ -467,7 +467,7 @@ public class Intermediaire extends GuiAgent {
     	String tourJoueur = "Joueur_"+iJoueurTourCombat; // iTourCombat variable globale
     	//window.println("tourJoueur = "+tourJoueur);
 		int iJoueur = 0;
-		while(!joueurs.get(iJoueur).getLocalName().toString().equals(tourJoueur)) // recherche du Joueur_iTourCombat (Joueur_1 -> Joueur_2 -> Joueur_3 -> ...)
+		while(!joueurs.get(iJoueur).getLocalName().equals(tourJoueur)) // recherche du Joueur_iTourCombat (Joueur_1 -> Joueur_2 -> Joueur_3 -> ...)
 		{
 			//window.println(joueurs.get(iJoueur).getLocalName().toString() + " != " + tourJoueur);
 			iJoueur++;

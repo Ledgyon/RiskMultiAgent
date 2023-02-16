@@ -345,8 +345,14 @@ public class Joueur extends GuiAgent{
                     //RENFORT
                     updateContinents();
                 	nouveauxRenforts();
-					//COMBAT
-                	for(int i = 0; i < territoires.size(); i++)
+                    addRegimentTerritoire();
+
+                    /**
+                     *  envoir des informations d'addRegimentTerritoire +
+                     *  autorisation pour commencer phaseCombatJoueur
+                     */
+                    //COMBAT
+                    for(int i = 0; i < territoires.size(); i++)
                 	{
                 		territoiresPouvantAttaquer.add(i);
                 	}
@@ -809,28 +815,35 @@ public class Joueur extends GuiAgent{
                 for(Integer j:fantassins.keySet()){
                     returnCarteGeneral(j);
                     for(Territoire ter:territoires)
-                        if(ter.getNomTerritoire().equals(fantassins.get(j)))
-                            nombreRegimentMax+=2;
+                        if(ter.getNomTerritoire().equals(fantassins.get(j))) {
+                            nombreRegimentMax += 2;
+                            ter.addRegimentSurTerritoire(2);
+                        }
                     fantassins.remove(j);
                     break;
                 }
                 for(Integer k:cavaliers.keySet()){
                     returnCarteGeneral(k);
                     for(Territoire ter:territoires)
-                        if(ter.getNomTerritoire().equals(cavaliers.get(k)))
-                            nombreRegimentMax+=2;
+                        if(ter.getNomTerritoire().equals(cavaliers.get(k))) {
+                            nombreRegimentMax += 2;
+                            ter.addRegimentSurTerritoire(2);
+                        }
                     cavaliers.remove(k);
                     break;
                 }
                 for(Integer t:canons.keySet()){
                     returnCarteGeneral(t);
                     for(Territoire ter:territoires)
-                        if(ter.getNomTerritoire().equals(canons.get(t)))
-                            nombreRegimentMax+=2;
+                        if(ter.getNomTerritoire().equals(canons.get(t))) {
+                            nombreRegimentMax += 2;
+                            ter.addRegimentSurTerritoire(2);
+                        }
                     canons.remove(t);
                     break;
                 }
                 nombreRegimentMax+=10;
+                nombreRegimentAPlacer+=10;
                 nbFantassin--;
                 nbCanon--;
                 nbCavalier--;
@@ -845,16 +858,20 @@ public class Joueur extends GuiAgent{
                     for(Integer k:cavaliers.keySet()){
                         returnCarteGeneral(k);
                         for(Territoire ter:territoires)
-                            if(ter.getNomTerritoire().equals(cavaliers.get(k)))
-                                nombreRegimentMax+=2;
+                            if(ter.getNomTerritoire().equals(cavaliers.get(k))) {
+                                nombreRegimentMax += 2;
+                                ter.addRegimentSurTerritoire(2);
+                            }
                         cavaliers.remove(k);
                         break;
                     }
                     for(Integer t:canons.keySet()){
                         returnCarteGeneral(t);
                         for(Territoire ter:territoires)
-                            if(ter.getNomTerritoire().equals(canons.get(t)))
-                                nombreRegimentMax+=2;
+                            if(ter.getNomTerritoire().equals(canons.get(t))) {
+                                nombreRegimentMax += 2;
+                                ter.addRegimentSurTerritoire(2);
+                            }
                         canons.remove(t);
                         break;
                     }
@@ -868,16 +885,20 @@ public class Joueur extends GuiAgent{
                     for(Integer k:cavaliers.keySet()){
                         returnCarteGeneral(k);
                         for(Territoire ter:territoires)
-                            if(ter.getNomTerritoire().equals(cavaliers.get(k)))
-                                nombreRegimentMax+=2;
+                            if(ter.getNomTerritoire().equals(cavaliers.get(k))) {
+                                nombreRegimentMax += 2;
+                                ter.addRegimentSurTerritoire(2);
+                            }
                         cavaliers.remove(k);
                         break;
                     }
                     for(Integer t:fantassins.keySet()){
                         returnCarteGeneral(t);
                         for(Territoire ter:territoires)
-                            if(ter.getNomTerritoire().equals(fantassins.get(t)))
-                                nombreRegimentMax+=2;
+                            if(ter.getNomTerritoire().equals(fantassins.get(t))) {
+                                nombreRegimentMax += 2;
+                                ter.addRegimentSurTerritoire(2);
+                            }
                         fantassins.remove(t);
                         break;
                     }
@@ -891,21 +912,26 @@ public class Joueur extends GuiAgent{
                     for(Integer k:fantassins.keySet()){
                         returnCarteGeneral(k);
                         for(Territoire ter:territoires)
-                            if(ter.getNomTerritoire().equals(fantassins.get(k)))
-                                nombreRegimentMax+=2;
+                            if(ter.getNomTerritoire().equals(fantassins.get(k))) {
+                                nombreRegimentMax += 2;
+                                ter.addRegimentSurTerritoire(2);
+                            }
                         fantassins.remove(k);
                         break;
                     }
                     for(Integer t:canons.keySet()){
                         returnCarteGeneral(t);
                         for(Territoire ter:territoires)
-                            if(ter.getNomTerritoire().equals(canons.get(t)))
-                                nombreRegimentMax+=2;
+                            if(ter.getNomTerritoire().equals(canons.get(t))) {
+                                nombreRegimentMax += 2;
+                                ter.addRegimentSurTerritoire(2);
+                            }
                         canons.remove(t);
                         break;
                     }
                 }
                 nombreRegimentMax+=10;
+                nombreRegimentAPlacer+=10;
                 nbFantassin--;
                 nbCanon--;
                 nbCavalier--;
@@ -918,6 +944,7 @@ public class Joueur extends GuiAgent{
                         for(Territoire ter:territoires) {
                             if (ter.getNomTerritoire().equals(canons.get(j))) {
                                 nombreRegimentMax += 2;
+                                ter.addRegimentSurTerritoire(2);
                             }
                         }
                     else {
@@ -931,6 +958,7 @@ public class Joueur extends GuiAgent{
                         break;
                 }
                 nombreRegimentMax+=8;
+                nombreRegimentAPlacer+=8;
             }
             if (nbCavalier >= 3) {
                 for(Integer j:cavaliers.keySet()){
@@ -939,6 +967,7 @@ public class Joueur extends GuiAgent{
                         for(Territoire ter:territoires) {
                             if (ter.getNomTerritoire().equals(cavaliers.get(j))) {
                                 nombreRegimentMax += 2;
+                                ter.addRegimentSurTerritoire(2);
                             }
                         }
                     else {
@@ -952,6 +981,7 @@ public class Joueur extends GuiAgent{
                         break;
                 }
                 nombreRegimentMax+=6;
+                nombreRegimentAPlacer+=6;
             }
             if (nbFantassin >= 3) {
                 for(Integer j:fantassins.keySet()){
@@ -960,6 +990,7 @@ public class Joueur extends GuiAgent{
                         for(Territoire ter:territoires) {
                             if (ter.getNomTerritoire().equals(fantassins.get(j))) {
                                 nombreRegimentMax += 2;
+                                ter.addRegimentSurTerritoire(2);
                             }
                         }
                     else {
@@ -973,6 +1004,7 @@ public class Joueur extends GuiAgent{
                         break;
                 }
                 nombreRegimentMax+=4;
+                nombreRegimentAPlacer+=4;
             }
         }
     }
@@ -1008,6 +1040,31 @@ public class Joueur extends GuiAgent{
         continent.addReceiver(topicUpdateContinent);
         send(continent);
 
+    }
+
+    public void addRegimentTerritoire(){
+        switch(strategie){
+            case "aleatoire" -> {
+                Random rand = new Random();
+                while(nombreRegimentAPlacer!=0){
+                    int indexTer = rand.nextInt(territoires.size());
+                    territoires.get(indexTer).addRegimentSurTerritoire(1);
+                    nombreRegimentAPlacer--;
+                }
+            }
+            case "attaque" -> {
+                String position = findPositionLowestValue();
+                String[] pos = position.split(position);
+                int indexTer = Integer.parseInt(pos[0]);
+                territoires.get(indexTer).addRegimentSurTerritoire(nombreRegimentAPlacer);
+                nombreRegimentAPlacer = 0;
+            }
+            case "defense" -> {
+                int indexTer = indexGreatestDanger();
+                territoires.get(indexTer).addRegimentSurTerritoire(nombreRegimentAPlacer);
+                nombreRegimentAPlacer = 0;
+            }
+        }
     }
     
     private void phaseCombatJoueur()
@@ -1086,11 +1143,23 @@ public class Joueur extends GuiAgent{
             case "defense" -> {
                 boolean attaque = rand.nextBoolean();
                 if(attaque) {
-                    /**
-                     * TO DO
-                     */
-                    if(attaque)
-                        phaseCombatJoueur();
+                    int i, j;
+                    String position = findPositionBiggestGap();
+                    String[] string = position.split(",");
+                    i = Integer.parseInt(string[0]);
+                    j = Integer.parseInt(string[1]);
+                    window.println("\n Position de l'attaque \n" + i + "\t" +j);
+                    ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+                    message.setConversationId("lancement attaque");
+                    message.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
+
+                    nomTerritoireAttaque = this.territoires.get(i).getNomTerritoire();
+                    nomTerritoireDefense = this.territoires.get(i).getTerritoires_adjacents().get(j).getNomTerritoire();
+                    nbRegimentAttaquant = this.territoires.get(i).getRegimentSurTerritoire() - 1;
+                    nbRegimentDefenseur = this.territoires.get(i).getTerritoires_adjacents().get(j).getRegimentSurTerritoire();
+                    message.setContent(nomTerritoireAttaque + "," + nomTerritoireDefense + "," + nbRegimentAttaquant + "," + nbRegimentDefenseur);
+                    send(message);
+                    phaseCombatJoueur();
                 }
                 else manoeuvreRegiment();
             }
@@ -1110,6 +1179,24 @@ public class Joueur extends GuiAgent{
                     				(this.territoires.get(i).getRegimentSurTerritoire() > 1) /* alors assez d unite pour attaque */) {
                         ecart = this.territoires.get(i).getRegimentSurTerritoire() - courantTerritoire.getRegimentSurTerritoire();
                         minValue = courantTerritoire.getRegimentSurTerritoire();
+                        position = i +","+ j;
+                    }
+                }
+            }
+        }
+        return position;
+    }
+
+    private String findPositionBiggestGap(){
+        String position ="";
+        int ecart = Integer.MIN_VALUE;
+        for(int i=0; i<territoires.size(); i++){
+            for(int j=0; j<this.territoires.get(i).getTerritoires_adjacents().size(); j++){
+                Territoire courantTerritoire = this.territoires.get(i).getTerritoires_adjacents().get(j);
+                if(!territoireContains(courantTerritoire)) {
+                    if ((this.territoires.get(i).getRegimentSurTerritoire() - courantTerritoire.getRegimentSurTerritoire() >= ecart)&&
+                            (this.territoires.get(i).getRegimentSurTerritoire() > 1) /* alors assez d unite pour attaque */) {
+                        ecart = this.territoires.get(i).getRegimentSurTerritoire() - courantTerritoire.getRegimentSurTerritoire();
                         position = i +","+ j;
                     }
                 }
@@ -1253,12 +1340,33 @@ public class Joueur extends GuiAgent{
         int index = 0, regimentEnnemi = Integer.MIN_VALUE;
         for(List<Territoire> listTemp:listTer){
             for(Territoire ter:listTemp){
-                AtomicInteger tempReg = new AtomicInteger();
-                ter.getTerritoires_adjacents().forEach(t -> tempReg.addAndGet(t.getRegimentSurTerritoire()));
-                if(tempReg.get() > regimentEnnemi){
-                    regimentEnnemi = tempReg.get();
+                int tempReg = 0;
+                for(Territoire terAdj:ter.getTerritoires_adjacents()){
+                    if(!territoireContains(terAdj)){
+                        tempReg += terAdj.getRegimentSurTerritoire();
+                    }
+                }
+                if(tempReg > regimentEnnemi) {
+                    regimentEnnemi = tempReg;
                     index = listTer.indexOf(listTemp);
                 }
+            }
+        }
+        return index;
+    }
+
+    public int indexGreatestDanger(){
+        int index = 0, regimentEnnemi = Integer.MIN_VALUE;
+        for(Territoire ter:territoires){
+            int tempReg = 0;
+            for(Territoire terAdj:ter.getTerritoires_adjacents()){
+                if(!territoireContains(terAdj)){
+                    tempReg += terAdj.getRegimentSurTerritoire();
+                }
+            }
+            if(tempReg > regimentEnnemi) {
+                regimentEnnemi = tempReg;
+                index =  territoires.indexOf(ter);
             }
         }
         return index;
