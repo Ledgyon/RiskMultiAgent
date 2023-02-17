@@ -128,7 +128,7 @@ public class General extends GuiAgent {
 					 if(pioche.isEmpty() == true)
 	     				{
 						 	pioche.addAll(defaussePioche);
-						 	defaussePioche.clear();
+						 	defaussePioche = new ArrayList<>();
 	     				}
 					 
 					ACLMessage message = new ACLMessage(ACLMessage.REQUEST);

@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.logging.Level;
 
 import carte.CarteMission;
 import carte.CartePioche;
@@ -18,7 +19,9 @@ import jade.core.AgentServicesTools;
 import jade.core.ServiceException;
 import jade.core.behaviours.ReceiverBehaviour;
 import jade.core.messaging.TopicManagementHelper;
+import jade.domain.DFService;
 import jade.domain.DFSubscriber;
+import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.gui.GuiAgent;
 import jade.gui.GuiEvent;
@@ -509,17 +512,36 @@ public class Joueur extends GuiAgent{
                     if(nbRegimentAttaquant == nbRegimentAttaquantUpdate) window.println("Aucune perte ennemi");
                     else window.println("L ennemi a perdu "+(nbRegimentAttaquant - nbRegimentAttaquantUpdate) + " regiment");
                     
-                    
+                    boolean continuer = true;
                     if(nbRegimentDefenseurUpdate == 0) { //Perte territoire 
                     	territoires.remove(getTerritoireByName(nomTerritoireDefense));
+                    	if(territoires.isEmpty())
+                    	{
+                    		window.println("Vous n'avez plus de territoire. Vous etes elimine.");
+                    		
+                    		continuer = false;
+                    		
+                    		//Envoie au joueur l'ayant eliminer
+                            ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+            				message.setConversationId("elimination joueur");
+            				message.addReceiver(new AID(joueurAttaque, AID.ISLOCALNAME));
+            				message.setContent(getLocalName()+","+couleur+";"+joueurAttaque);
+            				send(message);
+            				
+            				doDelete(); // invoque le takeDown() pour delete l'agent
+                    	}
                     }
                     
-                    //Lancement de l autorisation d une nouvelle attaque
-                    ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
-    				message.setConversationId("autorisation nouvelle attaque");
-    				message.addReceiver(new AID(joueurAttaque, AID.ISLOCALNAME));
-    				message.setContent("autorisation defenseur");
-    				send(message);
+                    if(continuer)
+                    {
+                    	//Lancement de l autorisation d une nouvelle attaque
+                        ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+        				message.setConversationId("autorisation nouvelle attaque");
+        				message.addReceiver(new AID(joueurAttaque, AID.ISLOCALNAME));
+        				message.setContent("autorisation defenseur");
+        				send(message);
+                    }
+                    
         		}
         		reset(model6,MsgReceiver.INFINITE,null,null);
         	}
@@ -639,7 +661,47 @@ public class Joueur extends GuiAgent{
             
             window.println(territoires.toString());
         }));
+        
+      //init du model
+        var model9 = MessageTemplate.MatchConversationId("elimination joueur");
+        
+        //Le joueur a elimine un adversaire
+        addBehaviour(new MsgReceiver(this,model9,MsgReceiver.INFINITE,null,null){
+        	protected void handleMessage(ACLMessage msg) {
+        		if(msg!=null)
+        		{
+        			var infos = msg.getContent().split(",");
+                    
+                    window.println("Message recu sur le model " + model2.toString() + ". Contenu " + msg.getContent().toString()
+                    + " emis par :  " + msg.getSender().getLocalName());
+                    
+                    window.println("Vous avez elimine le "+infos[0]+" et donc l'armee " + infos[1]);
+                    
+                    armees_eliminees.add(infos[1]);
+                    
+                    //Lancement de l autorisation d une nouvelle attaque avec l'autorisation du defenseur, mtn elimine
+                    ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+    				message.setConversationId("autorisation nouvelle attaque");
+    				message.addReceiver(new AID(infos[2], AID.ISLOCALNAME));
+    				message.setContent("autorisation defenseur");
+    				send(message);
+        		}
+        		reset(model9,MsgReceiver.INFINITE,null,null);
+        	}
+        });
 
+    }
+    
+    // Fermeture de l'agent
+    @Override
+    protected void takeDown() {
+        // S'effacer du service pages jaunes
+        try {
+            DFService.deregister(this);
+        } catch (FIPAException fe) {
+        }
+        System.out.println("TakeDown de "+this.getLocalName());
+        //window.dispose();
     }
     
     private void detectIntermediaire() {
@@ -740,6 +802,7 @@ public class Joueur extends GuiAgent{
                         window.println(territoires.toString());
                         
                         //FIN PHASE D INIT PARTIE
+                        debutPartie = true;
                         autorisationDebutPartie();
                     }
     			}
@@ -1049,7 +1112,6 @@ public class Joueur extends GuiAgent{
 
 		if(changementManoeuvre != null)
 		{
-			System.out.println(debutPartie);
 			continent.setEncoding(changementManoeuvre);
 		}
         continent.addReceiver(topicUpdateContinent);
@@ -1331,7 +1393,6 @@ public class Joueur extends GuiAgent{
 		{
 			window.println("Envoie changement a cause de la manoeuvre");
 			changementManoeuvre = terAdd.getNomTerritoire()+","+terAdd.getRegimentSurTerritoire()+","+terMinus.getNomTerritoire()+","+terMinus.getRegimentSurTerritoire();
-			System.out.println(changementManoeuvre);
 		}
         
         updateContinents(changementManoeuvre); // fonction pour savoir si le joueur rempli les conditions de victoire de sa carte Mission

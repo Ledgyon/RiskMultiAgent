@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,10 +61,13 @@ public class Intermediaire extends GuiAgent {
     private Map<String,AID> mapTerritoireJoueur;
     
     //variable pour lancer updateRegimentTerritoireAjdacent
-    int nbTerritoireUpdate = 0;
+    private int nbTerritoireUpdate = 0;
     
     //variable pour gerer qui joue en phase de combat
-    int iJoueurTourCombat = 1;
+    private int iJoueurTourCombat = 0;
+    
+    //numero du tour
+    private int numTour = 1;
 
     @SuppressWarnings({ "deprecation", "serial" })
 	@Override
@@ -195,7 +199,6 @@ public class Intermediaire extends GuiAgent {
     		if(m.getEncoding() != null)
     		{
     			String temp = m.getEncoding();
-    			System.out.println(temp);
     			if(temp != null)
     			{
     				window.println("Bonne reception de la manoeuvre");
@@ -257,7 +260,7 @@ public class Intermediaire extends GuiAgent {
         	protected void handleMessage(ACLMessage msg) {
         		window.println("\nReception autorisation debut de partie de " + msg.getSender().getLocalName() + "\n");
         		nbAutorisation += 1;
-        		if(nbAutorisation == 6)
+        		if(nbAutorisation == joueurs.size())
         		{
         			nbAutorisation = 0; // reset pour la prochaine phase
         			debutPartie(); //debut partie
@@ -274,20 +277,24 @@ public class Intermediaire extends GuiAgent {
         	protected void handleMessage(ACLMessage msg) {
         	
         		
-    			if(iJoueurTourCombat < 6) // alors tous les joueurs n'ont pas joue
+    			if(iJoueurTourCombat < joueurs.size()-1) // alors tous les joueurs n'ont pas joue
     			{
     				iJoueurTourCombat++; // pour passer au joueur suivant
     				debutPartie(); // nouveau tour pour ce nouveau joueur
     			}
     			else 
     			{
-    				window.println("fin 1er tour");; // tous le monde a fait sa phase de combat, DEBUT PHASE MANOEUVRE
+    				window.println("fin du tour " + numTour);; // tous le monde a fait sa phase de combat, DEBUT PHASE MANOEUVRE
     				
     				ACLMessage assignRegiment = new ACLMessage(ACLMessage.INFORM);
     		        assignRegiment.addReceiver(topicAffichageFinTour);
     		        send(assignRegiment);
     		        
     		        window.println("\n" + plateau.toString());
+    		        
+    		        numTour++;
+    		        iJoueurTourCombat = 0;
+    		        debutPartie();  // A METTRE EN COMMENTAIRE SI ON NE VEUT PLUS LOOP (si on veut ne faire que 1 seul tour)
     			}
         		reset(model2,MsgReceiver.INFINITE,null,null);
         	}
@@ -469,21 +476,13 @@ public class Intermediaire extends GuiAgent {
      */
     private void debutPartie()
     {
-    	window.println("\nDebut tour");
-    	String tourJoueur = "Joueur_"+iJoueurTourCombat; // iTourCombat variable globale
-    	//window.println("tourJoueur = "+tourJoueur);
-		int iJoueur = 0;
-		while(!joueurs.get(iJoueur).getLocalName().equals(tourJoueur)) // recherche du Joueur_iTourCombat (Joueur_1 -> Joueur_2 -> Joueur_3 -> ...)
-		{
-			//window.println(joueurs.get(iJoueur).getLocalName().toString() + " != " + tourJoueur);
-			iJoueur++;
-		}
-		window.println("\nEnvoie autorisation commencement du tour de " + tourJoueur);
+    	window.println("\nDebut du tour " + numTour);
+		window.println("\nEnvoie autorisation commencement du tour de " + joueurs.get(iJoueurTourCombat).getLocalName());
 		
 		//Envoie du message pour que le joueur commence son tour
     	ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
 		message.setConversationId("debut tour");
-		message.addReceiver(new AID(joueurs.get(iJoueur).getLocalName(), AID.ISLOCALNAME));
+		message.addReceiver(new AID(joueurs.get(iJoueurTourCombat).getLocalName(), AID.ISLOCALNAME));
 		send(message);
     }
     
@@ -531,6 +530,14 @@ public class Intermediaire extends GuiAgent {
             doDelete();
         }
         if (guiEvent.getType() == Intermediaire.LANCER_RISK){
+        	
+        	//trie des joueurs par leur nom (Joueur_1 -> Joueur_6)
+        	Comparator<AID> joueurComparator 
+            = (j1, j2) -> j1.getLocalName().compareTo(j2.getLocalName());
+	        joueurs.sort(joueurComparator);
+
+        	System.out.println(joueurs);
+        	
             launchRisk();
         }
     }
