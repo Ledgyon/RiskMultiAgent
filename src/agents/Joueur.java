@@ -8,10 +8,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import carte.CarteMission;
 import carte.CartePioche;
+import carte.enumerations.TypeMission;
 import gui.JoueurGui;
 import jade.core.AID;
 import jade.core.AgentServicesTools;
@@ -38,10 +38,12 @@ public class Joueur extends GuiAgent{
     private String strategie;   // parametre qui va definir la strategie que l'IA va utiliser
     private List<CartePioche> main; // cartes que le joueur possede dans sa main (max 5)
     private CarteMission objectif; // objectif du joueur pour remporter la partie
+    private boolean debutPartie = false;
     
     private List<Territoire> territoires; // territoires possedes par le joueur
     private List<Integer> territoiresPouvantAttaquer; //indices de la liste "territoires" des territoires n'ayant pas encore attaque au tour actuel
     private List<Continent> continents; // permet de savoir quel continent le joueur a conquis pour l'attribution des renforts et pour les objectifs
+    private List<String> armees_eliminees; // liste des couleurs des armees que le joueur a elimnee (les adversaires elimnees, utile si objectif est d eliminer une joueur precis)
     public static final int EXIT = 0;
     public static final int GET_INFO_TERRITOIRE = 1;
     
@@ -104,6 +106,7 @@ public class Joueur extends GuiAgent{
         this.territoiresPouvantAttaquer = new ArrayList<>();
         this.continents = new ArrayList<>();
         this.main = new ArrayList<>();
+        this.armees_eliminees = new ArrayList<>();
         this.nombreRegimentAPlacer = nombreRegimentMax = 20;
 
         switch(rand.nextInt(3)){
@@ -179,7 +182,6 @@ public class Joueur extends GuiAgent{
                         if(msg.getContentObject().getClass().getName().equals("carte.CartePioche")) {
                             //reception
                             CartePioche temp = (CartePioche)msg.getContentObject();
-                            //window.println(temp.toString());
 
                             //demande a INTERMEDIAIRE les infos du territoire
                             ACLMessage info_territoire = new ACLMessage(ACLMessage.INFORM);
@@ -187,17 +189,13 @@ public class Joueur extends GuiAgent{
                             info_territoire.addReceiver(topicTerritoire);
                             send(info_territoire);
                             
-                            //window.println("pb topic ++" + (Territoire)infoT.getContentObject());
-                           /* Territoire tempT = (Territoire)msg.getContentObject();
-                        	territoires.add(tempT);
-                        	window.println("pb topic" + territoires.toString());*/
                         } else if(msg.getContentObject().getClass().getName().equals("carte.CarteMission")) {
                             // AJout de la carte mission donn√© par le General
 
                             CarteMission temp = (CarteMission) msg.getContentObject();
                             if(temp.getCouleur() != null) {
-                                if (temp.getCouleur().equals(couleur)) {
-                                    temp = new CarteMission(temp.getNbTerritoire());
+                                if (temp.getCouleur().equals(couleur)) { // alors changement de type de mission
+                                    temp = new CarteMission(temp.getNbTerritoire(), TypeMission.TERRITOIRES.toString());
                                 }
                             }
                             objectif = temp;
@@ -303,7 +301,7 @@ public class Joueur extends GuiAgent{
                     {
                     	window.println("\n\nTerritoires adjacents regiments update :");
                         window.println(territoires.toString());
-                        autorisationDebutPartie();
+                        updateContinents(null);
                     }
         		}
         		reset(model2,MsgReceiver.INFINITE,null,null);
@@ -318,6 +316,7 @@ public class Joueur extends GuiAgent{
             protected void handleMessage(ACLMessage msg) {
                 if(msg!=null)
                 {
+                	window.println("\nMessage recu sur le model " + model3.toString() + " emis par :  " + msg.getSender().getLocalName());
                     List<Continent> continentList = new ArrayList<>();
                     try {
                         continentList = (List<Continent>) msg.getContentObject();
@@ -327,6 +326,17 @@ public class Joueur extends GuiAgent{
                     }
 
                     continents.addAll(continentList);
+                    
+                    if(debutPartie)
+                    {
+                    	verifVictoire();
+                    }
+                    else 
+                    {
+                    	debutPartie = true;
+                    	autorisationDebutPartie();
+                    }
+                    
                 }
                 reset(model3,MsgReceiver.INFINITE,null,null);
             }
@@ -343,7 +353,6 @@ public class Joueur extends GuiAgent{
                     window.println("\nMessage recu sur le model " + model4.toString() + " emis par :  " + msg.getSender().getLocalName());
                     
                     //RENFORT
-                    updateContinents();
                 	nouveauxRenforts();
                     addRegimentTerritoire();
 
@@ -1029,7 +1038,7 @@ public class Joueur extends GuiAgent{
     }
 
     // fonction qui permet de mettre ‡ jour les continents possedes
-    public void updateContinents(){
+    public void updateContinents(String changementManoeuvre){
         ACLMessage continent = new ACLMessage(ACLMessage.INFORM);
         try {
             continent.setContentObject((Serializable) territoires);
@@ -1037,6 +1046,12 @@ public class Joueur extends GuiAgent{
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+
+		if(changementManoeuvre != null)
+		{
+			System.out.println(debutPartie);
+			continent.setEncoding(changementManoeuvre);
+		}
         continent.addReceiver(topicUpdateContinent);
         send(continent);
 
@@ -1054,7 +1069,7 @@ public class Joueur extends GuiAgent{
             }
             case "attaque" -> {
                 String position = findPositionLowestValue();
-                String[] pos = position.split(position);
+                String[] pos = position.split(",");
                 int indexTer = Integer.parseInt(pos[0]);
                 territoires.get(indexTer).addRegimentSurTerritoire(nombreRegimentAPlacer);
                 nombreRegimentAPlacer = 0;
@@ -1310,17 +1325,131 @@ public class Joueur extends GuiAgent{
                 }
             }
         }
- 
-        window.println("\nEnvoie fin de tour a Intermediaire.");
-    	ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
-		message.setConversationId("fin tour joueur");
-		message.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
-		if(terAdd != null && terMinus != null )
+        
+        String changementManoeuvre = null;
+        if(terAdd != null && terMinus != null ) // set des changements de la manoeuvre
 		{
 			window.println("Envoie changement a cause de la manoeuvre");
-			message.setContent(terAdd.getNomTerritoire()+","+terAdd.getRegimentSurTerritoire()+","+terMinus.getNomTerritoire()+","+terMinus.getRegimentSurTerritoire());
+			changementManoeuvre = terAdd.getNomTerritoire()+","+terAdd.getRegimentSurTerritoire()+","+terMinus.getNomTerritoire()+","+terMinus.getRegimentSurTerritoire();
+			System.out.println(changementManoeuvre);
 		}
-		send(message);
+        
+        updateContinents(changementManoeuvre); // fonction pour savoir si le joueur rempli les conditions de victoire de sa carte Mission
+ 
+    }
+    
+    /*
+     *  fonction pour savoir si le joueur rempli les conditions de victoire de sa carte Mission
+     */
+	private void verifVictoire()
+    {
+    	boolean finPartie = false;
+    	int i;
+    	
+    	//preparation du modele d'envoie de la fin de partie, peut ne pas etre envoye si la condition de victoire n est pas remplie
+    	ACLMessage message1 = new ACLMessage(ACLMessage.REQUEST);
+		message1.setConversationId("victoire / fin de partie");
+		message1.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
+    	
+		//1er type de mission
+    	if(objectif.getTypeMission() == TypeMission.CONTINENTS.toString())
+    	{
+    		boolean missionRemplie = false;
+    		int nbConditionsRemplies = 0;
+    		for(i = 0; i < 2; i++) // verif si les 2 continents demandes sont concquis
+    		{
+    			if(continents.contains(objectif.getContinentAConquerir().get(i)))
+    			{
+    				nbConditionsRemplies++;
+    			}
+    		}
+    		if(nbConditionsRemplies == 2) // alors les 2 continents demandes sont concquis
+    		{
+    			missionRemplie = true;
+    		}
+    		
+    		if(missionRemplie)
+    		{
+    			if(objectif.getContinentAConquerir().size() == 2) // alors pas de "Autre", victoire
+        		{
+    				finPartie = true;
+    				window.println("\nEnvoie fin de partie a Intermediaire. Le "+ this.getLocalName() +" a gagne la partie,"
+    						+ "\ncar il a complete sa mission de concquerir les territoires "+ objectif.getContinentAConquerir().get(0) 
+    						+ " et "+ objectif.getContinentAConquerir().get(1) +".");
+    				send(message1);
+        		}
+        		else // besoin de ses 2 continents + un "Autre" au choix, si oui, victoire, sinon, la partie continue
+        		{
+        			if(continents.size() >= 3) // alors victoire
+        			{
+        				finPartie = true;
+        				window.println("\nEnvoie fin de partie a Intermediaire. Le "+ this.getLocalName() +" a gagne la partie,"
+        						+ "\ncar il a complete sa mission de concquerir les territoires "+ objectif.getContinentAConquerir().get(0) 
+        						+ ", "+ objectif.getContinentAConquerir().get(1) +" et un autre de son choix.");
+        				send(message1);
+        			}
+        		}
+    		}
+    	}
+    	
+    	//2eme type de mission
+    	if(objectif.getTypeMission() == TypeMission.COULEUR.toString())
+    	{
+    		if(armees_eliminees.contains(objectif.getCouleur())) //alors victoire
+    		{
+    			finPartie = true;
+    			window.println("\nEnvoie fin de partie a Intermediaire. Le "+ this.getLocalName() +" a gagne la partie,"
+						+ "\ncar il a complete sa mission d eliminer les armees "+ objectif.getCouleur() + ".");
+				send(message1);
+    		}
+    	}
+    	
+    	//3eme type de mission
+    	if(objectif.getTypeMission() == TypeMission.TERRITOIRES.toString())
+    	{
+    		if(territoires.size() == objectif.getNbTerritoire()) //alors victoire
+    		{
+    			finPartie = true;
+    			window.println("\nEnvoie fin de partie a Intermediaire. Le "+ this.getLocalName() +" a gagne la partie,"
+						+ "\ncar il a complete sa mission de concquerir "+ objectif.getNbTerritoire() + " territoires.");
+				send(message1);
+    		}
+    	}
+    	
+    	//4eme type de mission
+    	if(objectif.getTypeMission() == TypeMission.TERRITOIRES_ET_ARMEES_MIN.toString())
+    	{
+    		if(territoires.size() == objectif.getNbTerritoire()) //alors verif
+    		{
+    			//Verif si assez d armees sur le nombre de territoire concquis demandes
+    			int nbTerritoiresAvecNbArmeesRecquis = 0;
+    			for(i=0; i<territoires.size(); i++)
+    			{
+    				if(territoires.get(i).getRegimentSurTerritoire() >= objectif.getNbArmee())
+    				{
+    					nbTerritoiresAvecNbArmeesRecquis++;
+    				}
+    			}
+    			
+    			if(nbTerritoiresAvecNbArmeesRecquis >= objectif.getNbTerritoire()) // alors victoire
+    			{
+    				finPartie = true;
+    				window.println("\nEnvoie fin de partie a Intermediaire. Le "+ this.getLocalName() +" a gagne la partie,"
+    						+ "\ncar il a complete sa mission de concquerir "+ objectif.getNbTerritoire() + " territoires "
+    						+ " avec au moins " + objectif.getNbArmee() + " sur ce nombre de territoire a concquerir.");
+    				send(message1);
+    			}
+    		}
+    	}
+    	
+    	if(!finPartie) // alors nouveau tour
+    	{
+    		window.println("\nEnvoie fin de tour a Intermediaire.");
+    		ACLMessage message2 = new ACLMessage(ACLMessage.REQUEST);
+    		message2.setConversationId("fin tour joueur");
+    		message2.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
+    		send(message2);
+    	}
     }
 
     // fonction recuperant l'index du territoire avec le plus grand nombre de regiment d'une liste

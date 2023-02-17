@@ -191,6 +191,25 @@ public class Intermediaire extends GuiAgent {
 
 
         addBehaviour(new ReceiverBehaviour(this, -1, MessageTemplate.MatchTopic(topicUpdateContinent), true, (a, m)->{
+        	//update de plateau si manoeuvre
+    		if(m.getEncoding() != null)
+    		{
+    			String temp = m.getEncoding();
+    			System.out.println(temp);
+    			if(temp != null)
+    			{
+    				window.println("Bonne reception de la manoeuvre");
+        			
+        			var infos = m.getEncoding().split(",");
+        			
+        			plateau.getTerritoireByName(infos[0]).setRegimentSurTerritoire(Integer.parseInt(infos[1]));
+            		updatePlateauRegimentTerrAdj(infos[0],Integer.parseInt(infos[1]));
+            		
+            		plateau.getTerritoireByName(infos[2]).setRegimentSurTerritoire(Integer.parseInt(infos[3]));
+            		updatePlateauRegimentTerrAdj(infos[2],Integer.parseInt(infos[3]));
+    			}
+    		}
+        	
             window.println("Message recu sur le topic " + topicUpdateContinent.getLocalName() + ". Contenu " + m.getContent()
                     + " emis par :  " + m.getSender().getLocalName());
             List<Territoire> tempT = new ArrayList<>();
@@ -253,20 +272,7 @@ public class Intermediaire extends GuiAgent {
         //Reception des notifications de fin de tour de combat des joueurs, pour permettre au prochain de commencer sa phase de combat
         addBehaviour(new MsgReceiver(this,model2,MsgReceiver.INFINITE,null,null){
         	protected void handleMessage(ACLMessage msg) {
-        		
-        		//update de plateau si manoeuvre
-        		if(msg.getContent() != null)
-        		{
-        			window.println("Bonne reception de la manoeuvre");
-        			
-        			var infos = msg.getContent().split(",");
-        			
-        			plateau.getTerritoireByName(infos[0]).setRegimentSurTerritoire(Integer.parseInt(infos[1]));
-            		updatePlateauRegimentTerrAdj(infos[0],Integer.parseInt(infos[1]));
-            		
-            		plateau.getTerritoireByName(infos[2]).setRegimentSurTerritoire(Integer.parseInt(infos[3]));
-            		updatePlateauRegimentTerrAdj(infos[2],Integer.parseInt(infos[3]));
-        		}
+        	
         		
     			if(iJoueurTourCombat < 6) // alors tous les joueurs n'ont pas joue
     			{

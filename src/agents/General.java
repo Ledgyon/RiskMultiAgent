@@ -7,6 +7,7 @@ import java.util.List;
 
 import carte.CarteMission;
 import carte.CartePioche;
+import carte.enumerations.TypeMission;
 import carte.enumerations.Unite;
 import jade.core.AID;
 import jade.core.AgentServicesTools;
@@ -366,33 +367,33 @@ public class General extends GuiAgent {
 	}
 
 	public void constructObjectifs(){
-		CarteMission carteM = new CarteMission(NomContinents.AMERIQUE_NORD.toString(),NomContinents.AFRIQUE.toString());
+		CarteMission carteM = new CarteMission(NomContinents.AMERIQUE_NORD.toString(),NomContinents.AFRIQUE.toString(),TypeMission.CONTINENTS.toString());
 		objectifs.add(carteM);
-		carteM = new CarteMission(NomContinents.AMERIQUE_NORD.toString(),NomContinents.OCEANIE.toString());
+		carteM = new CarteMission(NomContinents.AMERIQUE_NORD.toString(),NomContinents.OCEANIE.toString(),TypeMission.CONTINENTS.toString());
 		objectifs.add(carteM);
-		carteM = new CarteMission(NomContinents.ASIE.toString(),NomContinents.AFRIQUE.toString());
+		carteM = new CarteMission(NomContinents.ASIE.toString(),NomContinents.AFRIQUE.toString(),TypeMission.CONTINENTS.toString());
 		objectifs.add(carteM);
-		carteM = new CarteMission(NomContinents.ASIE.toString(),NomContinents.AMERIQUE_SUD.toString());
+		carteM = new CarteMission(NomContinents.ASIE.toString(),NomContinents.AMERIQUE_SUD.toString(),TypeMission.CONTINENTS.toString());
 		objectifs.add(carteM);
-		carteM = new CarteMission(NomContinents.EUROPE.toString(),NomContinents.AMERIQUE_SUD.toString(),"Autre");
+		carteM = new CarteMission(NomContinents.EUROPE.toString(),NomContinents.AMERIQUE_SUD.toString(),"Autre",TypeMission.CONTINENTS.toString());
 		objectifs.add(carteM);
-		carteM = new CarteMission(NomContinents.EUROPE.toString(),NomContinents.OCEANIE.toString(),"Autre");
+		carteM = new CarteMission(NomContinents.EUROPE.toString(),NomContinents.OCEANIE.toString(),"Autre",TypeMission.CONTINENTS.toString());
 		objectifs.add(carteM);
-		carteM = new CarteMission(24);
+		carteM = new CarteMission(24,TypeMission.TERRITOIRES.toString());
 		objectifs.add(carteM);
-		carteM = new CarteMission(18,2);
+		carteM = new CarteMission(18,2,TypeMission.TERRITOIRES_ET_ARMEES_MIN.toString());
 		objectifs.add(carteM);
-		carteM = new CarteMission("jaune");
+		carteM = new CarteMission("jaune",TypeMission.COULEUR.toString());
 		objectifs.add(carteM);
-		carteM = new CarteMission("rouge");
+		carteM = new CarteMission("rouge",TypeMission.COULEUR.toString());
 		objectifs.add(carteM);
-		carteM = new CarteMission("bleu");
+		carteM = new CarteMission("bleu",TypeMission.COULEUR.toString());
 		objectifs.add(carteM);
-		carteM = new CarteMission("noir");
+		carteM = new CarteMission("noir",TypeMission.COULEUR.toString());
 		objectifs.add(carteM);
-		carteM = new CarteMission("violet");
+		carteM = new CarteMission("violet",TypeMission.COULEUR.toString());
 		objectifs.add(carteM);
-		carteM = new CarteMission("vert");
+		carteM = new CarteMission("vert",TypeMission.COULEUR.toString());
 		objectifs.add(carteM);
 
 		Collections.shuffle(this.objectifs);
