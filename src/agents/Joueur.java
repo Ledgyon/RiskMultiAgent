@@ -3,12 +3,7 @@ package agents;
 import java.awt.Color;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.logging.Level;
+import java.util.*;
 
 import carte.CarteMission;
 import carte.CartePioche;
@@ -800,10 +795,11 @@ public class Joueur extends GuiAgent{
                     {
                     	window.println("\n\nTerritoires adjacents regiments update :");
                         window.println(territoires.toString());
-                        
-                        //FIN PHASE D INIT PARTIE
-                        debutPartie = true;
-                        autorisationDebutPartie();
+                        if(!debutPartie) {
+                            //FIN PHASE D INIT PARTIE
+                            debutPartie = true;
+                            autorisationDebutPartie();
+                        }
                     }
     			}
     			else // on demande a intermedaire d'update
@@ -850,13 +846,14 @@ public class Joueur extends GuiAgent{
 
     // Permet de rajouter d'obtenir de nouveaux renforts par rapport aux cartes se trouvant dans la main du joueur
     private void nouveauxRenfortsMain(){
-        int nbFantassin=0, nbCavalier=0, nbCanon=0;
+        int nbFantassin=0, nbCavalier=0, nbCanon=0, nbJoker=0;
         Map<Integer,String> fantassins = new HashMap<>();
         Map<Integer,String> cavaliers = new HashMap<>();
         Map<Integer,String> canons = new HashMap<>();
         Random rand = new Random();
-        boolean joker=false;
-        boolean echange=rand.nextBoolean();
+        boolean joker = false;
+        boolean echange = rand.nextBoolean();
+        System.out.println(main);
         for(int i=0; i< main.size(); i++){
             switch(main.get(i).getUnite()){
                 case("FANTASSIN") -> {
@@ -879,40 +876,63 @@ public class Joueur extends GuiAgent{
                     nbFantassin++;
                     canons.put(i,main.get(i).getTerritoire());
                     joker=true;
+                    nbJoker++;
                 }
             }
         }
+        List<Integer> keyCanon = new ArrayList<>(canons.keySet());
+        List<Integer> keyCanonSorted = keyCanon.stream().sorted(Comparator.reverseOrder()).toList();
+        List<Integer> keyCavalier = new ArrayList<>(cavaliers.keySet());
+        List<Integer> keyCavalierSorted = keyCavalier.stream().sorted(Comparator.reverseOrder()).toList();
+        List<Integer> keyFantassin = new ArrayList<>(fantassins.keySet());
+        List<Integer> keyFantassinSorted = keyFantassin.stream().sorted(Comparator.reverseOrder()).toList();
         if(echange) {
             if ((nbFantassin > 0) && (nbCavalier > 0) && (nbCanon > 0) && !joker){
-                for(Integer j:fantassins.keySet()){
-                    returnCarteGeneral(j);
-                    for(Territoire ter:territoires)
-                        if(ter.getNomTerritoire().equals(fantassins.get(j))) {
-                            nombreRegimentMax += 2;
-                            ter.addRegimentSurTerritoire(2);
+                LinkedList<String> unite = new LinkedList<>();
+                int j = keyFantassin.get(0);
+                unite.add("Fantassin");
+                int k = keyCavalier.get(0);
+                if(k > j)
+                    unite.addFirst("Cavalier");
+                else
+                    unite.add("Cavalier");
+                int t = keyCanon.get(0);
+                if((t>k) && (t>j))
+                    unite.addFirst("Canon");
+                else if ((t < k) && (t < j))
+                    unite.addLast("Canon");
+                else
+                    unite.add(1,"Canon");
+                for (String s : unite) {
+                    switch (s) {
+                        case "Fantassin" -> {
+                            returnCarteGeneral(j);
+                            for (Territoire ter : territoires)
+                                if (ter.getNomTerritoire().equals(fantassins.get(j))) {
+                                    nombreRegimentMax += 2;
+                                    ter.addRegimentSurTerritoire(2);
+                                }
+                            fantassins.remove(j);
                         }
-                    fantassins.remove(j);
-                    break;
-                }
-                for(Integer k:cavaliers.keySet()){
-                    returnCarteGeneral(k);
-                    for(Territoire ter:territoires)
-                        if(ter.getNomTerritoire().equals(cavaliers.get(k))) {
-                            nombreRegimentMax += 2;
-                            ter.addRegimentSurTerritoire(2);
+                        case "Cavalier" -> {
+                            returnCarteGeneral(k);
+                            for (Territoire ter : territoires)
+                                if (ter.getNomTerritoire().equals(cavaliers.get(k))) {
+                                    nombreRegimentMax += 2;
+                                    ter.addRegimentSurTerritoire(2);
+                                }
+                            cavaliers.remove(k);
                         }
-                    cavaliers.remove(k);
-                    break;
-                }
-                for(Integer t:canons.keySet()){
-                    returnCarteGeneral(t);
-                    for(Territoire ter:territoires)
-                        if(ter.getNomTerritoire().equals(canons.get(t))) {
-                            nombreRegimentMax += 2;
-                            ter.addRegimentSurTerritoire(2);
+                        case "Canon" -> {
+                            returnCarteGeneral(t);
+                            for (Territoire ter : territoires)
+                                if (ter.getNomTerritoire().equals(canons.get(t))) {
+                                    nombreRegimentMax += 2;
+                                    ter.addRegimentSurTerritoire(2);
+                                }
+                            canons.remove(t);
                         }
-                    canons.remove(t);
-                    break;
+                    }
                 }
                 nombreRegimentMax+=10;
                 nombreRegimentAPlacer+=10;
@@ -921,86 +941,176 @@ public class Joueur extends GuiAgent{
                 nbCavalier--;
             }
             if(joker && ((nbFantassin > 1) && (nbCanon > 1)) || ((nbFantassin > 1) && (nbCavalier > 1)) || ((nbCavalier > 1) && (nbCanon > 1))){
+                LinkedList<String> unite = new LinkedList<>();
+                int j = 0,k = 0,t = 0;
+                boolean joker1 = true,joker2 = true;            // CATASTROPHIQUE A REVOIR
+                if((int)keyFantassin.get(0) != keyCavalier.get(0))
+                    joker1 = false;
+                if(keyFantassin.size() > 1 && keyCavalier.size() > 1) {
+                    if ((int) keyFantassin.get(1) != keyCavalier.get(1))
+                        joker2 = false;
+                } else if(keyFantassin.size() > 1 && keyCanon.size() > 1) {
+                    if ((int) keyFantassin.get(1) != keyCanon.get(1))
+                        joker2 = false;
+                } else {
+                    if ((int) keyCavalier.get(1) != keyCanon.get(1))
+                        joker2 = false;
+                }
+                if(joker1){
+                    if(joker2){
+                        if(keyFantassin.contains(2)) {
+                            j = 2;
+                            t = 1;
+                            unite.add("Cavalier");
+                            unite.add("Canon");
+                            unite.add("Fantassin");
+                        }
+                        else if(keyCavalier.contains(2)) {
+                            k = 2;
+                            t = 1;
+                            unite.add("Fantassin");
+                            unite.add("Canon");
+                            unite.add("Cavalier");
+                        }
+                        else {
+                            t = 2;
+                            k = 1;
+                            unite.add("Fantassin");
+                            unite.add("Cavalier");
+                            unite.add("Canon");
+                        }
+                    } else {
+                        if(keyFantassin.contains(1)){
+                            j = 1;
+                            if(keyCavalier.contains(2)){
+                                k = 2;
+                                unite.add("Canon");
+                                unite.add("Fantassin");
+                                unite.add("Cavalier");
+                            } else {
+                                t = 2;
+                                unite.add("Cavalier");
+                                unite.add("Fantassin");
+                                unite.add("Canon");
+                            }
+                        } else if(keyCavalier.contains(1)) {
+                            k = 1;
+                            if(keyFantassin.contains(2)){
+                                j = 2;
+                                unite.add("Canon");
+                                unite.add("Cavalier");
+                                unite.add("Fantassin");
+                            } else {
+                                t = 2;
+                                unite.add("Fantassin");
+                                unite.add("Cavalier");
+                                unite.add("Canon");
+                            }
+                        } else {
+                            t = 1;
+                            if(keyFantassin.contains(2)){
+                                j = 2;
+                                unite.add("Cavalier");
+                                unite.add("Canon");
+                                unite.add("Fantassin");
+                            } else {
+                                k = 2;
+                                unite.add("Fantassin");
+                                unite.add("Canon");
+                                unite.add("Cavalier");
+                            }
+                        }
+                    }
+                }
                 if(nbFantassin == 1){
-                    for(Integer j:fantassins.keySet()){
-                        returnCarteGeneral(j);
-                        fantassins.remove(j);
-                        break;
-                    }
-                    for(Integer k:cavaliers.keySet()){
-                        returnCarteGeneral(k);
-                        for(Territoire ter:territoires)
-                            if(ter.getNomTerritoire().equals(cavaliers.get(k))) {
-                                nombreRegimentMax += 2;
-                                ter.addRegimentSurTerritoire(2);
+                    for(String s:unite) {
+                        switch(s) {
+                            case "Fantassin" -> {
+                                returnCarteGeneral(j);
+                                fantassins.remove(j);
                             }
-                        cavaliers.remove(k);
-                        break;
-                    }
-                    for(Integer t:canons.keySet()){
-                        returnCarteGeneral(t);
-                        for(Territoire ter:territoires)
-                            if(ter.getNomTerritoire().equals(canons.get(t))) {
-                                nombreRegimentMax += 2;
-                                ter.addRegimentSurTerritoire(2);
+                            case "Cavalier" -> {
+                                returnCarteGeneral(k);
+                                for (Territoire ter : territoires)
+                                    if (ter.getNomTerritoire().equals(cavaliers.get(k))) {
+                                        nombreRegimentMax += 2;
+                                        ter.addRegimentSurTerritoire(2);
+                                    }
+                                cavaliers.remove(k);
                             }
-                        canons.remove(t);
-                        break;
+                            case "Canon" -> {
+                                returnCarteGeneral(t);
+                                for (Territoire ter : territoires)
+                                    if (ter.getNomTerritoire().equals(canons.get(t))) {
+                                        nombreRegimentMax += 2;
+                                        ter.addRegimentSurTerritoire(2);
+                                    }
+                                canons.remove(t);
+                            }
+                        }
                     }
+                    nbCanon--;
+                    nbCavalier--;
                 }
                 if(nbCanon == 1){
-                    for(Integer j:canons.keySet()){
-                        returnCarteGeneral(j);
-                        canons.remove(j);
-                        break;
-                    }
-                    for(Integer k:cavaliers.keySet()){
-                        returnCarteGeneral(k);
-                        for(Territoire ter:territoires)
-                            if(ter.getNomTerritoire().equals(cavaliers.get(k))) {
-                                nombreRegimentMax += 2;
-                                ter.addRegimentSurTerritoire(2);
+                    for(String s:unite) {
+                        switch (s) {
+                            case "Canon" -> {
+                                returnCarteGeneral(t);
+                                canons.remove(t);
                             }
-                        cavaliers.remove(k);
-                        break;
-                    }
-                    for(Integer t:fantassins.keySet()){
-                        returnCarteGeneral(t);
-                        for(Territoire ter:territoires)
-                            if(ter.getNomTerritoire().equals(fantassins.get(t))) {
-                                nombreRegimentMax += 2;
-                                ter.addRegimentSurTerritoire(2);
+                            case "Cavalier" -> {
+                                returnCarteGeneral(k);
+                                for (Territoire ter : territoires)
+                                    if (ter.getNomTerritoire().equals(cavaliers.get(k))) {
+                                        nombreRegimentMax += 2;
+                                        ter.addRegimentSurTerritoire(2);
+                                    }
+                                cavaliers.remove(k);
                             }
-                        fantassins.remove(t);
-                        break;
+                            case "Fantassin" -> {
+                                returnCarteGeneral(j);
+                                for (Territoire ter : territoires)
+                                    if (ter.getNomTerritoire().equals(fantassins.get(j))) {
+                                        nombreRegimentMax += 2;
+                                        ter.addRegimentSurTerritoire(2);
+                                    }
+                                fantassins.remove(j);
+                            }
+                        }
                     }
+                    nbCavalier--;
+                    nbFantassin--;
                 }
                 if(nbCavalier == 1){
-                    for(Integer j:cavaliers.keySet()){
-                        returnCarteGeneral(j);
-                        cavaliers.remove(j);
-                        break;
-                    }
-                    for(Integer k:fantassins.keySet()){
-                        returnCarteGeneral(k);
-                        for(Territoire ter:territoires)
-                            if(ter.getNomTerritoire().equals(fantassins.get(k))) {
-                                nombreRegimentMax += 2;
-                                ter.addRegimentSurTerritoire(2);
+                    for(String s:unite) {
+                        switch (s) {
+                            case "Cavalier" -> {
+                                returnCarteGeneral(k);
+                                cavaliers.remove(k);
                             }
-                        fantassins.remove(k);
-                        break;
-                    }
-                    for(Integer t:canons.keySet()){
-                        returnCarteGeneral(t);
-                        for(Territoire ter:territoires)
-                            if(ter.getNomTerritoire().equals(canons.get(t))) {
-                                nombreRegimentMax += 2;
-                                ter.addRegimentSurTerritoire(2);
+                            case "Fantassin" -> {
+                                returnCarteGeneral(j);
+                                for (Territoire ter : territoires)
+                                    if (ter.getNomTerritoire().equals(fantassins.get(j))) {
+                                        nombreRegimentMax += 2;
+                                        ter.addRegimentSurTerritoire(2);
+                                    }
+                                fantassins.remove(j);
                             }
-                        canons.remove(t);
-                        break;
+                            case "Canon" -> {
+                                returnCarteGeneral(t);
+                                for (Territoire ter : territoires)
+                                    if (ter.getNomTerritoire().equals(canons.get(t))) {
+                                        nombreRegimentMax += 2;
+                                        ter.addRegimentSurTerritoire(2);
+                                    }
+                                canons.remove(t);
+                            }
+                        }
                     }
+                    nbFantassin--;
+                    nbCanon--;
                 }
                 nombreRegimentMax+=10;
                 nombreRegimentAPlacer+=10;
@@ -1010,7 +1120,7 @@ public class Joueur extends GuiAgent{
             }
             int troisCartes = 0;
             if (nbCanon >= 3) {
-                for(Integer j:canons.keySet()){
+                for(Integer j:keyCanonSorted){
                     returnCarteGeneral(j);
                     if(!canons.get(j).equals("JOKER"))
                         for(Territoire ter:territoires) {
@@ -1033,7 +1143,7 @@ public class Joueur extends GuiAgent{
                 nombreRegimentAPlacer+=8;
             }
             if (nbCavalier >= 3) {
-                for(Integer j:cavaliers.keySet()){
+                for(Integer j:keyCavalierSorted){
                     returnCarteGeneral(j);
                     if(!cavaliers.get(j).equals("JOKER"))
                         for(Territoire ter:territoires) {
@@ -1056,7 +1166,7 @@ public class Joueur extends GuiAgent{
                 nombreRegimentAPlacer+=6;
             }
             if (nbFantassin >= 3) {
-                for(Integer j:fantassins.keySet()){
+                for(Integer j:keyFantassinSorted){
                     returnCarteGeneral(j);
                     if(!fantassins.get(j).equals("JOKER"))
                         for(Territoire ter:territoires) {
@@ -1142,6 +1252,9 @@ public class Joueur extends GuiAgent{
                 nombreRegimentAPlacer = 0;
             }
         }
+        for(Territoire ter:territoires){
+            updateRegimentTerritoire(ter);
+        }
     }
     
     private void phaseCombatJoueur()
@@ -1160,6 +1273,7 @@ public class Joueur extends GuiAgent{
                 int i = territoiresPouvantAttaquer.get(0);
                 // on remove pour ne plus attaquer ce territoire
                 territoiresPouvantAttaquer.remove(0);
+                System.out.println(territoiresPouvantAttaquer);
                 if (this.territoires.get(i).getRegimentSurTerritoire() > 1) // alors assez d unite pour attaque
                 {
                     List<Territoire> listTemp = new ArrayList<>(this.territoires.get(i).getTerritoires_adjacents());
@@ -1250,7 +1364,7 @@ public class Joueur extends GuiAgent{
         for(int i=0; i<territoires.size(); i++){
             for(int j=0; j<this.territoires.get(i).getTerritoires_adjacents().size(); j++){
                 Territoire courantTerritoire = this.territoires.get(i).getTerritoires_adjacents().get(j);
-                if(!territoireContains(courantTerritoire)) {
+                if(territoireContains(courantTerritoire)) {
                     if ((courantTerritoire.getRegimentSurTerritoire() <= minValue)&&
                             (this.territoires.get(i).getRegimentSurTerritoire() - courantTerritoire.getRegimentSurTerritoire() >= ecart)&&
                     				(this.territoires.get(i).getRegimentSurTerritoire() > 1) /* alors assez d unite pour attaque */) {
@@ -1270,7 +1384,7 @@ public class Joueur extends GuiAgent{
         for(int i=0; i<territoires.size(); i++){
             for(int j=0; j<this.territoires.get(i).getTerritoires_adjacents().size(); j++){
                 Territoire courantTerritoire = this.territoires.get(i).getTerritoires_adjacents().get(j);
-                if(!territoireContains(courantTerritoire)) {
+                if(territoireContains(courantTerritoire)) {
                     if ((this.territoires.get(i).getRegimentSurTerritoire() - courantTerritoire.getRegimentSurTerritoire() >= ecart)&&
                             (this.territoires.get(i).getRegimentSurTerritoire() > 1) /* alors assez d unite pour attaque */) {
                         ecart = this.territoires.get(i).getRegimentSurTerritoire() - courantTerritoire.getRegimentSurTerritoire();
@@ -1286,9 +1400,9 @@ public class Joueur extends GuiAgent{
     private boolean territoireContains(Territoire t){
         for(Territoire ter:territoires){
             if(ter.getNomTerritoire().equals(t.getNomTerritoire()))
-                return true;
+                return false;
         }
-        return false;
+        return true;
     }
     
     private void manoeuvreRegiment() {
@@ -1334,7 +1448,6 @@ public class Joueur extends GuiAgent{
             if(!tempTAdd.isEmpty()) {
                 switch(this.strategie) {
                     case "aleatoire" -> {
-
                         if (!tempTMinus.isEmpty()) {
                             noTerritoireListMinus = rand.nextInt(tempTMinus.size());
                             List<Territoire> listTemp = new ArrayList<>(tempTMinus.get(noTerritoireListMinus));
@@ -1413,7 +1526,7 @@ public class Joueur extends GuiAgent{
 		message1.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
     	
 		//1er type de mission
-    	if(objectif.getTypeMission() == TypeMission.CONTINENTS.toString())
+    	if(objectif.getTypeMission().equals(TypeMission.CONTINENTS.toString()))
     	{
     		boolean missionRemplie = false;
     		int nbConditionsRemplies = 0;
@@ -1454,7 +1567,7 @@ public class Joueur extends GuiAgent{
     	}
     	
     	//2eme type de mission
-    	if(objectif.getTypeMission() == TypeMission.COULEUR.toString())
+    	if(objectif.getTypeMission().equals(TypeMission.COULEUR.toString()))
     	{
     		if(armees_eliminees.contains(objectif.getCouleur())) //alors victoire
     		{
@@ -1466,7 +1579,7 @@ public class Joueur extends GuiAgent{
     	}
     	
     	//3eme type de mission
-    	if(objectif.getTypeMission() == TypeMission.TERRITOIRES.toString())
+    	if(objectif.getTypeMission().equals(TypeMission.TERRITOIRES.toString()))
     	{
     		if(territoires.size() == objectif.getNbTerritoire()) //alors victoire
     		{
@@ -1478,7 +1591,7 @@ public class Joueur extends GuiAgent{
     	}
     	
     	//4eme type de mission
-    	if(objectif.getTypeMission() == TypeMission.TERRITOIRES_ET_ARMEES_MIN.toString())
+    	if(objectif.getTypeMission().equals(TypeMission.TERRITOIRES_ET_ARMEES_MIN.toString()))
     	{
     		if(territoires.size() == objectif.getNbTerritoire()) //alors verif
     		{
@@ -1532,7 +1645,7 @@ public class Joueur extends GuiAgent{
             for(Territoire ter:listTemp){
                 int tempReg = 0;
                 for(Territoire terAdj:ter.getTerritoires_adjacents()){
-                    if(!territoireContains(terAdj)){
+                    if(territoireContains(terAdj)){
                         tempReg += terAdj.getRegimentSurTerritoire();
                     }
                 }
@@ -1550,7 +1663,7 @@ public class Joueur extends GuiAgent{
         for(Territoire ter:territoires){
             int tempReg = 0;
             for(Territoire terAdj:ter.getTerritoires_adjacents()){
-                if(!territoireContains(terAdj)){
+                if(territoireContains(terAdj)){
                     tempReg += terAdj.getRegimentSurTerritoire();
                 }
             }
