@@ -276,11 +276,12 @@ public class Intermediaire extends GuiAgent {
     			if(iJoueurTourCombat < joueurs.size()-1) // alors tous les joueurs n'ont pas joue
     			{
     				iJoueurTourCombat++; // pour passer au joueur suivant
+    				window.println("\niJoueurTourCombat = " + iJoueurTourCombat);
     				debutPartie(); // nouveau tour pour ce nouveau joueur
     			}
     			else 
     			{
-    				window.println("fin du tour " + numTour);; // tous le monde a fait sa phase de combat, DEBUT PHASE MANOEUVRE
+    				window.println("fin du tour " + numTour + " dont le dernier est "+msg.getSender().getLocalName());; // tous le monde a fait sa phase de combat, DEBUT PHASE MANOEUVRE
     				
     				ACLMessage assignRegiment = new ACLMessage(ACLMessage.INFORM);
     		        assignRegiment.addReceiver(topicAffichageFinTour);
@@ -289,7 +290,7 @@ public class Intermediaire extends GuiAgent {
     		        window.println("\n" + plateau.toString());
     		        
     		        numTour++;
-    		        //iJoueurTourCombat = 0;
+    		        iJoueurTourCombat = 0;
     		        //debutPartie();  // A METTRE EN COMMENTAIRE SI ON NE VEUT PLUS LOOP (si on veut ne faire que 1 seul tour)
     			}
         		reset(model2,MsgReceiver.INFINITE,null,null);

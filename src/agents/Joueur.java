@@ -315,8 +315,10 @@ public class Joueur extends GuiAgent {
                     continents.addAll(Arrays.asList(infos));
 
                     if (debutPartie) {
+                    	System.out.println("verifVictoire");
                         verifVictoire();
                     } else {
+                    	System.out.println("debut partie = true");
                         debutPartie = true;
                         autorisationDebutPartie();
                     }
@@ -344,7 +346,7 @@ public class Joueur extends GuiAgent {
                      *  autorisation pour commencer phaseCombatJoueur
                      */
                     //COMBAT
-                    territoiresPouvantAttaquer.clear();
+                    territoiresPouvantAttaquer = new ArrayList<>();
                     for (int i = 0; i < territoires.size(); i++) {
                         territoiresPouvantAttaquer.add(i);
                     }
@@ -590,9 +592,19 @@ public class Joueur extends GuiAgent {
                         window.println("Tous les AGENTS ont envoyes leur autorisation");
 
                         //verif nouvelle attaque
-                        if (!territoiresPouvantAttaquer.isEmpty()) {
-                            phaseCombatJoueur();
-                        } else manoeuvreRegiment(); // lancement phase manoeuvre
+                        if(strategie.equals("aleatoire"))
+                        {
+                        	if (!territoiresPouvantAttaquer.isEmpty()) {
+                                phaseCombatJoueur();
+                            } 
+                            else 
+                            {
+                            	territoireConcquis = false;
+                            	manoeuvreRegiment(); // lancement phase manoeuvre
+                           	}
+                        }
+                        else phaseCombatJoueur();
+                        
                     }
                 }
                 reset(model7, MsgReceiver.INFINITE, null, null);
@@ -762,11 +774,7 @@ public class Joueur extends GuiAgent {
                     if (i == territoires.size() - 1 && j == territoires.get(i).getTerritoires_adjacents().size() - 1) {
                         window.println("\n\nTerritoires adjacents regiments update :");
                         window.println(territoires.toString());
-                        if (!debutPartie) {
-                            //FIN PHASE D INIT PARTIE
-                            debutPartie = true;
-                            autorisationDebutPartie();
-                        }
+                        updateContinents(null);
                     }
                 } else // on demande a intermedaire d'update
                 {
@@ -1315,7 +1323,7 @@ public class Joueur extends GuiAgent {
                     nbRegimentDefenseur = this.territoires.get(i).getTerritoires_adjacents().get(j).getRegimentSurTerritoire();
                     message.setContent(nomTerritoireAttaque + "," + nomTerritoireDefense + "," + nbRegimentAttaquant + "," + nbRegimentDefenseur);
                     send(message);
-                    phaseCombatJoueur();
+                    //phaseCombatJoueur();
                 } else {
                     manoeuvreRegiment();
                     territoireConcquis = false;
@@ -1340,7 +1348,7 @@ public class Joueur extends GuiAgent {
                     nbRegimentDefenseur = this.territoires.get(i).getTerritoires_adjacents().get(j).getRegimentSurTerritoire();
                     message.setContent(nomTerritoireAttaque + "," + nomTerritoireDefense + "," + nbRegimentAttaquant + "," + nbRegimentDefenseur);
                     send(message);
-                    phaseCombatJoueur();
+                    //phaseCombatJoueur();
                 } else {
                     manoeuvreRegiment();
                     territoireConcquis = false;
