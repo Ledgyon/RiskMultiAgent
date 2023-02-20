@@ -403,7 +403,7 @@ public class Joueur extends GuiAgent {
                     }
                     nbAutorTopicTerrAdjRecquis = nbAutorTopic; // avec 6 joueurs, il faut 6 ou 12 autorisations
 
-                    window.println("Bilan de l'attaque de notre territoire" + nomTerritoireAttaque + "sur le territoire " + nomTerritoireDefense + " :");
+                    window.println("Bilan de l'attaque de notre territoire" + nomTerritoireAttaque + " sur le territoire " + nomTerritoireDefense + " :");
                     //Perte personnel
                     if (nbRegimentAttaquant == nbRegimentAttaquantUpdate)
                         window.println("Aucune perte de regiment subit");
@@ -1292,6 +1292,17 @@ public class Joueur extends GuiAgent {
                         message.setContent(nomTerritoireAttaque + "," + nomTerritoireDefense + "," + nbRegimentAttaquant + "," + nbRegimentDefenseur);
                         window.println("Attente retour de l'attaque de " + nomTerritoireAttaque + " sur " + nomTerritoireDefense + " de Intermediaire");
                         send(message);
+                    }
+                    else
+                    {
+                    	window.println("Les territoires adjacents ne sont que des territoires allies. Le territoire "+ this.territoires.get(i).getNomTerritoire() +" ne peut pas attaquer" );
+                    	//verif nouvelle attaque
+                        if (!territoiresPouvantAttaquer.isEmpty()) {
+                            phaseCombatJoueur();
+                        } else {
+                            manoeuvreRegiment(); // lancement phase manoeuvre
+                            territoireConcquis = false;
+                        }
                     }
                 } else {
                     window.println("Le territoire " + this.territoires.get(i).getNomTerritoire() + " n a pas assez d unite pour attaquer");
