@@ -125,8 +125,9 @@ public class General extends GuiAgent {
 			 protected void handleMessage(ACLMessage msg) {
 				 if (msg != null) {
 					 
-					 if(pioche.isEmpty() == true)
+					 if(pioche.isEmpty())
 	     				{
+							Collections.shuffle(defaussePioche);
 						 	pioche.addAll(defaussePioche);
 						 	defaussePioche = new ArrayList<>();
 	     				}
@@ -236,6 +237,7 @@ public class General extends GuiAgent {
 		constructPioche();
 		this.objectifs = new ArrayList<>();
 		constructObjectifs();
+		this.defaussePioche = new ArrayList<>();
 	}
 
 	@Override
