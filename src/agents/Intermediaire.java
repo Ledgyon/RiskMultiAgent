@@ -221,7 +221,7 @@ public class Intermediaire extends GuiAgent {
             } catch (UnreadableException e) {
                 //throw new RuntimeException(e);
             }
-            List<Continent> continentPossede = new ArrayList<>();
+            StringBuilder continentPossede = new StringBuilder();
             for(Continent c: plateau.getContinents()){
                 int nbTerritoire = 0;
                 for(Territoire t:c.getTerritoires()){
@@ -232,7 +232,9 @@ public class Intermediaire extends GuiAgent {
                     }
                 }
                 if(nbTerritoire == c.getTerritoires().size()){
-                    continentPossede.add(c);
+					if(!continentPossede.toString().equals(""))
+						continentPossede.append(',');
+                    continentPossede.append(c);
                 }
             }
 
@@ -240,13 +242,7 @@ public class Intermediaire extends GuiAgent {
 
             //init du model
             retour.setConversationId("send update continent");
-
-            try {
-                retour.setContentObject((Serializable) continentPossede);
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
+			retour.setContent(continentPossede.toString());
 
             send(retour);
 
@@ -293,7 +289,7 @@ public class Intermediaire extends GuiAgent {
     		        window.println("\n" + plateau.toString());
     		        
     		        numTour++;
-    		        iJoueurTourCombat = 0;
+    		        //iJoueurTourCombat = 0;
     		        //debutPartie();  // A METTRE EN COMMENTAIRE SI ON NE VEUT PLUS LOOP (si on veut ne faire que 1 seul tour)
     			}
         		reset(model2,MsgReceiver.INFINITE,null,null);
