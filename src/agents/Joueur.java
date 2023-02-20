@@ -40,7 +40,7 @@ public class Joueur extends GuiAgent {
 
     private List<Territoire> territoires; // territoires possedes par le joueur
     private List<Integer> territoiresPouvantAttaquer; //indices de la liste "territoires" des territoires n'ayant pas encore attaque au tour actuel
-    private List<Continent> continents; // permet de savoir quel continent le joueur a conquis pour l'attribution des renforts et pour les objectifs
+    private List<String> continents; // permet de savoir quel continent le joueur a conquis pour l'attribution des renforts et pour les objectifs
     private List<String> armees_eliminees; // liste des couleurs des armees que le joueur a elimnee (les adversaires elimnees, utile si objectif est d eliminer une joueur precis)
     public static final int EXIT = 0;
     public static final int GET_INFO_TERRITOIRE = 1;
@@ -311,16 +311,8 @@ public class Joueur extends GuiAgent {
             protected void handleMessage(ACLMessage msg) {
                 if (msg != null) {
                     window.println("\nMessage recu sur le model " + model3.toString() + " emis par :  " + msg.getSender().getLocalName());
-                    List<Continent> continentList = new ArrayList<>();
-                    try {
-                        continentList = (List<Continent>) msg.getContentObject();
-                    } catch (UnreadableException e) {
-                        // TODO Auto-generated catch block
-                        e.printStackTrace();
-                    }
-
-                    //System.out.println(getLocalName()+"\n"continentList);
-                    continents.addAll(continentList);
+                    var infos = msg.getContent().split(",");
+                    continents.addAll(Arrays.asList(infos));
 
                     if (debutPartie) {
                         verifVictoire();
@@ -807,10 +799,28 @@ public class Joueur extends GuiAgent {
         int nbAddRegiment = this.territoires.size() / 3;
         if (nbAddRegiment < 3)
             nbAddRegiment = 3;
-        nombreRegimentMax += nbAddRegiment;
+        this.nombreRegimentMax += nbAddRegiment;
+        this.nombreRegimentAPlacer += nbAddRegiment;
         if (!this.continents.isEmpty())
-            for (Continent c : continents)
-                nombreRegimentMax += c.getRenfortObtenu();
+            for (String c : continents)
+                switch (c) {
+                    case "AMERIQUE_NORD", "EUROPE" -> {
+                        this.nombreRegimentAPlacer += 5;
+                        this.nombreRegimentMax += 5;
+                    }
+                    case "AMERIQUE_SUD", "OCEANIE" -> {
+                        this.nombreRegimentAPlacer += 2;
+                        this.nombreRegimentMax += 2;
+                    }
+                    case "AFRIQUE" -> {
+                        this.nombreRegimentAPlacer += 3;
+                        this.nombreRegimentMax += 3;
+                    }
+                    case "ASIE" -> {
+                        this.nombreRegimentAPlacer += 7;
+                        this.nombreRegimentMax += 7;
+                    }
+                }
         if (main.size() >= 3)
             nouveauxRenfortsMain();
         window.println(String.valueOf(nombreRegimentMax));
@@ -819,7 +829,7 @@ public class Joueur extends GuiAgent {
 
     // Permet de rajouter d'obtenir de nouveaux renforts par rapport aux cartes se trouvant dans la main du joueur
     private void nouveauxRenfortsMain() {
-        int nbFantassin = 0, nbCavalier = 0, nbCanon = 0, nbJoker = 0;
+        int nbFantassin = 0, nbCavalier = 0, nbCanon = 0, nbJoker = 0, troisCartes = 0;;
         Map<Integer, String> fantassins = new HashMap<>();
         Map<Integer, String> cavaliers = new HashMap<>();
         Map<Integer, String> canons = new HashMap<>();
@@ -842,11 +852,11 @@ public class Joueur extends GuiAgent {
                     canons.put(i, main.get(i).getTerritoire());
                 }
                 case ("FANTASSIN_CAVALERIE_CANON") -> {
-                    nbCanon++;
+                    nbFantassin++;
                     fantassins.put(i, main.get(i).getTerritoire());
                     nbCavalier++;
                     cavaliers.put(i, main.get(i).getTerritoire());
-                    nbFantassin++;
+                    nbCanon++;
                     canons.put(i, main.get(i).getTerritoire());
                     joker = true;
                     nbJoker++;
@@ -914,8 +924,7 @@ public class Joueur extends GuiAgent {
             nbFantassin--;
             nbCanon--;
             nbCavalier--;
-        }
-        if (joker && ((nbFantassin > 1) && (nbCanon > 1)) || ((nbFantassin > 1) && (nbCavalier > 1)) || ((nbCavalier > 1) && (nbCanon > 1))) {
+        } else if (joker && ((nbFantassin > 1) && (nbCanon > 1)) || ((nbFantassin > 1) && (nbCavalier > 1)) || ((nbCavalier > 1) && (nbCanon > 1))) {
             LinkedList<String> unite = new LinkedList<>();
             int j = 0, k = 0, t = 0;
             if (nbJoker == 2) {
@@ -999,8 +1008,7 @@ public class Joueur extends GuiAgent {
                     }
                     returnCarteGeneral(i);
                 }
-            }
-            if (nbCanon == 1) {
+            } else if (nbCanon == 1) {
                 boolean cavalierSend = false, fantassinSend = false;
                 for (int i = (unite.size() - 1); i >= 0; i--) {
                     switch (unite.get(i)) {
@@ -1041,8 +1049,7 @@ public class Joueur extends GuiAgent {
                     }
                     returnCarteGeneral(i);
                 }
-            }
-            if (nbCavalier == 1) {
+            } else if (nbCavalier == 1) {
                 boolean fantassinSend = false, canonSend = false;
                 for (int i = (unite.size() - 1); i >= 0; i--) {
                     switch (unite.get(i)) {
@@ -1089,9 +1096,7 @@ public class Joueur extends GuiAgent {
             nbFantassin--;
             nbCanon--;
             nbCavalier--;
-        }
-        int troisCartes = 0;
-        if (nbCanon >= 3) {
+        } else if (nbCanon >= 3) {
             for (Integer j : keyCanonSorted) {
                 returnCarteGeneral(j);
                 if (!canons.get(j).equals("JOKER"))
@@ -1119,8 +1124,7 @@ public class Joueur extends GuiAgent {
             }
             nombreRegimentMax += 8;
             nombreRegimentAPlacer += 8;
-        }
-        if (nbCavalier >= 3) {
+        } else if (nbCavalier >= 3) {
             for (Integer j : keyCavalierSorted) {
                 returnCarteGeneral(j);
                 if (!cavaliers.get(j).equals("JOKER"))
@@ -1148,8 +1152,7 @@ public class Joueur extends GuiAgent {
             }
             nombreRegimentMax += 6;
             nombreRegimentAPlacer += 6;
-        }
-        if (nbFantassin >= 3) {
+        } else if (nbFantassin >= 3) {
             for (Integer j : keyFantassinSorted) {
                 returnCarteGeneral(j);
                 if (!fantassins.get(j).equals("JOKER"))
