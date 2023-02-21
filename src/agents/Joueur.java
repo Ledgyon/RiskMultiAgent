@@ -106,14 +106,17 @@ public class Joueur extends GuiAgent {
         this.main = new ArrayList<>();
         this.armees_eliminees = new ArrayList<>();
         this.nombreRegimentAPlacer = nombreRegimentMax = 20;
-/*
-        switch (rand.nextInt(3)) {
-            case (0) -> strategie = "aleatoire";
-            case (1) -> strategie = "attaque";
-            case (2) -> strategie = "defense";
-        }*/
-        strategie = "aleatoire";
-        window.println(strategie);
+
+        switch (rand.nextInt(6)) {
+            case (0) -> strategie = "aleatoire";        //  strategie ou toutes les actions se font de façon aleatoire
+            case (1) -> strategie = "attaque";          //  strategie ou les actions seront dirigees vers le territoire ennemi le plus faible
+            case (2) -> strategie = "defense";          //  strategie ou les actions serviront soient a defendre le territoire le plus en danger soit a attaque le territoire l emoins dangereux
+            case (3) -> strategie = "passive";          //  strategie ou le joueur n'attaque pas
+            case (4) -> strategie = "equilibre";        //  strategie ou le joueur cherche a avoir un equilibre dans ses forces d'armees
+            //case (5) -> strategie = "revanche";
+        }
+        //strategie = "aleatoire";
+        window.println("Le " + getLocalName() + " adopte une strategie " + strategie);
 
         //gestion couleur des joueurs
         switch (window.getNoJoueurGui()) {
@@ -359,7 +362,7 @@ public class Joueur extends GuiAgent {
                     for (int i = 0; i < territoires.size(); i++) {
                         territoiresPouvantAttaquer.add(i);
                     }
-                    phaseCombatJoueur();
+                    phaseCombatJoueur(true);
                 }
                 reset(model4bis, MsgReceiver.INFINITE, null, null);
             }
@@ -595,7 +598,7 @@ public class Joueur extends GuiAgent {
                         if(strategie.equals("aleatoire"))
                         {
                         	if (!territoiresPouvantAttaquer.isEmpty()) {
-                                phaseCombatJoueur();
+                                phaseCombatJoueur(true);
                             } 
                             else 
                             {
@@ -603,7 +606,7 @@ public class Joueur extends GuiAgent {
                             	manoeuvreRegiment(); // lancement phase manoeuvre
                            	}
                         }
-                        else phaseCombatJoueur();
+                        else phaseCombatJoueur(rand.nextBoolean());
                         
                     }
                 }
@@ -674,7 +677,7 @@ public class Joueur extends GuiAgent {
         // S'effacer du service pages jaunes
         try {
             DFService.deregister(this);
-        } catch (FIPAException fe) {
+        } catch (FIPAException ignored) {
         }
         System.out.println("TakeDown de " + this.getLocalName());
         //window.dispose();
@@ -807,46 +810,58 @@ public class Joueur extends GuiAgent {
 
     // Permet de rajouter d'obtenir de nouveaux renforts
     public void nouveauxRenforts() {
-        window.println(String.valueOf(nombreRegimentMax));
+        window.println("Avant d'avoir de nouveaux renforts le " + getLocalName() + " avait " + nombreRegimentMax + " regiments");
+        String affichage;
         int nbAddRegiment = this.territoires.size() / 3;
         if (nbAddRegiment < 3)
             nbAddRegiment = 3;
+        affichage = "Il a obtenu de nouveaux regiments\nIl en obtient :\n\t" + nbAddRegiment + " grace a ces territoires";
         this.nombreRegimentMax += nbAddRegiment;
         this.nombreRegimentAPlacer += nbAddRegiment;
+        int nbRegimentContinent = 0;
         if (!this.continents.isEmpty())
             for (String c : continents)
                 switch (c) {
                     case "AMERIQUE_NORD", "EUROPE" -> {
+                        nbRegimentContinent += 5;
                         this.nombreRegimentAPlacer += 5;
                         this.nombreRegimentMax += 5;
                     }
                     case "AMERIQUE_SUD", "OCEANIE" -> {
+                        nbRegimentContinent += 2;
                         this.nombreRegimentAPlacer += 2;
                         this.nombreRegimentMax += 2;
                     }
                     case "AFRIQUE" -> {
+                        nbRegimentContinent += 3;
                         this.nombreRegimentAPlacer += 3;
                         this.nombreRegimentMax += 3;
                     }
                     case "ASIE" -> {
+                        nbRegimentContinent += 7;
                         this.nombreRegimentAPlacer += 7;
                         this.nombreRegimentMax += 7;
                     }
                 }
+        if(nbRegimentContinent != 0)
+            affichage = "\n\t" + nbRegimentContinent + " grace a ces continents qu'il possede";
+        String affichageCartes ="";
         if (main.size() >= 3)
-            nouveauxRenfortsMain();
-        window.println(String.valueOf(nombreRegimentMax));
+            affichageCartes = nouveauxRenfortsMain();
+        if(!affichageCartes.isEmpty())
+            affichage += "\n\t" + affichageCartes;
+        window.println(affichage);
 
     }
 
     // Permet de rajouter d'obtenir de nouveaux renforts par rapport aux cartes se trouvant dans la main du joueur
-    private void nouveauxRenfortsMain() {
-        int nbFantassin = 0, nbCavalier = 0, nbCanon = 0, nbJoker = 0, troisCartes = 0;;
+    private String nouveauxRenfortsMain() {
+        int nbFantassin = 0, nbCavalier = 0, nbCanon = 0, nbJoker = 0, troisCartes = 0;
+        String renvoieInfo = "";
         Map<Integer, String> fantassins = new HashMap<>();
         Map<Integer, String> cavaliers = new HashMap<>();
         Map<Integer, String> canons = new HashMap<>();
         Map<Integer, String> jokers = new HashMap<>();
-        Random rand = new Random();
         boolean joker = false;
         System.out.println(main);
         for (int i = 0; i < main.size(); i++) {
@@ -931,14 +946,11 @@ public class Joueur extends GuiAgent {
                     }
                 }
             }
+            renvoieInfo += 10 + " grace a l'echange d'une carte fantassin, d'une carte cavalier et d'une carte canon";
             nombreRegimentMax += 10;
             nombreRegimentAPlacer += 10;
-            nbFantassin--;
-            nbCanon--;
-            nbCavalier--;
         } else if (joker && ((nbFantassin > 1) && (nbCanon > 1)) || ((nbFantassin > 1) && (nbCavalier > 1)) || ((nbCavalier > 1) && (nbCanon > 1))) {
             LinkedList<String> unite = new LinkedList<>();
-            int j = 0, k = 0, t = 0;
             if (nbJoker == 2) {
                 if (!keyJokersSorted.contains(0)) {
                     unite.add(main.get(0).getUnite());
@@ -1020,6 +1032,7 @@ public class Joueur extends GuiAgent {
                     }
                     returnCarteGeneral(i);
                 }
+                renvoieInfo += 10 + " grace a l'echange d'une carte joker, d'une carte cavalier et d'une carte canon";
             } else if (nbCanon == 1) {
                 boolean cavalierSend = false, fantassinSend = false;
                 for (int i = (unite.size() - 1); i >= 0; i--) {
@@ -1061,6 +1074,7 @@ public class Joueur extends GuiAgent {
                     }
                     returnCarteGeneral(i);
                 }
+                renvoieInfo += 10 + " grace a l'echange d'une carte fantassin, d'une carte cavalier et d'une carte joker";
             } else if (nbCavalier == 1) {
                 boolean fantassinSend = false, canonSend = false;
                 for (int i = (unite.size() - 1); i >= 0; i--) {
@@ -1102,12 +1116,10 @@ public class Joueur extends GuiAgent {
                     }
                     returnCarteGeneral(i);
                 }
+                renvoieInfo += 10 + " grace a l'echange d'une carte fantassin, d'une carte joker et d'une carte canon";
             }
             nombreRegimentMax += 10;
             nombreRegimentAPlacer += 10;
-            nbFantassin--;
-            nbCanon--;
-            nbCavalier--;
         } else if (nbCanon >= 3) {
             for (Integer j : keyCanonSorted) {
                 returnCarteGeneral(j);
@@ -1129,11 +1141,13 @@ public class Joueur extends GuiAgent {
                 nbCanon--;
                 canons.remove(j);
                 troisCartes++;
-                if (troisCartes == 3) {
-                    troisCartes = 0;
+                if (troisCartes == 3)
                     break;
-                }
             }
+            if(joker)
+                renvoieInfo += 10 + " grace a l'echange de deux cartes canon et d'une carte joker";
+            else
+                renvoieInfo += 10 + " grace a l'echange de trois cartes canon";
             nombreRegimentMax += 8;
             nombreRegimentAPlacer += 8;
         } else if (nbCavalier >= 3) {
@@ -1157,11 +1171,13 @@ public class Joueur extends GuiAgent {
                 nbCavalier--;
                 cavaliers.remove(j);
                 troisCartes++;
-                if (troisCartes == 3) {
-                    troisCartes = 0;
+                if (troisCartes == 3)
                     break;
-                }
             }
+            if(joker)
+                renvoieInfo += 10 + " grace a l'echange de deux cartes cavalier et d'une carte joker";
+            else
+                renvoieInfo += 10 + " grace a l'echange de trois cartes cavalier";
             nombreRegimentMax += 6;
             nombreRegimentAPlacer += 6;
         } else if (nbFantassin >= 3) {
@@ -1185,14 +1201,17 @@ public class Joueur extends GuiAgent {
                 nbFantassin--;
                 fantassins.remove(j);
                 troisCartes++;
-                if (troisCartes == 3) {
-                    troisCartes = 0;
+                if (troisCartes == 3)
                     break;
-                }
             }
+            if(joker)
+                renvoieInfo += 10 + " grace a l'echange de deux cartes fantassin et d'une carte joker";
+            else
+                renvoieInfo += 10 + " grace a l'echange de trois cartes fantassin";
             nombreRegimentMax += 4;
             nombreRegimentAPlacer += 4;
         }
+        return renvoieInfo;
     }
 
     // Renvoie des cartes de la main vers la pioche du General
@@ -1233,7 +1252,7 @@ public class Joueur extends GuiAgent {
 
     public void addRegimentTerritoire() {
         switch (strategie) {
-            case "aleatoire" -> {
+            case "aleatoire", "passive" -> {
                 Random rand = new Random();
                 while (nombreRegimentAPlacer != 0) {
                     int indexTer = rand.nextInt(territoires.size());
@@ -1253,13 +1272,20 @@ public class Joueur extends GuiAgent {
                 territoires.get(indexTer).addRegimentSurTerritoire(nombreRegimentAPlacer);
                 nombreRegimentAPlacer = 0;
             }
+            case "equilibre" -> {
+                while (nombreRegimentAPlacer != 0) {
+                    int indexTer = indexWeakestTerritoire();
+                    territoires.get(indexTer).addRegimentSurTerritoire(1);
+                    nombreRegimentAPlacer--;
+                }
+            }
         }
         for (Territoire ter : territoires) {
             updateRegimentTerritoire(ter);
         }
     }
 
-    private void phaseCombatJoueur() {
+    private void phaseCombatJoueur(boolean attaque) {
         window.println("\nAttaque");
         /*
          * Gerer les attaques A FAIRE
@@ -1274,7 +1300,6 @@ public class Joueur extends GuiAgent {
                 int i = territoiresPouvantAttaquer.get(0);
                 // on remove pour ne plus attaquer ce territoire
                 territoiresPouvantAttaquer.remove(0);
-                System.out.println(getLocalName()+"\n"+territoiresPouvantAttaquer);
                 if (this.territoires.get(i).getRegimentSurTerritoire() > 1) // alors assez d unite pour attaque
                 {
                     List<Territoire> listTemp = new ArrayList<>(this.territoires.get(i).getTerritoires_adjacents());
@@ -1302,7 +1327,7 @@ public class Joueur extends GuiAgent {
                     	window.println("Les territoires adjacents ne sont que des territoires allies. Le territoire "+ this.territoires.get(i).getNomTerritoire() +" ne peut pas attaquer" );
                     	//verif nouvelle attaque
                         if (!territoiresPouvantAttaquer.isEmpty()) {
-                            phaseCombatJoueur();
+                            phaseCombatJoueur(true);
                         } else {
                             manoeuvreRegiment(); // lancement phase manoeuvre
                             territoireConcquis = false;
@@ -1312,7 +1337,7 @@ public class Joueur extends GuiAgent {
                     window.println("Le territoire " + this.territoires.get(i).getNomTerritoire() + " n a pas assez d unite pour attaquer");
                     //verif nouvelle attaque
                     if (!territoiresPouvantAttaquer.isEmpty()) {
-                        phaseCombatJoueur();
+                        phaseCombatJoueur(true);
                     } else {
                         manoeuvreRegiment(); // lancement phase manoeuvre
                         territoireConcquis = false;
@@ -1320,7 +1345,6 @@ public class Joueur extends GuiAgent {
                 }
             }
             case "attaque" -> {
-                boolean attaque = rand.nextBoolean();
                 if (attaque) {
                     int i, j;
                     String position = findPositionLowestValue();
@@ -1344,8 +1368,7 @@ public class Joueur extends GuiAgent {
                     territoireConcquis = false;
                 }
             }
-            case "defense" -> {
-                boolean attaque = rand.nextBoolean();
+            case "defense", "equilibre" -> {
                 if (attaque) {
                     int i, j;
                     String position = findPositionBiggestGap();
@@ -1368,6 +1391,10 @@ public class Joueur extends GuiAgent {
                     manoeuvreRegiment();
                     territoireConcquis = false;
                 }
+            }
+            case "passive" -> {
+                window.println("Le " + getLocalName() + "ayant une strategie passive, il n'attaque pas");
+                manoeuvreRegiment();
             }
         }
     }
@@ -1424,7 +1451,7 @@ public class Joueur extends GuiAgent {
         window.println("\nDebut phase manoeuvre");
         Random rand = new Random();
         boolean manoeuvre = rand.nextBoolean();
-        int noTerritoireListMinus, noTerritoireMinus, noTerritoireAdd, nbRegiment;
+        int noTerritoireListMinus, noTerritoireMinus, noTerritoireAdd, nbRegiment = 0;
         Territoire terAdd = null, terMinus = null;
         if (manoeuvre) {
             List<List<Territoire>> tempTAdd = new ArrayList<>();        //  Liste temporaire des territoires qui pourront recevoir des regiments
@@ -1462,7 +1489,7 @@ public class Joueur extends GuiAgent {
             }
             if (!tempTAdd.isEmpty()) {
                 switch (this.strategie) {
-                    case "aleatoire" -> {
+                    case "aleatoire", "passive" -> {
                         if (!tempTMinus.isEmpty()) {
                             noTerritoireListMinus = rand.nextInt(tempTMinus.size());
                             List<Territoire> listTemp = new ArrayList<>(tempTMinus.get(noTerritoireListMinus));
@@ -1507,6 +1534,22 @@ public class Joueur extends GuiAgent {
                             if (indexMinus != -1) {
                                 terMinus = getTerritoireByName(tempTMinus.get(indexAdd).get(indexMinus).getNomTerritoire());
                                 nbRegiment = terMinus.getRegimentSurTerritoire() - 1;
+                                terMinus.addRegimentSurTerritoire(-nbRegiment);
+                                terAdd.addRegimentSurTerritoire(nbRegiment);
+                            }
+                        }
+                    }
+                    case "equilibre" -> {
+                        String position = indexWeakestTerritoire(tempTAdd);
+                        String[] string = position.split(",");
+                        int indexList = Integer.parseInt(string[0]);
+                        int indexAdd = Integer.parseInt(string[1]);
+                        terAdd = getTerritoireByName(tempTAdd.get(indexList).get(indexAdd).getNomTerritoire());
+                        if (!tempTMinus.get(indexList).isEmpty()) {
+                            int indexMinus = indexOfBiggestValue(tempTMinus.get(indexList), terAdd);
+                            if (indexMinus != -1) {
+                                terMinus = getTerritoireByName(tempTMinus.get(indexList).get(indexMinus).getNomTerritoire());
+                                nbRegiment = ((terMinus.getRegimentSurTerritoire() - terAdd.getRegimentSurTerritoire()) / 2) - 1;
                                 terMinus.addRegimentSurTerritoire(-nbRegiment);
                                 terAdd.addRegimentSurTerritoire(nbRegiment);
                             }
@@ -1675,6 +1718,33 @@ public class Joueur extends GuiAgent {
             if (tempReg > regimentEnnemi) {
                 regimentEnnemi = tempReg;
                 index = territoires.indexOf(ter);
+            }
+        }
+        return index;
+    }
+
+    // fonction recuperant le territoire possedant le moins de regiment
+    public int indexWeakestTerritoire() {
+        int index = 0, minValue = Integer.MAX_VALUE;
+        for (Territoire t : territoires){
+            if(t.getRegimentSurTerritoire() < minValue){
+                index = territoires.indexOf(t);
+                minValue = t.getRegimentSurTerritoire();
+            }
+        }
+        return index;
+    }
+
+    // fonction recuperant le territoire possedant le moins de regiment par rapport a une liste donnee
+    public String indexWeakestTerritoire(List<List<Territoire>> listAdd) {
+        int minValue = Integer.MAX_VALUE;
+        String index = "";
+        for (List<Territoire> listTer : listAdd){
+            for(Territoire t : listTer) {
+                if (t.getRegimentSurTerritoire() < minValue) {
+                    index = listAdd.indexOf(listTer) + "," + listTer.indexOf(t);
+                    minValue = t.getRegimentSurTerritoire();
+                }
             }
         }
         return index;
