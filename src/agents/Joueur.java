@@ -107,7 +107,7 @@ public class Joueur extends GuiAgent {
         this.armees_eliminees = new ArrayList<>();
         this.nombreRegimentAPlacer = nombreRegimentMax = 20;
 
-        switch (rand.nextInt(6)) {
+        switch (rand.nextInt(5)) {
             case (0) -> strategie = "aleatoire";        //  strategie ou toutes les actions se font de façon aleatoire
             case (1) -> strategie = "attaque";          //  strategie ou les actions seront dirigees vers le territoire ennemi le plus faible
             case (2) -> strategie = "defense";          //  strategie ou les actions serviront soient a defendre le territoire le plus en danger soit a attaque le territoire l emoins dangereux
@@ -1393,7 +1393,7 @@ public class Joueur extends GuiAgent {
                 }
             }
             case "passive" -> {
-                window.println("Le " + getLocalName() + "ayant une strategie passive, il n'attaque pas");
+                window.println("Le " + getLocalName() + " ayant une strategie passive, il n'attaque pas");
                 manoeuvreRegiment();
             }
         }
