@@ -186,11 +186,23 @@ public class Intermediaire extends GuiAgent {
             window.println(plateau.toString());
             
             nbTerritoireUpdate += 1;
-            if(nbTerritoireUpdate == 42)
-            {
-            	nbTerritoireUpdate = 0;
-            	autorisationRegimentTerritoireAdjacent();
+            
+            if(m.getEncoding() != null)
+    		{
+            	if(nbTerritoireUpdate == Integer.parseInt(m.getEncoding()))
+            	{
+            		nbTerritoireUpdate = 0;
+            		autorisationCombat(m.getSender().getLocalName());
+            	}
+    		}
+            else {
+            	if(nbTerritoireUpdate == 42)
+                {
+                	nbTerritoireUpdate = 0;
+                	autorisationRegimentTerritoireAdjacent();
+                }
             }
+            
         }));
 
 
@@ -291,7 +303,7 @@ public class Intermediaire extends GuiAgent {
     		        
     		        numTour++;
     		        iJoueurTourCombat = 0;
-    		        debutPartie();  // A METTRE EN COMMENTAIRE SI ON NE VEUT PLUS LOOP (si on veut ne faire que 1 seul tour)
+    		        //debutPartie();  // A METTRE EN COMMENTAIRE SI ON NE VEUT PLUS LOOP (si on veut ne faire que 1 seul tour)
     			}
         		reset(model2,MsgReceiver.INFINITE,null,null);
         	}
@@ -480,6 +492,17 @@ public class Intermediaire extends GuiAgent {
     	ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
 		message.setConversationId("debut tour");
 		message.addReceiver(new AID(joueurs.get(iJoueurTourCombat).getLocalName(), AID.ISLOCALNAME));
+		send(message);
+    }
+    
+    private void autorisationCombat(String nomJoueur)
+    {
+		window.println("\nEnvoie autorisation commencement de la phase de combat de " + joueurs.get(iJoueurTourCombat).getLocalName());
+		
+		//Envoie du message pour que le joueur commence son tour
+    	ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+		message.setConversationId("autorisation combat");
+		message.addReceiver(new AID(nomJoueur, AID.ISLOCALNAME));
 		send(message);
     }
     

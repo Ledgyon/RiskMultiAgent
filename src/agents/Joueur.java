@@ -106,13 +106,13 @@ public class Joueur extends GuiAgent {
         this.main = new ArrayList<>();
         this.armees_eliminees = new ArrayList<>();
         this.nombreRegimentAPlacer = nombreRegimentMax = 20;
-
+/*
         switch (rand.nextInt(3)) {
             case (0) -> strategie = "aleatoire";
             case (1) -> strategie = "attaque";
             case (2) -> strategie = "defense";
-        }
-        //strategie = "aleatoire";
+        }*/
+        strategie = "aleatoire";
         window.println(strategie);
 
         //gestion couleur des joueurs
@@ -331,7 +331,7 @@ public class Joueur extends GuiAgent {
         //init du model
         var model4 = MessageTemplate.MatchConversationId("debut tour");
 
-        //Reception de la notification du debut de la phase de combat
+        //Reception de la notification du debut de la phase de renfort
         addBehaviour(new MsgReceiver(this, model4, MsgReceiver.INFINITE, null, null) {
             protected void handleMessage(ACLMessage msg) {
                 if (msg != null) {
@@ -340,28 +340,28 @@ public class Joueur extends GuiAgent {
                     //RENFORT
                     nouveauxRenforts();
                     addRegimentTerritoire();
+                    
+                }
+                reset(model4, MsgReceiver.INFINITE, null, null);
+            }
+        });
+        
+        //init du model
+        var model4bis = MessageTemplate.MatchConversationId("autorisation combat");
 
-                    /**
-                     *  envoir des informations d'addRegimentTerritoire +
-                     *  autorisation pour commencer phaseCombatJoueur
-                     */
-                    //COMBAT
+        //Reception de la notification du debut de la phase de combat
+        addBehaviour(new MsgReceiver(this, model4bis, MsgReceiver.INFINITE, null, null) {
+            protected void handleMessage(ACLMessage msg) {
+                if (msg != null) {
+                    window.println("\nMessage recu sur le model " + model4.toString() + " emis par :  " + msg.getSender().getLocalName());
+                    
                     territoiresPouvantAttaquer = new ArrayList<>();
                     for (int i = 0; i < territoires.size(); i++) {
                         territoiresPouvantAttaquer.add(i);
                     }
                     phaseCombatJoueur();
-                    /*
-                    try {
-						Thread.sleep(2000);
-					} catch (InterruptedException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}*/
-
-
                 }
-                reset(model4, MsgReceiver.INFINITE, null, null);
+                reset(model4bis, MsgReceiver.INFINITE, null, null);
             }
         });
 
@@ -750,6 +750,10 @@ public class Joueur extends GuiAgent {
             e.printStackTrace();
         }
         infoRegimentTerritoire.addReceiver(topicRegimentTeritoire);
+        if(debutPartie) // alors la fonction sert a update le plateau apres nouveau renfort a chaque tour
+        {
+        	infoRegimentTerritoire.setEncoding(""+territoires.size());
+        }
         send(infoRegimentTerritoire);
     }
 
@@ -1250,9 +1254,9 @@ public class Joueur extends GuiAgent {
                 nombreRegimentAPlacer = 0;
             }
         }
-        /*for (Territoire ter : territoires) {
+        for (Territoire ter : territoires) {
             updateRegimentTerritoire(ter);
-        }*/
+        }
     }
 
     private void phaseCombatJoueur() {
