@@ -294,7 +294,7 @@ public class Intermediaire extends GuiAgent {
 
 					numTour++;
 					iJoueurTourCombat = 0;
-					if (numTour < 15)
+					if (numTour < 10)
 						debutPartie();  // A METTRE EN COMMENTAIRE SI ON NE VEUT PLUS LOOP (si on veut ne faire que 1 seul tour)
 				}
 				reset(model2, MsgReceiver.INFINITE, null, null);
@@ -500,10 +500,11 @@ public class Intermediaire extends GuiAgent {
 	private void autorisationCombat(String nomJoueur) {
 		window.println("\nEnvoie autorisation commencement de la phase de combat de " + joueurs.get(iJoueurTourCombat).getLocalName());
 
-		//Envoie du message pour que le joueur commence son tour
+		//Envoie du message pour que le joueur commence sa phase de combat
 		ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
 		message.setConversationId("autorisation combat");
 		message.addReceiver(new AID(nomJoueur, AID.ISLOCALNAME));
+		message.setContent("autorisation intermediaire");
 		send(message);
 	}
 
@@ -535,7 +536,6 @@ public class Intermediaire extends GuiAgent {
 					}
 				}
 			}
-
 		}
 	}
 

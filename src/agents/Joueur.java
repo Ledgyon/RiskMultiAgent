@@ -44,6 +44,13 @@ public class Joueur extends GuiAgent {
     private List<String> armees_eliminees; // liste des couleurs des armees que le joueur a elimnee (les adversaires elimnees, utile si objectif est d eliminer une joueur precis)
     public static final int EXIT = 0;
     public static final int GET_INFO_TERRITOIRE = 1;
+    
+    /*
+     * VARIABLES controlant la bonne reception des messages permettant l'autorisation de lancer la phase de combat
+     */
+    private boolean autorIntermediaire = false;
+    private int nbAutorJoueurRecquis = 500; // set a une valeur trop elevee expres pour ne pas cut la validation des autorisation
+    private int nbAutorJoueur = 0;
 
     /*
      * VARIABLES controlant la bonne reception des messages permettant l'autorisation de lancer une nouvelle attaque
@@ -72,6 +79,10 @@ public class Joueur extends GuiAgent {
      * topic du joueur demandant de mettre à jour les régiments sur le plateau
      */
     AID topicRegimentTeritoire;
+    /*
+     * topic du joueur envoyant à tous les joueurs l'update des regiments apres phase de renfort pour qu ils update leurs territoires adjacents
+     */
+    AID topicRegimentTerritoireAdjacentPourJoueursPhaseRenfort;
     /**
      * topic du joueur permettant de faire la repartition des regiments sur les territoires du joueur en debut de partie
      */
@@ -169,12 +180,15 @@ public class Joueur extends GuiAgent {
         try {
             topicHelper = (TopicManagementHelper) getHelper(TopicManagementHelper.SERVICE_NAME);
             topicRegimentTeritoire = topicHelper.createTopic("INFO REGIMENT TERRITOIRE");
+            topicRegimentTerritoireAdjacentPourJoueursPhaseRenfort = topicHelper.createTopic("UPDATE TERRITOIRES ADJACENTS POUR JOUEURS PHASE RENFORT");
             topicTerritoire = topicHelper.createTopic("INFO TERRITOIRE");
             topicUpdateContinent = topicHelper.createTopic("UPDATE CONTINENT");
             topicElimJoueur = topicHelper.createTopic("ELIMINATION JOUEUR");
             topicHelper.register(topicTerritoire);
             topicHelper.register(topicRegimentTeritoire);
             topicHelper.register(topicUpdateContinent);
+            topicHelper.register(topicRegimentTerritoireAdjacentPourJoueursPhaseRenfort);
+            topicHelper.register(topicElimJoueur);
         } catch (ServiceException e) {
             e.printStackTrace();
         }
@@ -215,20 +229,8 @@ public class Joueur extends GuiAgent {
                             objectif = temp;
                             window.println(objectif.toString());
                         }
-
-                        /*
-                         * OBSOLETE MAIS ON LAISSE POUR L'INSTANT
-                         */
-                        /*
-                        else if(msg.getContentObject().getClass().getName().equals("plateau.Territoire")) { 
-                        	window.println("pb topic");
-                        	Territoire tempT = (Territoire)msg.getContentObject();
-                        	territoires.add(tempT);
-                        	window.println("pb topic" + territoires.toString());
-                        }*/
-                    } catch (
-                            UnreadableException e) { // A DEFINIR DE NE RIEN FAIRE SI MESS VIENT D'UN TOPIC, SINON, REMETTRE LE throw new RuntimeException(e);
-                        //throw new RuntimeException(e);
+                    } catch (UnreadableException e) {
+                        throw new RuntimeException(e);
                     }
 
                 } else window.println("error territoire");
@@ -363,19 +365,53 @@ public class Joueur extends GuiAgent {
                         send(message1);
                     } else {
                         //RENFORT
-                        //nouveauxRenforts();
-                        //addRegimentTerritoire();
-
+                        nouveauxRenforts();
+                        addRegimentTerritoire();
+/*
                         territoiresPouvantAttaquer = new ArrayList<>();
                         for (int i = 0; i < territoires.size(); i++) {
                             territoiresPouvantAttaquer.add(i);
                         }
-                        phaseCombatJoueur(true);
+                        phaseCombatJoueur(true);*/
                     }
                 }
                 reset(model4, MsgReceiver.INFINITE, null, null);
             }
         });
+        
+        //topic declenche lors de la phase de renfort, recu par tous les joueurs pour update leurs territoires adjacents
+        topicRegimentTerritoireAdjacentPourJoueursPhaseRenfort = AgentServicesTools.generateTopicAID(this, "UPDATE TERRITOIRES ADJACENTS POUR JOUEURS PHASE RENFORT");
+
+        //ecoute des messages radio
+        addBehaviour(new ReceiverBehaviour(this, -1, MessageTemplate.MatchTopic(topicRegimentTerritoireAdjacentPourJoueursPhaseRenfort), true, (a, m) -> {
+            window.println("Message recu sur le topic " + topicRegimentTerritoireAdjacentPourJoueursPhaseRenfort.getLocalName() + ". Contenu " + m.getContent()
+                    + " emis par :  " + m.getSender().getLocalName());
+            
+            var infos = m.getContent().split(",");
+            
+            String nomTerritoire = infos[0];
+            int nbRegimentUpdate = Integer.parseInt(infos[1]);
+            String nomJoueur = infos[2];
+
+            //update territoires adjacents
+            int i, j, k;
+    		for (i = 0; i < this.territoires.size(); i++) // parcours des territoires
+    		{
+    			for (j = 0; j < this.territoires.get(i).getTerritoires_adjacents().size(); j++) // parcours de tous les territoires adjacents
+    			{
+					if (this.territoires.get(i).getTerritoires_adjacents().get(j).getNomTerritoire().equals(nomTerritoire)) {
+						this.territoires.get(i).getTerritoires_adjacents().get(j).setRegimentSurTerritoire(nbRegimentUpdate);
+					}
+    			}
+    		}
+    		
+    		//Envoie du message pour que le joueur commence sa phase de combat
+    		ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
+    		message.setConversationId("autorisation combat");
+    		message.addReceiver(new AID(nomJoueur, AID.ISLOCALNAME));
+    		message.setContent("autorisation joueur");
+    		send(message);
+        }));
 
         //init du model
         var model4bis = MessageTemplate.MatchConversationId("autorisation combat");
@@ -386,11 +422,31 @@ public class Joueur extends GuiAgent {
                 if (msg != null) {
                     window.println("\nMessage recu sur le model " + model4.toString() + " emis par :  " + msg.getSender().getLocalName());
 
-                    territoiresPouvantAttaquer = new ArrayList<>();
-                    for (int i = 0; i < territoires.size(); i++) {
-                        territoiresPouvantAttaquer.add(i);
+                    if(msg.getContent().equals("autorisation joueur"))
+                    {
+                    	window.println("nbAutorJoueur = " + nbAutorJoueur + ", nbAutorJoueurRecquis = " + nbAutorJoueurRecquis);
+                    	nbAutorJoueur++;
                     }
-                    phaseCombatJoueur(true);
+                    
+                    if(msg.getContent().equals("autorisation intermediaire"))
+                    {
+                    	autorIntermediaire = true;
+                    }
+                    
+                    if(autorIntermediaire && nbAutorJoueurRecquis == nbAutorJoueur)
+                    {
+                    	//reset des variables
+                    	autorIntermediaire = false;
+                    	nbAutorJoueurRecquis = 500;
+                    	nbAutorJoueur = 0;
+                    	
+                    	territoiresPouvantAttaquer = new ArrayList<>();
+                        for (int i = 0; i < territoires.size(); i++) {
+                            territoiresPouvantAttaquer.add(i);
+                        }
+                        phaseCombatJoueur(true);
+                    }
+                    
                 }
                 reset(model4bis, MsgReceiver.INFINITE, null, null);
             }
@@ -819,6 +875,13 @@ public class Joueur extends GuiAgent {
             infoRegimentTerritoire.setEncoding("" + territoires.size());
         }
         send(infoRegimentTerritoire);
+    }
+    
+    public void updateRegimentTerritoireAdjPourJoueursPhaseRenfort(Territoire ter) {
+        ACLMessage infoRegimentTerritoireAdjPourJoueursPhaseRenfort = new ACLMessage(ACLMessage.INFORM);
+        infoRegimentTerritoireAdjPourJoueursPhaseRenfort.addReceiver(topicRegimentTerritoireAdjacentPourJoueursPhaseRenfort);
+        infoRegimentTerritoireAdjPourJoueursPhaseRenfort.setContent(ter.getNomTerritoire()+","+ter.getRegimentSurTerritoire()+","+getLocalName());
+        send(infoRegimentTerritoireAdjPourJoueursPhaseRenfort);
     }
 
     /*
@@ -1341,8 +1404,14 @@ public class Joueur extends GuiAgent {
                 }
             }
         }
+        
+        //set du nombre de topic de joueurs a recevoir avant de continuer
+        nbAutorJoueurRecquis = joueurs.size() * territoires.size();
+        		
+        //envoie des update au plateau et aux joueurs
         for (Territoire ter : territoires) {
             updateRegimentTerritoire(ter);
+            updateRegimentTerritoireAdjPourJoueursPhaseRenfort(ter);
         }
     }
 
