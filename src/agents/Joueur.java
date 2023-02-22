@@ -351,23 +351,26 @@ public class Joueur extends GuiAgent {
                 if (msg != null) {
                     window.println("\nMessage recu sur le model " + model4.toString() + " emis par :  " + msg.getSender().getLocalName());
 
-                    if (objectif.getTypeMission().equals(TypeMission.COULEUR.toString())) {
-                        if (armees_eliminees.contains(objectif.getCouleur())) //alors victoire
-                        {
-                            window.println("\nEnvoie fin de partie a Intermediaire. Le " + getLocalName() + " a gagne la partie,"
-                                    + "\ncar il a complete sa mission, l armee " + objectif.getCouleur() + " a ete eliminee."
-                                    		+ "\nLe " + getLocalName() + " revendique la victoire.");
-                            ACLMessage message1 = new ACLMessage(ACLMessage.REQUEST);
-                            message1.setConversationId("victoire / fin de partie");
-                            message1.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
-                            send(message1);
-                        }
+                    if (objectif.getTypeMission().equals(TypeMission.COULEUR.toString()) && armees_eliminees.contains(objectif.getCouleur())) { // alors victoire
+                        window.println("\nEnvoie fin de partie a Intermediaire. Le " + getLocalName() + " a gagne la partie,"
+                                + "\ncar il a complete sa mission, l armee " + objectif.getCouleur() + " a ete eliminee."
+                                		+ "\nLe " + getLocalName() + " revendique la victoire.");
+                        ACLMessage message1 = new ACLMessage(ACLMessage.REQUEST);
+                        message1.setConversationId("victoire / fin de partie");
+                        message1.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
+                        send(message1);
                     }
                     else
                     {
                     	//RENFORT
                         nouveauxRenforts();
                         addRegimentTerritoire();
+                        /*
+                    	territoiresPouvantAttaquer = new ArrayList<>();
+                        for (int i = 0; i < territoires.size(); i++) {
+                            territoiresPouvantAttaquer.add(i);
+                        }
+                    	phaseCombatJoueur(true);*/
                     }
                 }
                 reset(model4, MsgReceiver.INFINITE, null, null);

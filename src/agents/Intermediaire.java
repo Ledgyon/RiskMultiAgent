@@ -225,7 +225,7 @@ public class Intermediaire extends GuiAgent {
     			}
     		}
         	
-            window.println("Message recu sur le topic " + topicUpdateContinent.getLocalName() + ". Contenu " + m.getContent()
+            window.println("Message recu sur le topic " + topicUpdateContinent.getLocalName() /*+ ". Contenu " + m.getContent().toString()*/ // en commentaire pour alleger l affichage
                     + " emis par :  " + m.getSender().getLocalName());
             List<Territoire> tempT = new ArrayList<>();
             try {
@@ -326,29 +326,49 @@ public class Intermediaire extends GuiAgent {
                     String nomTerritoireAttaque = infos[0], nomTerritoireDefense = infos[1];
                 	int nbRegimentAttaquant = Integer.parseInt(infos[2]), nbRegimentDefenseur = Integer.parseInt(infos[3]);
                 	
-                	// savoir combien de des ils peuvent lances
-                	int nbDesAttaquant = nbDes("attaquant",nbRegimentAttaquant);
-                	int nbDesDefenseur = nbDes("defenseur",nbRegimentDefenseur);
+                	int nbRegimentAttaquantUpdate = nbRegimentAttaquant, nbRegimentDefenseurUpdate = nbRegimentDefenseur;
+                	window.println("\n");
                 	
-                	// resultat lancement
-                	Random rand = new Random();
-                	List<Integer> resultatsAtt = new ArrayList<>();
-                	List<Integer> resultatsDef = new ArrayList<>();
-                	int i;
-                	for(i = 0; i < nbDesAttaquant; i++) resultatsAtt.add(rand.nextInt(6) + 1); // random entre 1 et 6
-                	for(i = 0; i < nbDesDefenseur; i++) resultatsDef.add(rand.nextInt(6) + 1); // random entre 1 et 6
-                	// trie decroissant
-                	Collections.sort(resultatsAtt,Collections.reverseOrder());
-                	Collections.sort(resultatsDef,Collections.reverseOrder());
-                	// confrontation lancement
-                	int nbConfrontation, nbRegimentAttaquantUpdate = nbRegimentAttaquant, nbRegimentDefenseurUpdate = nbRegimentDefenseur;
-                	if(resultatsAtt.size() >= 2 && resultatsDef.size() >= 2) nbConfrontation = 2; // car nbDes max de defenseur = 2, donc max 2 comparaisons
-                	else nbConfrontation = 1;
-                	for(i=0;i<nbConfrontation;i++) 
+                	while(nbRegimentAttaquantUpdate > 0 && nbRegimentDefenseurUpdate > 0)
                 	{
-                		if(resultatsAtt.get(i) > resultatsDef.get(i)) nbRegimentDefenseurUpdate--;
-                		else nbRegimentAttaquantUpdate--;
+                		window.println(nomTerritoireAttaque + " possede " + nbRegimentAttaquantUpdate +" regiment(s).\n"
+                    			+ nomTerritoireDefense + " possede " + nbRegimentDefenseurUpdate + " regiment(s).\nDebut du combat.");
+                		window.println("\tLancer de des");
+	                	// savoir combien de des ils peuvent lances
+	                	int nbDesAttaquant = nbDes("attaquant",nbRegimentAttaquantUpdate);
+	                	int nbDesDefenseur = nbDes("defenseur",nbRegimentDefenseurUpdate);
+	                	window.println("\tL attaquant lance "+ nbDesAttaquant +" des. Le defenseur lance "+ nbDesDefenseur + " des.");
+	                	
+	                	// resultat lancement
+	                	Random rand = new Random();
+	                	List<Integer> resultatsAtt = new ArrayList<>();
+	                	List<Integer> resultatsDef = new ArrayList<>();
+	                	int i;
+	                	for(i = 0; i < nbDesAttaquant; i++) resultatsAtt.add(rand.nextInt(6) + 1); // random entre 1 et 6
+	                	for(i = 0; i < nbDesDefenseur; i++) resultatsDef.add(rand.nextInt(6) + 1); // random entre 1 et 6
+	                	// trie decroissant
+	                	Collections.sort(resultatsAtt,Collections.reverseOrder());
+	                	Collections.sort(resultatsDef,Collections.reverseOrder());
+	                	window.println("\tResultat des lancer de l'attaquant : "+resultatsAtt.toString());
+	                	window.println("\tResultat des lancer du defenseur : "+resultatsDef.toString());
+	                	// confrontation lancement
+	                	int nbConfrontation;
+	                	if(resultatsAtt.size() >= 2 && resultatsDef.size() >= 2) nbConfrontation = 2; // car nbDes max de defenseur = 2, donc max 2 comparaisons
+	                	else nbConfrontation = 1;
+	                	for(i=0;i<nbConfrontation;i++) 
+	                	{
+	                		if(resultatsAtt.get(i) > resultatsDef.get(i)) {
+	                			nbRegimentDefenseurUpdate--;
+	                			window.println("\t"+ resultatsAtt.get(i) + " > " + resultatsDef.get(i) + ", le defenseur perd 1 unite.");
+	                		}
+	                		else {
+	                			nbRegimentAttaquantUpdate--;
+	                			window.println("\t"+ resultatsAtt.get(i) + " <= " + resultatsDef.get(i) + ", l attaquant perd 1 unite.");
+	                		}
+	                	}
                 	}
+                	if(nbRegimentAttaquantUpdate == 0) window.println("Le defenseur ne possede plus d unite. Victoire de l'attaquant "+ nomTerritoireAttaque);
+                	else window.println("L attaquant ne possede plus d unite. Victoire du defenseur "+ nomTerritoireDefense);
                 	
                 	
                 	
