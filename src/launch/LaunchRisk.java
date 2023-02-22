@@ -22,7 +22,7 @@ public class LaunchRisk {
         prop.setProperty(Profile.SERVICES, "jade.core.messaging.TopicManagementService;jade.core.event.NotificationService");
         // nommer les agents
         StringBuilder sb = new StringBuilder();
-        for(int i = 1; i <= 6; i++)
+        for (int i = 1; i <= 6; i++)
             sb.append("Joueur_").append(i).append(":agents.Joueur;");
         sb.append("General:agents.General;");
         sb.append("Intermediaire:agents.Intermediaire;");
