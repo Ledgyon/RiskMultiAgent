@@ -129,17 +129,6 @@ public class Joueur extends GuiAgent {
         this.attaqueRevanche = new ArrayList<>();
         this.nombreRegimentAPlacer = nombreRegimentMax = 20;
 
-        switch (rand.nextInt(6)) {
-            case (0) -> strategie = "aleatoire";        //  strategie ou toutes les actions se font de façon aleatoire
-            case (1) -> strategie = "attaque";          //  strategie ou les actions seront dirigees vers le territoire ennemi le plus faible
-            case (2) -> strategie = "defense";          //  strategie ou les actions serviront soient a defendre le territoire le plus en danger soit a attaque le territoire l emoins dangereux
-            case (3) -> strategie = "passive";          //  strategie ou le joueur n'attaque pas
-            case (4) -> strategie = "equilibre";        //  strategie ou le joueur cherche a avoir un equilibre dans ses forces d'armees
-            case (5) -> strategie = "revanche";
-        }
-        //strategie = "aleatoire";
-        window.println("Le " + getLocalName() + " adopte une strategie " + strategie);
-
         //gestion couleur des joueurs
         switch (window.getNoJoueurGui()) {
             case (1) -> {
@@ -227,7 +216,16 @@ public class Joueur extends GuiAgent {
                                 }
                             }
                             objectif = temp;
+                            strategie = msg.getEncoding();
                             window.println(objectif.toString());
+                            String rajout = null;
+                            if(strategie.equals("aleatoire")) rajout = ", strategie ou toutes les actions se font de façon aleatoire";
+                            if(strategie.equals("attaque")) rajout = ", strategie ou les actions seront dirigees vers le territoire ennemi le plus faible";  
+                            if(strategie.equals("defense")) rajout = ", strategie ou les actions serviront soient a defendre le territoire le plus en danger soit a attaque le territoire l emoins dangereux";
+                            if(strategie.equals("passive")) rajout = ", strategie ou le joueur n'attaque pas";
+                            if(strategie.equals("equilibre")) rajout = ", strategie ou le joueur cherche a avoir un equilibre dans ses forces d'armees";
+                            if(strategie.equals("revanche")) rajout = ", strategie ou le joueur priorise son attaque sur une joueur l ayant attaque";
+                            window.println("Le " + getLocalName() + ", adopte une strategie " + strategie + rajout);
                         }
                     } catch (UnreadableException e) {
                         throw new RuntimeException(e);

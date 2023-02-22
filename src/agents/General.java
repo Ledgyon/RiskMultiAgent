@@ -2,6 +2,7 @@ package agents;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,6 +32,7 @@ public class General extends GuiAgent {
 	private List<CartePioche> pioche;
 	private List<CartePioche> defaussePioche;
 	private List<CarteMission> objectifs;
+	private List<String> strategies;
 	private gui.GeneralGui window;
 	
 	/**
@@ -56,6 +58,11 @@ public class General extends GuiAgent {
 		window.println("Hello! Agent  " + getLocalName() + " is ready, my address is " + this.getAID().getName());
 		window.println(this.toString());
 		detectJoueurs();
+		
+		this.strategies = new ArrayList<>();
+		strategies.addAll(Arrays.asList("attaque","aleatoire","defense","passive","equilibre","revanche"));
+		//melange des strategies
+		Collections.shuffle(strategies);
 
 		AgentServicesTools.register(this, "general", "link");
 		
@@ -75,49 +82,6 @@ public class General extends GuiAgent {
 				 reset(model0,MsgReceiver.INFINITE,null,null);
 			 }
 		});
-		/*
-		 * OBSOLETE MAIS METHODE POUVANT ETRE PRATIQUE POUR PLUS TARD
-		 */
-		/*
-		SequentialBehaviour comportementSequentiel = new SequentialBehaviour();
-				
-		comportementSequentiel.addSubBehaviour(new TickerBehaviour(this,500) {
-			
-			int i_carte = 0;	
-			int i = 0;
-			protected void onTick() {
-		        //System.out.println("Il reste "+(nombreDeSecondes-getTickCount())+" seconds");
-		    	  ACLMessage message = new ACLMessage(ACLMessage.PROPOSE);
-		  			message.addReceiver(new AID(joueurs.get(i).getLocalName(), AID.ISLOCALNAME));
-
-		  			try {
-		  				message.setContentObject(pioche.get(i_carte));
-		  			} catch (IOException e) {
-		  				// TODO Auto-generated catch block
-		  				e.printStackTrace();
-		  			}
-		  			send(message);
-
-		  			window.println("Carte "+pioche.get(i_carte));
-		  			window.println("MSG "+message.toString());
-
-		  			i_carte++;
-		  			//boucle pour gerer l'envoie aux joueurs
-		  			if (i != (joueurs.size() - 1)) {
-		  				i++;
-		  			} else i = 0;
-		  			
-		  			if(i_carte == pioche.size())
-		  			{
-		  				
-		  			}
-		  		
-		      } 
-	    });
-		
-		addBehaviour(comportementSequentiel);
-		
-		*/
 		
 		var model1 = MessageTemplate.MatchConversationId("demande carte pioche");
 
@@ -177,7 +141,7 @@ public class General extends GuiAgent {
 
     }
 
-	private void sendCarteMission(){
+	private void sendCarteMissionEtStrat(){
 		for(int j=0; j<joueurs.size(); j++){
 			ACLMessage message = new ACLMessage(ACLMessage.PROPOSE);
 			message.setConversationId("init jeu");
@@ -188,8 +152,10 @@ public class General extends GuiAgent {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			message.setEncoding(strategies.get(0));
 			send(message);
 			objectifs.remove(0);
+			strategies.remove(0);
 		}
 	}
     
@@ -247,7 +213,7 @@ public class General extends GuiAgent {
 		}
 		if (guiEvent.getType() == General.INITIALISATION_RISK) {
 			sendCarteTerritoire();
-			sendCarteMission();
+			sendCarteMissionEtStrat();
 			addJokerShuffle();
 		}
 	}
