@@ -53,11 +53,16 @@ public class Joueur extends GuiAgent {
     private boolean autorTopicTerrAdj = false;
     private int nbAutorTopicTerrAdjRecquis = 20; // set a une valeur trop elevee expres pour ne pas cut la validation des autorisation
     private int nbAutorTopicTerrAdj = 0;
+    private int nbTopicElim = 0; // nombre de topic elim recu, remplace autorDef lorsque le joueur Defense vient de se faire eliminee
     //bonus boolean pour ne piocher que 1 carte
     private boolean territoireConcquis = false;
 
     private AID intermediaire;
     private AID general;
+    /**
+     * liste des joueurs
+     */
+    private ArrayList<AID> joueurs;
     /**
      * topic du joueur demandant les informations du territoire
      */
@@ -86,6 +91,10 @@ public class Joueur extends GuiAgent {
      * apres un combat, envoie a tous les joueurs l'update des regiments pour leurs territoires adjacents SI CHANGEMENT
      */
     AID topicUpdateRegimentAdjacent;
+    /*
+     * recevoir l'info qu'un joueur a ete eliminee, utile si mission est d eliminer un joueur precis
+     */
+    AID topicElimJoueur;
     /*
      * topic affichage a chaque fin de tour
      */
@@ -151,6 +160,7 @@ public class Joueur extends GuiAgent {
 
         detectIntermediaire();
         detectGeneral();
+        detectJoueurs();
 
         //gestion topic manager pour la communication avec l'agent INTERMEDIARE pour avoir les infos plus precise du territoire acquis
         TopicManagementHelper topicHelper;
@@ -159,6 +169,7 @@ public class Joueur extends GuiAgent {
             topicRegimentTeritoire = topicHelper.createTopic("INFO REGIMENT TERRITOIRE");
             topicTerritoire = topicHelper.createTopic("INFO TERRITOIRE");
             topicUpdateContinent = topicHelper.createTopic("UPDATE CONTINENT");
+            topicElimJoueur = topicHelper.createTopic("ELIMINATION JOUEUR");
             topicHelper.register(topicTerritoire);
             topicHelper.register(topicRegimentTeritoire);
             topicHelper.register(topicUpdateContinent);
@@ -340,10 +351,24 @@ public class Joueur extends GuiAgent {
                 if (msg != null) {
                     window.println("\nMessage recu sur le model " + model4.toString() + " emis par :  " + msg.getSender().getLocalName());
 
-                    //RENFORT
-                    nouveauxRenforts();
-                    addRegimentTerritoire();
-                    
+                    if (objectif.getTypeMission().equals(TypeMission.COULEUR.toString())) {
+                        if (armees_eliminees.contains(objectif.getCouleur())) //alors victoire
+                        {
+                            window.println("\nEnvoie fin de partie a Intermediaire. Le " + getLocalName() + " a gagne la partie,"
+                                    + "\ncar il a complete sa mission, l armee " + objectif.getCouleur() + " a ete eliminee."
+                                    		+ "\nLe " + getLocalName() + " revendique la victoire.");
+                            ACLMessage message1 = new ACLMessage(ACLMessage.REQUEST);
+                            message1.setConversationId("victoire / fin de partie");
+                            message1.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
+                            send(message1);
+                        }
+                    }
+                    else
+                    {
+                    	//RENFORT
+                        nouveauxRenforts();
+                        addRegimentTerritoire();
+                    }
                 }
                 reset(model4, MsgReceiver.INFINITE, null, null);
             }
@@ -501,9 +526,8 @@ public class Joueur extends GuiAgent {
                             continuer = false;
 
                             //Envoie au joueur l'ayant eliminer
-                            ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
-                            message.setConversationId("elimination joueur");
-                            message.addReceiver(new AID(joueurAttaque, AID.ISLOCALNAME));
+                            ACLMessage message = new ACLMessage(ACLMessage.INFORM);
+                            message.addReceiver(topicElimJoueur);
                             message.setContent(getLocalName() + "," + couleur + ";" + joueurAttaque);
                             send(message);
 
@@ -573,6 +597,16 @@ public class Joueur extends GuiAgent {
                         autorDef = true;
                         window.println("Defenseur a envoye son autorisation");
                     }
+                    if(msg.getContent().equals("autorisation topic elim"))
+                    {
+                    	nbTopicElim++;
+                    	if(nbTopicElim == joueurs.size()) // alors tous les joueurs ont recu l info du joueur eliminee
+                    	{
+                    		//Autorisation nouvel attaque du defenseur
+                            autorDef = true;
+                            window.println("Defenseur a envoye son autorisation");
+                    	}
+                    }
                     if (msg.getContent().equals("autorisation topic")) {
                         //Autorisation nouvel attaque de l attaquant
                         nbAutorTopicTerrAdj++;
@@ -591,6 +625,7 @@ public class Joueur extends GuiAgent {
                         autorTopicTerrAdj = false;
                         nbAutorTopicTerrAdjRecquis = 20;
                         nbAutorTopicTerrAdj = 0;
+                        nbTopicElim = 0;
 
                         window.println("Tous les AGENTS ont envoyes leur autorisation");
 
@@ -642,19 +677,16 @@ public class Joueur extends GuiAgent {
             window.println(territoires.toString());
         }));
 
-        //init du model
-        var model9 = MessageTemplate.MatchConversationId("elimination joueur");
+        topicElimJoueur = AgentServicesTools.generateTopicAID(this, "ELIMINATION JOUEUR");
 
-        //Le joueur a elimine un adversaire
-        addBehaviour(new MsgReceiver(this, model9, MsgReceiver.INFINITE, null, null) {
-            protected void handleMessage(ACLMessage msg) {
-                if (msg != null) {
-                    var infos = msg.getContent().split(",");
+        //un adversaire a ete eliminee
+        addBehaviour(new ReceiverBehaviour(this, -1, MessageTemplate.MatchTopic(topicElimJoueur), true, (a, m) -> {
+                    var infos = m.getContent().split(",");
 
-                    window.println("Message recu sur le model " + model2.toString() + ". Contenu " + msg.getContent().toString()
-                            + " emis par :  " + msg.getSender().getLocalName());
+                    window.println("Message recu sur le topic " + topicElimJoueur.getLocalName() + ". Contenu " + m.getContent().toString()
+                            + " emis par :  " + m.getSender().getLocalName());
 
-                    window.println("Vous avez elimine le " + infos[0] + " et donc l'armee " + infos[1]);
+                    window.println("Le " + infos[0] + " et donc l'armee " + infos[1] + " a ete eliminee par le " + infos[2]);
 
                     armees_eliminees.add(infos[1]);
 
@@ -662,12 +694,9 @@ public class Joueur extends GuiAgent {
                     ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
                     message.setConversationId("autorisation nouvelle attaque");
                     message.addReceiver(new AID(infos[2], AID.ISLOCALNAME));
-                    message.setContent("autorisation defenseur");
+                    message.setContent("autorisation topic elim");
                     send(message);
-                }
-                reset(model9, MsgReceiver.INFINITE, null, null);
-            }
-        });
+        }));
 
     }
 
@@ -724,6 +753,32 @@ public class Joueur extends GuiAgent {
             }
 
         });
+
+    }
+    
+    /**
+     * ecoute des evenement de type enregistrement en tant que joueur, pour avoir acces a leurs adresses
+     */
+    private void detectJoueurs() {
+        var model = AgentServicesTools.createAgentDescription("liste joueur", "get AID joueur");
+        this.joueurs = new ArrayList<>();
+
+        //souscription au service des pages jaunes pour recevoir une alerte en cas mouvement sur le service travel agency'seller
+        addBehaviour(new DFSubscriber(this, model) {
+            @Override
+            public void onRegister(DFAgentDescription dfd) { //au debut
+                joueurs.add(dfd.getName());
+                System.out.println("Liste de joueurs AID"+joueurs);
+                window.println(dfd.getName().getLocalName() + " s'est inscrit en tant que joueur : " + model.getAllServices().get(0));
+            }
+            
+            @Override
+            public void onDeregister(DFAgentDescription dfd) { // lorsque le joueur est mort
+                joueurs.remove(dfd.getName());
+                window.println(dfd.getName().getLocalName() + " s'est desinscrit de  : " + model.getAllServices().get(0));
+            }
+        });
+        System.out.println("Liste de joueurs"+joueurs);
 
     }
 
