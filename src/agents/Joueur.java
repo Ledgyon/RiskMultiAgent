@@ -1489,7 +1489,9 @@ public class Joueur extends GuiAgent {
 
                             nomTerritoireAttaque = this.territoires.get(i).getNomTerritoire();
                             nomTerritoireDefense = this.territoires.get(i).getTerritoires_adjacents().get(j).getNomTerritoire();
-                            nbRegimentAttaquant = this.territoires.get(i).getRegimentSurTerritoire() - 1;
+                            // random entre 1 et le total de regiment - 1 car au moins 1 unite doit rester 
+                            int nbRegimentEnvoie = (rand.nextInt(this.territoires.get(i).getRegimentSurTerritoire() - 1) + 1); 
+                            nbRegimentAttaquant = nbRegimentEnvoie;
                             nbRegimentDefenseur = this.territoires.get(i).getTerritoires_adjacents().get(j).getRegimentSurTerritoire();
                             message.setContent(nomTerritoireAttaque + "," + nomTerritoireDefense + "," + nbRegimentAttaquant + "," + nbRegimentDefenseur);
                             send(message);
@@ -1516,7 +1518,8 @@ public class Joueur extends GuiAgent {
 
                         nomTerritoireAttaque = this.territoires.get(i).getNomTerritoire();
                         nomTerritoireDefense = this.territoires.get(i).getTerritoires_adjacents().get(j).getNomTerritoire();
-                        nbRegimentAttaquant = this.territoires.get(i).getRegimentSurTerritoire() - 1;
+                        int nbRegimentEnvoie = this.territoires.get(i).getRegimentSurTerritoire() / 2;
+                        nbRegimentAttaquant = nbRegimentEnvoie;
                         nbRegimentDefenseur = this.territoires.get(i).getTerritoires_adjacents().get(j).getRegimentSurTerritoire();
                         message.setContent(nomTerritoireAttaque + "," + nomTerritoireDefense + "," + nbRegimentAttaquant + "," + nbRegimentDefenseur);
                         send(message);
@@ -1589,7 +1592,7 @@ public class Joueur extends GuiAgent {
         int position = -1;
         int minValue = Integer.MAX_VALUE, ecart = Integer.MIN_VALUE;
         for (Territoire terAdj : t.getTerritoires_adjacents()) {
-            int i = t.getTerritoires_adjacents().indexOf(terAdj);
+            int i = territoires.indexOf(t);
             if ((terAdj.getRegimentSurTerritoire() <= minValue) &&
                     (this.territoires.get(i).getRegimentSurTerritoire() - terAdj.getRegimentSurTerritoire() >= ecart) &&
                     (this.territoires.get(i).getRegimentSurTerritoire() > 1) /* alors assez d unite pour attaque */) {
@@ -1747,7 +1750,10 @@ public class Joueur extends GuiAgent {
         String changementManoeuvre = null;
         if (terAdd != null && terMinus != null) // set des changements de la manoeuvre
         {
-            window.println("Envoie changement a cause de la manoeuvre");
+            window.println("Envoie changement a cause de la manoeuvre."
+            		+ "\n" + terMinus.getNomTerritoire() + " a envoye " + nbRegiment + " regiment(s) au territoire " + terAdd.getNomTerritoire()
+            		+ "\n" + terMinus.getNomTerritoire() + " possede " + terMinus.getRegimentSurTerritoire() + " regiments.\n"
+            				+ terAdd.getNomTerritoire() + " possede " + terAdd.getRegimentSurTerritoire() + " regiments.");
             changementManoeuvre = terAdd.getNomTerritoire() + "," + terAdd.getRegimentSurTerritoire() + "," + terMinus.getNomTerritoire() + "," + terMinus.getRegimentSurTerritoire();
         }
 
