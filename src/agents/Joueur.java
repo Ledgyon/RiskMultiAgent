@@ -1,14 +1,8 @@
 package agents;
 
-import java.awt.Color;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.*;
-
 import carte.CarteMission;
 import carte.CartePioche;
 import carte.enumerations.TypeMission;
-import gui.JoueurGui;
 import jade.core.AID;
 import jade.core.AgentServicesTools;
 import jade.core.ServiceException;
@@ -16,8 +10,8 @@ import jade.core.behaviours.ReceiverBehaviour;
 import jade.core.messaging.TopicManagementHelper;
 import jade.domain.DFService;
 import jade.domain.DFSubscriber;
-import jade.domain.FIPAException;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAException;
 import jade.gui.GuiAgent;
 import jade.gui.GuiEvent;
 import jade.lang.acl.ACLMessage;
@@ -25,6 +19,12 @@ import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 import jade.proto.states.MsgReceiver;
 import plateau.Territoire;
+
+import java.awt.*;
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.List;
+import java.util.*;
 
 @SuppressWarnings("serial")
 public class Joueur extends GuiAgent {
@@ -40,15 +40,14 @@ public class Joueur extends GuiAgent {
     private List<Territoire> territoires; // territoires possedes par le joueur
     private List<Integer> territoiresPouvantAttaquer; //indices de la liste "territoires" des territoires n'ayant pas encore attaque au tour actuel
     private List<String> continents; // permet de savoir quel continent le joueur a conquis pour l'attribution des renforts et pour les objectifs
-    private List<String> armees_eliminees; // liste des couleurs des armees que le joueur a elimnee (les adversaires elimnees, utile si objectif est d eliminer une joueur precis)
+    private List<String> armees_eliminees; // liste des couleurs des armees que le joueur a eliminee (les adversaires eliminees, utile si objectif est d'eliminer un joueur precis)
     public static final int EXIT = 0;
-    public static final int GET_INFO_TERRITOIRE = 1;
     
     /*
      * VARIABLES controlant la bonne reception des messages permettant l'autorisation de lancer la phase de combat
      */
     private boolean autorIntermediaire = false;
-    private int nbAutorJoueurRecquis = 500; // set a une valeur trop elevee expres pour ne pas cut la validation des autorisation
+    private int nbAutorJoueurRecquis = 500; // set a une valeur trop elevee expres pour ne pas cut la validation des autorisations
     private int nbAutorJoueur = 0;
 
     /*
@@ -94,10 +93,6 @@ public class Joueur extends GuiAgent {
      * OUAIS
      */
     AID topicAutorisationUpdateRegimentTerritoireAdjacent;
-    /**
-     * topic du joueur retournant les informations du territoire
-     */
-    AID topicTerritoireRetour;
     /*
      * apres un combat, envoie a tous les joueurs l'update des regiments pour leurs territoires adjacents SI CHANGEMENT
      */
@@ -223,7 +218,7 @@ public class Joueur extends GuiAgent {
                             if(strategie.equals("defense")) rajout = ", strategie ou les actions serviront soient a defendre le territoire le plus en danger soit a attaque le territoire l emoins dangereux";
                             if(strategie.equals("passive")) rajout = ", strategie ou le joueur n'attaque pas";
                             if(strategie.equals("equilibre")) rajout = ", strategie ou le joueur cherche a avoir un equilibre dans ses forces d'armees";
-                            if(strategie.equals("revanche")) rajout = ", strategie ou le joueur priorise son attaque sur une joueur l ayant attaque";
+                            if(strategie.equals("revanche")) rajout = ", strategie ou le joueur attaque un joueur l'ayant attaque";
                             window.println("Le " + getLocalName() + ", adopte une strategie " + strategie + rajout);
                         }
                     } catch (UnreadableException e) {
@@ -281,7 +276,7 @@ public class Joueur extends GuiAgent {
                         e.printStackTrace();
                     }
                     assert tempT != null;
-                    window.println("Message recu sur le model " + model1.toString() + ". Contenu " + tempT.toString()
+                    window.println("Message recu sur le model " + model1 + ". Contenu " + tempT
                             + " emis par :  " + msg.getSender().getLocalName());
                     territoires.add(tempT);
 
@@ -301,7 +296,7 @@ public class Joueur extends GuiAgent {
                 if (msg != null) {
                     var infos = msg.getContent().split(",");
 
-                    window.println("Message recu sur le model " + model2.toString() + ". Contenu " + msg.getContent().toString()
+                    window.println("Message recu sur le model " + model2 + ". Contenu " + msg.getContent()
                             + " emis par :  " + msg.getSender().getLocalName());
 
                     // Affectation du nombre de regiment
@@ -325,7 +320,7 @@ public class Joueur extends GuiAgent {
         addBehaviour(new MsgReceiver(this, model3, MsgReceiver.INFINITE, null, null) {
             protected void handleMessage(ACLMessage msg) {
                 if (msg != null) {
-                    window.println("\nMessage recu sur le model " + model3.toString() + " emis par :  " + msg.getSender().getLocalName());
+                    window.println("\nMessage recu sur le model " + model3 + " emis par :  " + msg.getSender().getLocalName());
                     var infos = msg.getContent().split(",");
                     continents.addAll(Arrays.asList(infos));
 
@@ -350,7 +345,7 @@ public class Joueur extends GuiAgent {
         addBehaviour(new MsgReceiver(this, model4, MsgReceiver.INFINITE, null, null) {
             protected void handleMessage(ACLMessage msg) {
                 if (msg != null) {
-                    window.println("\nMessage recu sur le model " + model4.toString() + " emis par :  " + msg.getSender().getLocalName());
+                    window.println("\nMessage recu sur le model " + model4 + " emis par :  " + msg.getSender().getLocalName());
 
                     if (objectif.getTypeMission().equals(TypeMission.COULEUR.toString()) && armees_eliminees.contains(objectif.getCouleur())) { // alors victoire
                         window.println("\nEnvoie fin de partie a Intermediaire. Le " + getLocalName() + " a gagne la partie,"
@@ -364,12 +359,6 @@ public class Joueur extends GuiAgent {
                         //RENFORT
                         nouveauxRenforts();
                         addRegimentTerritoire();
-/*
-                        territoiresPouvantAttaquer = new ArrayList<>();
-                        for (int i = 0; i < territoires.size(); i++) {
-                            territoiresPouvantAttaquer.add(i);
-                        }
-                        phaseCombatJoueur(true);*/
                     }
                 }
                 reset(model4, MsgReceiver.INFINITE, null, null);
@@ -391,7 +380,7 @@ public class Joueur extends GuiAgent {
             String nomJoueur = infos[2];
 
             //update territoires adjacents
-            int i, j, k;
+            int i, j;
     		for (i = 0; i < this.territoires.size(); i++) // parcours des territoires
     		{
     			for (j = 0; j < this.territoires.get(i).getTerritoires_adjacents().size(); j++) // parcours de tous les territoires adjacents
@@ -417,7 +406,7 @@ public class Joueur extends GuiAgent {
         addBehaviour(new MsgReceiver(this, model4bis, MsgReceiver.INFINITE, null, null) {
             protected void handleMessage(ACLMessage msg) {
                 if (msg != null) {
-                    window.println("\nMessage recu sur le model " + model4.toString() + " emis par :  " + msg.getSender().getLocalName());
+                    window.println("\nMessage recu sur le model " + model4 + " emis par :  " + msg.getSender().getLocalName());
 
                     if(msg.getContent().equals("autorisation joueur"))
                     {
@@ -459,7 +448,7 @@ public class Joueur extends GuiAgent {
                 if (msg != null) {
                     var infos = msg.getEncoding().split(",");
 
-                    window.println("Message recu sur le model " + model5.toString() + ". Contenu " + msg.getEncoding().toString()
+                    window.println("Message recu sur le model " + model5 + ". Contenu " + msg.getEncoding()
                             + " emis par :  " + msg.getSender().getLocalName());
 
                     String nomTerritoireAttaque = infos[0];
@@ -552,7 +541,7 @@ public class Joueur extends GuiAgent {
                 if (msg != null) {
                     var infos = msg.getContent().split(",");
 
-                    window.println("Message recu sur le model " + model6.toString() + ". Contenu " + msg.getContent().toString()
+                    window.println("Message recu sur le model " + model6 + ". Contenu " + msg.getContent()
                             + " emis par :  " + msg.getSender().getLocalName());
 
                     String nomTerritoireAttaque = infos[0];
@@ -742,7 +731,7 @@ public class Joueur extends GuiAgent {
         addBehaviour(new ReceiverBehaviour(this, -1, MessageTemplate.MatchTopic(topicElimJoueur), true, (a, m) -> {
             var infos = m.getContent().split(",");
 
-            window.println("Message recu sur le topic " + topicElimJoueur.getLocalName() + ". Contenu " + m.getContent().toString()
+            window.println("Message recu sur le topic " + topicElimJoueur.getLocalName() + ". Contenu " + m.getContent()
                     + " emis par :  " + m.getSender().getLocalName());
 
             window.println("Le " + infos[0] + " et donc l'armee " + infos[1] + " a ete eliminee par le " + infos[2]);
@@ -1939,7 +1928,7 @@ public class Joueur extends GuiAgent {
     public boolean boolAttaquable(Territoire t) {
         if (t != null)
             for (Territoire ter : territoires)
-                for (Territoire terAdj : t.getTerritoires_adjacents())
+                for (Territoire terAdj : ter.getTerritoires_adjacents())
                     if (terAdj.getNomTerritoire().equals(t.getNomTerritoire()))
                         return false;
         return true;
@@ -1960,44 +1949,10 @@ public class Joueur extends GuiAgent {
         return null;
     }
 
-    public boolean isDead() {
-        return nombreRegimentMax == 0;
-    }
-
-    public Joueur getThisByCouleur(String couleur) {
-        if (this.couleur.equals(couleur))
-            return this;
-        return null;
-    }
-
-    public JoueurGui getWindow() {
-        return window;
-    }
-
-    public String getCouleur() {
-        return couleur;
-    }
-
-    public void setCouleur(String couleur) {
-        this.couleur = couleur;
-    }
-
     @Override
     protected void onGuiEvent(GuiEvent guiEvent) {
         if (guiEvent.getType() == Joueur.EXIT) {
             doDelete();
         }
-        /*
-        if (guiEvent.getType() == Joueur.GET_INFO_TERRITOIRE) {
-        	//demande a INTERMEDIAIRE les infos du territoire
-            ACLMessage info_territoire = new ACLMessage(ACLMessage.INFORM);
-            info_territoire.setContent("yes");
-            info_territoire.addReceiver(topicTerritoire);
-            send(info_territoire);
-            window.println("ouais le message territoire");
-
-           // ACLMessage infoT = receive();
-            //if(infoT == null) block();
-		}*/
     }
 }

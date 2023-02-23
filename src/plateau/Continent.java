@@ -84,26 +84,6 @@ public class Continent {
         return territoires;
     }
 
-    public void setTerritoires(List<Territoire> territoires) {
-        this.territoires = territoires;
-    }
-
-    public String getNom() {
-        return nom;
-    }
-
-    public void setNom(String nom) {
-        this.nom = nom;
-    }
-
-    public int getRenfortObtenu() {
-        return renfortObtenu;
-    }
-
-    public void setRenfortObtenu(int renfortObtenu) {
-        this.renfortObtenu = renfortObtenu;
-    }
-
     @Override
     public String toString() {
         return "\n\tContinent{" +

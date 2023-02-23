@@ -1,17 +1,5 @@
 package agents;
 
-import java.awt.Color;
-import java.io.IOException;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-
 import jade.core.AID;
 import jade.core.AgentServicesTools;
 import jade.core.ServiceException;
@@ -28,6 +16,11 @@ import jade.proto.states.MsgReceiver;
 import plateau.Continent;
 import plateau.Monde;
 import plateau.Territoire;
+
+import java.awt.*;
+import java.io.IOException;
+import java.util.List;
+import java.util.*;
 
 public class Intermediaire extends GuiAgent {
 
@@ -84,15 +77,13 @@ public class Intermediaire extends GuiAgent {
 
 		//AgentServicesTools.register(this, "intermediaire", "link");
 
-		TopicManagementHelper topicHelper = null;
+		TopicManagementHelper topicHelper;
 		try {
 			topicHelper = (TopicManagementHelper) getHelper(TopicManagementHelper.SERVICE_NAME);
 			topicRepartition = topicHelper.createTopic("REPARTITION REGIMENT");
 			topicAutorisationUpdateRegimentTerritoireAdjacent = topicHelper.createTopic("Update Regiment Territoire Adjacent");
 			topicUpdateRegimentAdjacent = topicHelper.createTopic("UPDATE REGIMENT ADJACENT");
 			topicAffichageFinTour = topicHelper.createTopic("AFFICHAGE FIN TOUR");
-			//topicTerritoireRetour = topicHelper.createTopic("RETOUR INFO TERRITOIRE");
-			//topicHelper.register(topicTerritoireRetour);
 			topicHelper.register(topicRepartition);
 			topicHelper.register(topicAutorisationUpdateRegimentTerritoireAdjacent);
 			topicHelper.register(topicUpdateRegimentAdjacent);
@@ -147,7 +138,7 @@ public class Intermediaire extends GuiAgent {
 					//Reception message
 					var infos = msg.getContent().split(",");
 
-					window.println("\nMessage recu sur le model " + model0.toString() + ". Contenu " + msg.getContent().toString()
+					window.println("\nMessage recu sur le model " + model0 + ". Contenu " + msg.getContent()
 							+ " emis par :  " + msg.getSender().getLocalName());
 
 					//Recherche territoire voulu du plateau
@@ -181,6 +172,7 @@ public class Intermediaire extends GuiAgent {
 				//throw new RuntimeException(e);
 			}
 
+			assert tempT != null;
 			plateau.getTerritoireByName(tempT.getNomTerritoire()).setRegimentSurTerritoire(tempT.getRegimentSurTerritoire());
 			window.println(plateau.toString());
 
@@ -284,7 +276,7 @@ public class Intermediaire extends GuiAgent {
 					debutPartie(); // nouveau tour pour ce nouveau joueur
 				} else {
 					window.println("fin du tour " + numTour + " dont le dernier est " + msg.getSender().getLocalName());
-					; // tous le monde a fait sa phase de combat, DEBUT PHASE MANOEUVRE
+					// tous le monde a fait sa phase de combat, DEBUT PHASE MANOEUVRE
 
 					ACLMessage assignRegiment = new ACLMessage(ACLMessage.INFORM);
 					assignRegiment.addReceiver(topicAffichageFinTour);
@@ -311,7 +303,7 @@ public class Intermediaire extends GuiAgent {
 				if (msg != null) {
 					var infos = msg.getContent().split(",");
 
-					window.println("Message recu sur le model " + model3.toString() + ". Contenu " + msg.getContent().toString()
+					window.println("Message recu sur le model " + model3 + ". Contenu " + msg.getContent()
 							+ " emis par :  " + msg.getSender().getLocalName());
 
 					String nomTerritoireAttaque = infos[0], nomTerritoireDefense = infos[1];
@@ -339,10 +331,10 @@ public class Intermediaire extends GuiAgent {
 						for (i = 0; i < nbDesDefenseur; i++)
 							resultatsDef.add(rand.nextInt(6) + 1); // random entre 1 et 6
 						// trie decroissant
-						Collections.sort(resultatsAtt, Collections.reverseOrder());
-						Collections.sort(resultatsDef, Collections.reverseOrder());
-						window.println("\tResultat des lancer de l'attaquant : " + resultatsAtt.toString());
-						window.println("\tResultat des lancer du defenseur : " + resultatsDef.toString());
+						resultatsAtt.sort(Collections.reverseOrder());
+						resultatsDef.sort(Collections.reverseOrder());
+						window.println("\tResultat des lancer de l'attaquant : " + resultatsAtt);
+						window.println("\tResultat des lancer du defenseur : " + resultatsDef);
 						// confrontation lancement
 						int nbConfrontation;
 						if (resultatsAtt.size() >= 2 && resultatsDef.size() >= 2)
@@ -549,7 +541,7 @@ public class Intermediaire extends GuiAgent {
 
 			//trie des joueurs par leur nom (Joueur_1 -> Joueur_6)
 			Comparator<AID> joueurComparator
-					= (j1, j2) -> j1.getLocalName().compareTo(j2.getLocalName());
+					= Comparator.comparing(AID::getLocalName);
 			joueurs.sort(joueurComparator);
 
 			System.out.println(joueurs);

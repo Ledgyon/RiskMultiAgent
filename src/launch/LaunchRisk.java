@@ -1,11 +1,9 @@
 package launch;
 
-import agents.General;
 import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.core.Runtime;
 import jade.util.ExtendedProperties;
-import plateau.Monde;
 
 import java.util.Properties;
 

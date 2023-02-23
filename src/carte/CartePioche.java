@@ -15,16 +15,8 @@ public class CartePioche implements Serializable {
 		return territoire;
 	}
 
-	public void setTerritoire(String territoire) {
-		this.territoire = territoire;
-	}
-
 	public String getUnite() {
 		return unite;
-	}
-
-	public void setUnite(String unite) {
-		this.unite = unite;
 	}
 
 	@Override

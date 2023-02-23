@@ -1,8 +1,6 @@
 package gui;
 
-import agents.General;
 import agents.Intermediaire;
-import agents.Joueur;
 import jade.gui.GuiEvent;
 
 import javax.swing.*;

@@ -49,43 +49,23 @@ public class CarteMission implements Serializable {
         return nbTerritoire;
     }
 
-    public void setNbTerritoire(int nbTerritoire) {
-        this.nbTerritoire = nbTerritoire;
-    }
-
     public int getNbArmee() {
         return nbArmee;
-    }
-
-    public void setNbArmee(int nbArmee) {
-        this.nbArmee = nbArmee;
     }
 
     public List<String> getContinentAConquerir() {
         return continentAConquerir;
     }
 
-    public void setContinentAConquerir(List<String> continentAConquerir) {
-        this.continentAConquerir = continentAConquerir;
-    }
-
     public String getCouleur() {
         return couleur;
-    }
-
-    public void setCouleur(String couleur) {
-        this.couleur = couleur;
     }
 
     public String getTypeMission() {
 		return typeMission;
 	}
 
-	public void setTypeMission(String typeMission) {
-		this.typeMission = typeMission;
-	}
-
-	@Override
+    @Override
     public String toString() {
         String temp = "\n\tCarteMission [";
         if(couleur != null){
