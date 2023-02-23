@@ -931,7 +931,6 @@ public class Joueur extends GuiAgent {
 
     // Permet de rajouter d'obtenir de nouveaux renforts
     public void nouveauxRenforts() {
-        window.println("Avant d'avoir de nouveaux renforts le " + getLocalName() + " avait " + nombreRegimentMax + " regiments");
         String affichage;
         int nbAddRegiment = this.territoires.size() / 3;
         if (nbAddRegiment < 3)
