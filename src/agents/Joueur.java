@@ -42,7 +42,7 @@ public class Joueur extends GuiAgent {
     private List<String> continents; // permet de savoir quel continent le joueur a conquis pour l'attribution des renforts et pour les objectifs
     private List<String> armees_eliminees; // liste des couleurs des armees que le joueur a eliminee (les adversaires eliminees, utile si objectif est d'eliminer un joueur precis)
     public static final int EXIT = 0;
-    
+
     /*
      * VARIABLES controlant la bonne reception des messages permettant l'autorisation de lancer la phase de combat
      */
@@ -214,11 +214,11 @@ public class Joueur extends GuiAgent {
                             window.println(objectif.toString());
                             String rajout = null;
                             if(strategie.equals("aleatoire")) rajout = ", strategie ou toutes les actions se font de façon aleatoire";
-                            if(strategie.equals("attaque")) rajout = ", strategie ou les actions seront dirigees vers le territoire ennemi le plus faible";  
+                            if(strategie.equals("attaque")) rajout = ", strategie ou les actions seront dirigees vers le territoire ennemi le plus faible";
                             if(strategie.equals("defense")) rajout = ", strategie ou les actions serviront soient a defendre le territoire le plus en danger soit a attaque le territoire l emoins dangereux";
                             if(strategie.equals("passive")) rajout = ", strategie ou le joueur n'attaque pas";
                             if(strategie.equals("equilibre")) rajout = ", strategie ou le joueur cherche a avoir un equilibre dans ses forces d'armees";
-                            if(strategie.equals("revanche")) rajout = ", strategie ou le joueur attaque un joueur l'ayant attaque";
+                            if(strategie.equals("revanche")) rajout = ", strategie ou le joueur attaque les territoires des joueurs l'ayant attaque";
                             window.println("Le " + getLocalName() + ", adopte une strategie " + strategie + rajout);
                         }
                     } catch (UnreadableException e) {
@@ -325,10 +325,10 @@ public class Joueur extends GuiAgent {
                     continents.addAll(Arrays.asList(infos));
 
                     if (debutPartie) {
-                        System.out.println("verifVictoire");
+                        //System.out.println("verifVictoire");
                         verifVictoire();
                     } else {
-                        System.out.println("debut partie = true");
+                        //System.out.println("debut partie = true");
                         debutPartie = true;
                         autorisationDebutPartie();
                     }
@@ -364,7 +364,7 @@ public class Joueur extends GuiAgent {
                 reset(model4, MsgReceiver.INFINITE, null, null);
             }
         });
-        
+
         //topic declenche lors de la phase de renfort, recu par tous les joueurs pour update leurs territoires adjacents
         topicRegimentTerritoireAdjacentPourJoueursPhaseRenfort = AgentServicesTools.generateTopicAID(this, "UPDATE TERRITOIRES ADJACENTS POUR JOUEURS PHASE RENFORT");
 
@@ -372,9 +372,9 @@ public class Joueur extends GuiAgent {
         addBehaviour(new ReceiverBehaviour(this, -1, MessageTemplate.MatchTopic(topicRegimentTerritoireAdjacentPourJoueursPhaseRenfort), true, (a, m) -> {
             window.println("Message recu sur le topic " + topicRegimentTerritoireAdjacentPourJoueursPhaseRenfort.getLocalName() + ". Contenu " + m.getContent()
                     + " emis par :  " + m.getSender().getLocalName());
-            
+
             var infos = m.getContent().split(",");
-            
+
             String nomTerritoire = infos[0];
             int nbRegimentUpdate = Integer.parseInt(infos[1]);
             String nomJoueur = infos[2];
@@ -390,7 +390,7 @@ public class Joueur extends GuiAgent {
 					}
     			}
     		}
-    		
+
     		//Envoie du message pour que le joueur commence sa phase de combat
     		ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
     		message.setConversationId("autorisation combat");
@@ -413,26 +413,26 @@ public class Joueur extends GuiAgent {
                     	window.println("nbAutorJoueur = " + nbAutorJoueur + ", nbAutorJoueurRecquis = " + nbAutorJoueurRecquis);
                     	nbAutorJoueur++;
                     }
-                    
+
                     if(msg.getContent().equals("autorisation intermediaire"))
                     {
                     	autorIntermediaire = true;
                     }
-                    
+
                     if(autorIntermediaire && nbAutorJoueurRecquis == nbAutorJoueur)
                     {
                     	//reset des variables
                     	autorIntermediaire = false;
                     	nbAutorJoueurRecquis = 500;
                     	nbAutorJoueur = 0;
-                    	
+
                     	territoiresPouvantAttaquer = new ArrayList<>();
                         for (int i = 0; i < territoires.size(); i++) {
                             territoiresPouvantAttaquer.add(i);
                         }
                         phaseCombatJoueur(true);
                     }
-                    
+
                 }
                 reset(model4bis, MsgReceiver.INFINITE, null, null);
             }
@@ -862,7 +862,7 @@ public class Joueur extends GuiAgent {
         }
         send(infoRegimentTerritoire);
     }
-    
+
     public void updateRegimentTerritoireAdjPourJoueursPhaseRenfort(Territoire ter) {
         ACLMessage infoRegimentTerritoireAdjPourJoueursPhaseRenfort = new ACLMessage(ACLMessage.INFORM);
         infoRegimentTerritoireAdjPourJoueursPhaseRenfort.addReceiver(topicRegimentTerritoireAdjacentPourJoueursPhaseRenfort);
@@ -972,7 +972,6 @@ public class Joueur extends GuiAgent {
         Map<Integer, String> canons = new HashMap<>();
         Map<Integer, String> jokers = new HashMap<>();
         boolean joker = false;
-        System.out.println(main);
         for (int i = 0; i < main.size(); i++) {
             switch (main.get(i).getUnite()) {
                 case ("FANTASSIN") -> {
@@ -1058,7 +1057,7 @@ public class Joueur extends GuiAgent {
             renvoieInfo += 10 + " grace a l'echange d'une carte fantassin, d'une carte cavalier et d'une carte canon";
             nombreRegimentMax += 10;
             nombreRegimentAPlacer += 10;
-        } else if (joker && ((nbFantassin > 1) && (nbCanon > 1)) || ((nbFantassin > 1) && (nbCavalier > 1)) || ((nbCavalier > 1) && (nbCanon > 1))) {
+        } else if (joker && (((nbFantassin > 1) && (nbCanon > 1)) || ((nbFantassin > 1) && (nbCavalier > 1)) || ((nbCavalier > 1) && (nbCanon > 1)))) {
             LinkedList<String> unite = new LinkedList<>();
             if (nbJoker == 2) {
                 if (!keyJokersSorted.contains(0)) {
@@ -1325,7 +1324,6 @@ public class Joueur extends GuiAgent {
 
     // Renvoie des cartes de la main vers la pioche du General
     private void returnCarteGeneral(int i) {
-        //System.out.println("yes");
         ACLMessage message = new ACLMessage(ACLMessage.PROPOSE);
         message.setConversationId("return carte");
         message.addReceiver(new AID(general.getLocalName(), AID.ISLOCALNAME));
@@ -1389,10 +1387,10 @@ public class Joueur extends GuiAgent {
                 }
             }
         }
-        
+
         //set du nombre de topic de joueurs a recevoir avant de continuer
         nbAutorJoueurRecquis = joueurs.size() * territoires.size();
-        		
+
         //envoie des update au plateau et aux joueurs
         for (Territoire ter : territoires) {
             updateRegimentTerritoire(ter);
@@ -1521,16 +1519,17 @@ public class Joueur extends GuiAgent {
             case "revanche" -> {
                 if (attaque && !attaqueRevanche.isEmpty()) {
                     int indexAtt = -1, indexDef = -1;
-                    for (Territoire attR : attaqueRevanche) {
-                        for (Territoire ter : territoires) {
-                            for (Territoire terAdj : ter.getTerritoires_adjacents()) {
-                                if (terAdj.getNomTerritoire().equals(attR.getNomTerritoire()) && ter.getRegimentSurTerritoire() > 1) {
-                                    indexAtt = territoires.indexOf(ter);
-                                    indexDef = ter.getTerritoires_adjacents().indexOf(terAdj);
-                                }
+                    Territoire attR = attaqueRevanche.get(0);
+                    for (Territoire ter : territoires) {
+                        for (Territoire terAdj : ter.getTerritoires_adjacents()) {
+                            if (terAdj.getNomTerritoire().equals(attR.getNomTerritoire()) && ter.getRegimentSurTerritoire() > 1) {
+                                indexAtt = territoires.indexOf(ter);
+                                indexDef = ter.getTerritoires_adjacents().indexOf(terAdj);
                             }
                         }
                     }
+                    attaqueRevanche.remove(0);
+
                     if (indexAtt != -1 && indexDef != -1) {
                         ACLMessage message = new ACLMessage(ACLMessage.REQUEST);
                         message.setConversationId("lancement attaque");
@@ -1542,6 +1541,13 @@ public class Joueur extends GuiAgent {
                         nbRegimentDefenseur = this.territoires.get(indexAtt).getTerritoires_adjacents().get(indexDef).getRegimentSurTerritoire();
                         message.setContent(nomTerritoireAttaque + "," + nomTerritoireDefense + "," + nbRegimentAttaquant + "," + nbRegimentDefenseur);
                         send(message);
+                    } else {
+                        if (!attaqueRevanche.isEmpty()) {
+                            phaseCombatJoueur(true);
+                        } else {
+                            manoeuvreRegiment(); // lancement phase manoeuvre
+                            territoireConcquis = false;
+                        }
                     }
                 } else
                     window.println("Je n'ai pas encore recu d'attaque donc je n'ai aucune raison d'attaquer");
@@ -1579,7 +1585,7 @@ public class Joueur extends GuiAgent {
                 int i = t.getTerritoires_adjacents().indexOf(terAdj);
                 if ((terAdj.getRegimentSurTerritoire() <= minValue) &&
                         (t.getRegimentSurTerritoire() - terAdj.getRegimentSurTerritoire() >= ecart)) {
-                    ecart = this.territoires.get(i).getRegimentSurTerritoire() - terAdj.getRegimentSurTerritoire();
+                    ecart = t.getRegimentSurTerritoire() - terAdj.getRegimentSurTerritoire();
                     minValue = terAdj.getRegimentSurTerritoire();
                     position = i;
                 }
@@ -1686,23 +1692,24 @@ public class Joueur extends GuiAgent {
                             }
                             terAdd = getTerritoireByName(tempTAdd.get(indexList).get(0).getNomTerritoire());
                             if (!tempTMinus.get(indexList).isEmpty()) {
-                                int indexMinus = indexOfBiggestValue(tempTMinus.get(indexList), t);
+                                int indexMinus = indexOfBiggestValue(tempTMinus.get(indexList), terAdd);
                                 if (indexMinus != -1) {
                                     terMinus = getTerritoireByName(tempTMinus.get(indexList).get(indexMinus).getNomTerritoire());
                                     nbRegiment = terMinus.getRegimentSurTerritoire() - 1;
                                     terMinus.addRegimentSurTerritoire(-nbRegiment);
                                     terAdd.addRegimentSurTerritoire(nbRegiment);
+
                                 }
                             }
                         }
                     }
                     case "defense" -> {
-                        int indexAdd = indexGreatestDanger(tempTAdd);
-                        terAdd = getTerritoireByName(tempTAdd.get(indexAdd).get(0).getNomTerritoire());
-                        if (!tempTMinus.get(indexAdd).isEmpty()) {
-                            int indexMinus = indexOfBiggestValue(tempTMinus.get(indexAdd), terAdd);
+                        int indexList = indexGreatestDanger(tempTAdd);
+                        terAdd = getTerritoireByName(tempTAdd.get(indexList).get(0).getNomTerritoire());
+                        if (!tempTMinus.get(indexList).isEmpty()) {
+                            int indexMinus = indexOfBiggestValue(tempTMinus.get(indexList), terAdd);
                             if (indexMinus != -1) {
-                                terMinus = getTerritoireByName(tempTMinus.get(indexAdd).get(indexMinus).getNomTerritoire());
+                                terMinus = getTerritoireByName(tempTMinus.get(indexList).get(indexMinus).getNomTerritoire());
                                 nbRegiment = terMinus.getRegimentSurTerritoire() - 1;
                                 terMinus.addRegimentSurTerritoire(-nbRegiment);
                                 terAdd.addRegimentSurTerritoire(nbRegiment);
@@ -1720,7 +1727,7 @@ public class Joueur extends GuiAgent {
                                 int indexMinus = indexOfBiggestValue(tempTMinus.get(indexList), terAdd);
                                 if (indexMinus != -1) {
                                     terMinus = getTerritoireByName(tempTMinus.get(indexList).get(indexMinus).getNomTerritoire());
-                                    nbRegiment = ((terMinus.getRegimentSurTerritoire() - terAdd.getRegimentSurTerritoire()) / 2) - 1;
+                                    nbRegiment = (terMinus.getRegimentSurTerritoire() - terAdd.getRegimentSurTerritoire()) / 2;
                                     terMinus.addRegimentSurTerritoire(-nbRegiment);
                                     terAdd.addRegimentSurTerritoire(nbRegiment);
                                 }
