@@ -24,7 +24,6 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 import jade.proto.states.MsgReceiver;
-import plateau.Continent;
 import plateau.Territoire;
 
 @SuppressWarnings("serial")
@@ -1488,8 +1487,7 @@ public class Joueur extends GuiAgent {
                             nomTerritoireAttaque = this.territoires.get(i).getNomTerritoire();
                             nomTerritoireDefense = this.territoires.get(i).getTerritoires_adjacents().get(j).getNomTerritoire();
                             // random entre 1 et le total de regiment - 1 car au moins 1 unite doit rester 
-                            int nbRegimentEnvoie = (rand.nextInt(this.territoires.get(i).getRegimentSurTerritoire() - 1) + 1); 
-                            nbRegimentAttaquant = nbRegimentEnvoie;
+                            nbRegimentAttaquant = (rand.nextInt(this.territoires.get(i).getRegimentSurTerritoire() - 1) + 1);
                             nbRegimentDefenseur = this.territoires.get(i).getTerritoires_adjacents().get(j).getRegimentSurTerritoire();
                             message.setContent(nomTerritoireAttaque + "," + nomTerritoireDefense + "," + nbRegimentAttaquant + "," + nbRegimentDefenseur);
                             send(message);
@@ -1516,8 +1514,7 @@ public class Joueur extends GuiAgent {
 
                         nomTerritoireAttaque = this.territoires.get(i).getNomTerritoire();
                         nomTerritoireDefense = this.territoires.get(i).getTerritoires_adjacents().get(j).getNomTerritoire();
-                        int nbRegimentEnvoie = this.territoires.get(i).getRegimentSurTerritoire() / 2;
-                        nbRegimentAttaquant = nbRegimentEnvoie;
+                        nbRegimentAttaquant = this.territoires.get(i).getRegimentSurTerritoire() / 2;
                         nbRegimentDefenseur = this.territoires.get(i).getTerritoires_adjacents().get(j).getRegimentSurTerritoire();
                         message.setContent(nomTerritoireAttaque + "," + nomTerritoireDefense + "," + nbRegimentAttaquant + "," + nbRegimentDefenseur);
                         send(message);
@@ -1572,7 +1569,7 @@ public class Joueur extends GuiAgent {
         for (int i = 0; i < territoires.size(); i++) {
             for (int j = 0; j < this.territoires.get(i).getTerritoires_adjacents().size(); j++) {
                 Territoire courantTerritoire = this.territoires.get(i).getTerritoires_adjacents().get(j);
-                if (territoireContains(courantTerritoire)) {
+                if (territoireNotContains(courantTerritoire)) {
                     if ((courantTerritoire.getRegimentSurTerritoire() <= minValue) &&
                             (this.territoires.get(i).getRegimentSurTerritoire() - courantTerritoire.getRegimentSurTerritoire() >= ecart) &&
                             (this.territoires.get(i).getRegimentSurTerritoire() > 1) /* alors assez d unite pour attaque */) {
@@ -1590,13 +1587,14 @@ public class Joueur extends GuiAgent {
         int position = -1;
         int minValue = Integer.MAX_VALUE, ecart = Integer.MIN_VALUE;
         for (Territoire terAdj : t.getTerritoires_adjacents()) {
-            int i = territoires.indexOf(t);
-            if ((terAdj.getRegimentSurTerritoire() <= minValue) &&
-                    (this.territoires.get(i).getRegimentSurTerritoire() - terAdj.getRegimentSurTerritoire() >= ecart) &&
-                    (this.territoires.get(i).getRegimentSurTerritoire() > 1) /* alors assez d unite pour attaque */) {
-                ecart = this.territoires.get(i).getRegimentSurTerritoire() - terAdj.getRegimentSurTerritoire();
-                minValue = terAdj.getRegimentSurTerritoire();
-                position = i;
+            if(territoireNotContains(terAdj)) {
+                int i = t.getTerritoires_adjacents().indexOf(terAdj);
+                if ((terAdj.getRegimentSurTerritoire() <= minValue) &&
+                        (t.getRegimentSurTerritoire() - terAdj.getRegimentSurTerritoire() >= ecart)) {
+                    ecart = this.territoires.get(i).getRegimentSurTerritoire() - terAdj.getRegimentSurTerritoire();
+                    minValue = terAdj.getRegimentSurTerritoire();
+                    position = i;
+                }
             }
         }
         return position;
@@ -1608,7 +1606,7 @@ public class Joueur extends GuiAgent {
         for (int i = 0; i < territoires.size(); i++) {
             for (int j = 0; j < this.territoires.get(i).getTerritoires_adjacents().size(); j++) {
                 Territoire courantTerritoire = this.territoires.get(i).getTerritoires_adjacents().get(j);
-                if (territoireContains(courantTerritoire)) {
+                if (territoireNotContains(courantTerritoire)) {
                     if ((this.territoires.get(i).getRegimentSurTerritoire() - courantTerritoire.getRegimentSurTerritoire() >= ecart) &&
                             (this.territoires.get(i).getRegimentSurTerritoire() > 1) /* alors assez d unite pour attaque */) {
                         ecart = this.territoires.get(i).getRegimentSurTerritoire() - courantTerritoire.getRegimentSurTerritoire();
@@ -1621,7 +1619,7 @@ public class Joueur extends GuiAgent {
     }
 
     // fonction qui permet de renseigner si un territoire est contenu dans la variable territoires
-    private boolean territoireContains(Territoire t) {
+    private boolean territoireNotContains(Territoire t) {
         for (Territoire ter : territoires) {
             if (ter.getNomTerritoire().equals(t.getNomTerritoire()))
                 return false;
@@ -1882,7 +1880,7 @@ public class Joueur extends GuiAgent {
             for (Territoire ter : listTemp) {
                 int tempReg = 0;
                 for (Territoire terAdj : ter.getTerritoires_adjacents()) {
-                    if (territoireContains(terAdj)) {
+                    if (territoireNotContains(terAdj)) {
                         tempReg += terAdj.getRegimentSurTerritoire();
                     }
                 }
@@ -1900,7 +1898,7 @@ public class Joueur extends GuiAgent {
         for (Territoire ter : territoires) {
             int tempReg = 0;
             for (Territoire terAdj : ter.getTerritoires_adjacents()) {
-                if (territoireContains(terAdj)) {
+                if (territoireNotContains(terAdj)) {
                     tempReg += terAdj.getRegimentSurTerritoire();
                 }
             }
