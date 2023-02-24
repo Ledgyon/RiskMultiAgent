@@ -1253,9 +1253,9 @@ public class Joueur extends GuiAgent {
                     break;
             }
             if (joker)
-                renvoieInfo += 10 + " grace a l'echange de deux cartes canon et d'une carte joker";
+                renvoieInfo += 8 + " grace a l'echange de deux cartes canon et d'une carte joker";
             else
-                renvoieInfo += 10 + " grace a l'echange de trois cartes canon";
+                renvoieInfo += 8 + " grace a l'echange de trois cartes canon";
             nombreRegimentMax += 8;
             nombreRegimentAPlacer += 8;
         } else if (nbCavalier >= 3) {
@@ -1283,9 +1283,9 @@ public class Joueur extends GuiAgent {
                     break;
             }
             if (joker)
-                renvoieInfo += 10 + " grace a l'echange de deux cartes cavalier et d'une carte joker";
+                renvoieInfo += 6 + " grace a l'echange de deux cartes cavalier et d'une carte joker";
             else
-                renvoieInfo += 10 + " grace a l'echange de trois cartes cavalier";
+                renvoieInfo += 6 + " grace a l'echange de trois cartes cavalier";
             nombreRegimentMax += 6;
             nombreRegimentAPlacer += 6;
         } else if (nbFantassin >= 3) {
@@ -1313,9 +1313,9 @@ public class Joueur extends GuiAgent {
                     break;
             }
             if (joker)
-                renvoieInfo += 10 + " grace a l'echange de deux cartes fantassin et d'une carte joker";
+                renvoieInfo += 4 + " grace a l'echange de deux cartes fantassin et d'une carte joker";
             else
-                renvoieInfo += 10 + " grace a l'echange de trois cartes fantassin";
+                renvoieInfo += 4 + " grace a l'echange de trois cartes fantassin";
             nombreRegimentMax += 4;
             nombreRegimentAPlacer += 4;
         }
