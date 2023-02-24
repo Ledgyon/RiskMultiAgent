@@ -229,7 +229,7 @@ public class Intermediaire extends GuiAgent {
 					}
 				}
 				if (nbTerritoire == c.getTerritoires().size()) {
-					if (!continentPossede.toString().equals(""))
+					if (!continentPossede.isEmpty())
 						continentPossede.append(',');
 					continentPossede.append(c);
 				}

@@ -1369,10 +1369,18 @@ public class Joueur extends GuiAgent {
             }
             case "attaque", "revanche" -> {
                 String position = findPositionLowestValue();
-                String[] pos = position.split(",");
-                int indexTer = Integer.parseInt(pos[0]);
-                territoires.get(indexTer).addRegimentSurTerritoire(nombreRegimentAPlacer);
-                nombreRegimentAPlacer = 0;
+                if(!position.isEmpty()) {
+                    String[] pos = position.split(",");
+                    int indexTer = Integer.parseInt(pos[0]);
+                    territoires.get(indexTer).addRegimentSurTerritoire(nombreRegimentAPlacer);
+                    nombreRegimentAPlacer = 0;
+                } else {
+                    while (nombreRegimentAPlacer != 0) {
+                        int indexTer = indexWeakestTerritoire();
+                        territoires.get(indexTer).addRegimentSurTerritoire(1);
+                        nombreRegimentAPlacer--;
+                    }
+                }
             }
             case "defense" -> {
                 int indexTer = indexGreatestDanger();
@@ -1517,16 +1525,14 @@ public class Joueur extends GuiAgent {
                 manoeuvreRegiment();
             }
             case "revanche" -> {
-                if (attaque && !attaqueRevanche.isEmpty()) {
+                if (!attaqueRevanche.isEmpty()) {
                     int indexAtt = -1, indexDef = -1;
                     Territoire attR = attaqueRevanche.get(0);
-                    for (Territoire ter : territoires) {
-                        for (Territoire terAdj : ter.getTerritoires_adjacents()) {
-                            if (terAdj.getNomTerritoire().equals(attR.getNomTerritoire()) && ter.getRegimentSurTerritoire() > 1) {
-                                indexAtt = territoires.indexOf(ter);
-                                indexDef = ter.getTerritoires_adjacents().indexOf(terAdj);
-                            }
-                        }
+                    String position = findPositionBiggestGap(attR);
+                    if(!position.isEmpty()) {
+                        String[] string = position.split(",");
+                        indexAtt = Integer.parseInt(string[0]);
+                        indexDef = Integer.parseInt(string[1]);
                     }
                     attaqueRevanche.remove(0);
 
@@ -1611,6 +1617,27 @@ public class Joueur extends GuiAgent {
         }
         return position;
     }
+
+    private String findPositionBiggestGap(Territoire t) {
+        String position = "";
+        int ecart = Integer.MIN_VALUE;
+        for (int i = 0; i < territoires.size(); i++) {
+            for (int j = 0; j < this.territoires.get(i).getTerritoires_adjacents().size(); j++) {
+                Territoire courantTerritoire = this.territoires.get(i).getTerritoires_adjacents().get(j);
+                if(courantTerritoire.getNomTerritoire().equals(t.getNomTerritoire())) {
+                    if (territoireNotContains(courantTerritoire)) {
+                        if ((this.territoires.get(i).getRegimentSurTerritoire() - courantTerritoire.getRegimentSurTerritoire() >= ecart) &&
+                                (this.territoires.get(i).getRegimentSurTerritoire() > 1) /* alors assez d unite pour attaque */) {
+                            ecart = this.territoires.get(i).getRegimentSurTerritoire() - courantTerritoire.getRegimentSurTerritoire();
+                            position = i + "," + j;
+                        }
+                    }
+                }
+            }
+        }
+        return position;
+    }
+
 
     // fonction qui permet de renseigner si un territoire est contenu dans la variable territoires
     private boolean territoireNotContains(Territoire t) {
