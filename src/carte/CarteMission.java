@@ -9,7 +9,7 @@ public class CarteMission implements Serializable {
     private int nbTerritoire;
     private int nbArmee;
     private List<String> continentAConquerir;
-    private String couleur; // A voir ultérieurement
+    private String couleur;
     private String typeMission;
 
 
