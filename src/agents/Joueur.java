@@ -348,12 +348,14 @@ public class Joueur extends GuiAgent {
                     window.println("\nMessage recu sur le model " + model4 + " emis par :  " + msg.getSender().getLocalName());
 
                     if (objectif.getTypeMission().equals(TypeMission.COULEUR.toString()) && armees_eliminees.contains(objectif.getCouleur())) { // alors victoire
-                        window.println("\nEnvoie fin de partie a Intermediaire. Le " + getLocalName() + " a gagne la partie,"
+                        String affichage = "Le " + getLocalName() + " a gagne la partie,"
                                 + "\ncar il a complete sa mission, l armee " + objectif.getCouleur() + " a ete eliminee."
-                                + "\nLe " + getLocalName() + " revendique la victoire.");
+                                + "\nLe " + getLocalName() + " revendique la victoire.";
+                    	window.println("\nEnvoie fin de partie a Intermediaire. " + affichage);
                         ACLMessage message1 = new ACLMessage(ACLMessage.REQUEST);
                         message1.setConversationId("victoire / fin de partie");
                         message1.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
+                        message1.setContent(affichage);
                         send(message1);
                     } else {
                         //RENFORT
