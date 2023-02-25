@@ -466,14 +466,14 @@ public class Joueur extends GuiAgent {
                     int nbAutorTopic = 0;
                     if (nbRegimentDefenseurUpdate == 0) // alors forcement les 2 topic ont ete envoyes car ajout et retrait (attribution nouveau territoire)
                     {
-                        nbAutorTopic = Integer.parseInt(nbJoueurs) + Integer.parseInt(nbJoueurs);
+                        nbAutorTopic = 2;
                     } else {
                         if (nbRegimentAttaquant > nbRegimentAttaquantUpdate) {
-                            nbAutorTopic += Integer.parseInt(nbJoueurs);
+                            nbAutorTopic += 1;
                         }
 
                         if (nbRegimentDefenseur > nbRegimentDefenseurUpdate) {
-                            nbAutorTopic += Integer.parseInt(nbJoueurs);
+                            nbAutorTopic += 1;
                         }
                     }
                     nbAutorTopicTerrAdjRecquis = nbAutorTopic; // avec 6 joueurs, il faut 6 ou 12 autorisations
@@ -669,7 +669,7 @@ public class Joueur extends GuiAgent {
                         nbAutorTopicTerrAdj++;
                         window.println(msg.getSender().getLocalName() + " a envoye son autorisation. NbTopic = " + nbAutorTopicTerrAdj + " / NbTopicRecquis = " + nbAutorTopicTerrAdjRecquis);
                     }
-                    if (nbAutorTopicTerrAdjRecquis == nbAutorTopicTerrAdj && !autorTopicTerrAdj) {
+                    if ((nbAutorTopicTerrAdjRecquis*joueurs.size()) == nbAutorTopicTerrAdj && !autorTopicTerrAdj) {
                         autorTopicTerrAdj = true;
                         window.println("Tous les topics ont envoyes son autorisation");
                     }
@@ -1572,8 +1572,12 @@ public class Joueur extends GuiAgent {
                         }
                     }
                 } else
-                    window.println("Je n'ai pas encore recu d'attaque donc je n'ai aucune raison d'attaquer");
-                manoeuvreRegiment();
+                {
+                	window.println("Je n'ai pas encore recu d'attaque donc je n'ai aucune raison d'attaquer");
+                	manoeuvreRegiment();
+                }
+                    
+                
             }
         }
     }

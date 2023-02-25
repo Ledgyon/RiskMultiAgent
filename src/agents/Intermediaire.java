@@ -288,7 +288,7 @@ public class Intermediaire extends GuiAgent {
 					numTour++;
 					iJoueurTourCombat = 0;
 					//if (numTour < 10)
-					//debutPartie();  // A METTRE EN COMMENTAIRE SI ON NE VEUT PLUS LOOP (si on veut ne faire que 1 seul tour)
+					debutPartie();  // A METTRE EN COMMENTAIRE SI ON NE VEUT PLUS LOOP (si on veut ne faire que 1 seul tour)
 				}
 				reset(model2, MsgReceiver.INFINITE, null, null);
 			}
@@ -571,6 +571,10 @@ public class Intermediaire extends GuiAgent {
 
 			launchRisk();
 		} else if (guiEvent.getType() == Intermediaire.LANCER_TOUR_RISK) {
+			//trie des joueurs par leur nom (Joueur_1 -> Joueur_6)
+			Comparator<AID> joueurComparator
+					= Comparator.comparing(AID::getLocalName);
+			joueurs.sort(joueurComparator);
 			debutPartie();
 		}
 	}
