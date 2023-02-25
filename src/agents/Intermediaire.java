@@ -31,6 +31,8 @@ public class Intermediaire extends GuiAgent {
 
 	public static final int LANCER_RISK = 1;
 
+	public static final int LANCER_TOUR_RISK = 2;
+
 	private int nbAutorisation = 0; // boolean activant la phase de combat si == 6 (= tous les joueurs ont fini la phase de renfort)
 	/**
 	 * topic du joueur demandant les informations du territoire
@@ -174,7 +176,7 @@ public class Intermediaire extends GuiAgent {
 
 			assert tempT != null;
 			plateau.getTerritoireByName(tempT.getNomTerritoire()).setRegimentSurTerritoire(tempT.getRegimentSurTerritoire());
-			window.println(plateau.toString());
+			//window.println(plateau.toString());
 
 			nbTerritoireUpdate += 1;
 
@@ -210,8 +212,7 @@ public class Intermediaire extends GuiAgent {
 				}
 			}
 
-			window.println("Message recu sur le topic " + topicUpdateContinent.getLocalName() /*+ ". Contenu " + m.getContent().toString()*/ // en commentaire pour alleger l affichage
-					+ " emis par :  " + m.getSender().getLocalName());
+
 			List<Territoire> tempT = new ArrayList<>();
 			try {
 				tempT.addAll((List<Territoire>) m.getContentObject());
@@ -287,7 +288,7 @@ public class Intermediaire extends GuiAgent {
 					numTour++;
 					iJoueurTourCombat = 0;
 					//if (numTour < 10)
-						debutPartie();  // A METTRE EN COMMENTAIRE SI ON NE VEUT PLUS LOOP (si on veut ne faire que 1 seul tour)
+					//debutPartie();  // A METTRE EN COMMENTAIRE SI ON NE VEUT PLUS LOOP (si on veut ne faire que 1 seul tour)
 				}
 				reset(model2, MsgReceiver.INFINITE, null, null);
 			}
@@ -465,7 +466,10 @@ public class Intermediaire extends GuiAgent {
 	 */
 	private void detectJoueurs() {
 		var model = AgentServicesTools.createAgentDescription("liste joueur", "get AID joueur");
-		this.joueurs = new ArrayList<>();
+		if(this.joueurs == null)
+			this.joueurs = new ArrayList<>();
+		else
+			this.joueurs.clear();
 
 		//souscription au service des pages jaunes pour recevoir une alerte en cas mouvement sur le service travel agency'seller
 		addBehaviour(new DFSubscriber(this, model) {
@@ -556,8 +560,7 @@ public class Intermediaire extends GuiAgent {
 	protected void onGuiEvent(GuiEvent guiEvent) {
 		if (guiEvent.getType() == Intermediaire.EXIT) {
 			doDelete();
-		}
-		if (guiEvent.getType() == Intermediaire.LANCER_RISK) {
+		} else if (guiEvent.getType() == Intermediaire.LANCER_RISK) {
 
 			//trie des joueurs par leur nom (Joueur_1 -> Joueur_6)
 			Comparator<AID> joueurComparator
@@ -567,6 +570,8 @@ public class Intermediaire extends GuiAgent {
 			System.out.println(joueurs);
 
 			launchRisk();
+		} else if (guiEvent.getType() == Intermediaire.LANCER_TOUR_RISK) {
+			debutPartie();
 		}
 	}
 

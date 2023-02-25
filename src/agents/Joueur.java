@@ -428,7 +428,7 @@ public class Joueur extends GuiAgent {
                     	nbAutorJoueurRecquis = 500;
                     	nbAutorJoueur = 0;
 
-                    	territoiresPouvantAttaquer = new ArrayList<>();
+                    	territoiresPouvantAttaquer.clear();
                         for (int i = 0; i < territoires.size(); i++) {
                             territoiresPouvantAttaquer.add(i);
                         }
@@ -493,7 +493,8 @@ public class Joueur extends GuiAgent {
                         try {
                             Territoire tempT = (Territoire) msg.getContentObject();
                             territoires.add(tempT);
-                            getTerritoireByName(nomTerritoireAttaque).setRegimentSurTerritoire(getTerritoireByName(nomTerritoireAttaque).getRegimentSurTerritoire() - nbRegimentAttaquant); // car peu importe si perte ou non -> regiment soit mort, soit sur le nouveau territoire concquis
+                            Territoire t = getTerritoireByName(nomTerritoireAttaque);
+                            t.setRegimentSurTerritoire(t.getRegimentSurTerritoire() - nbRegimentAttaquant); // car peu importe si perte ou non -> regiment soit mort, soit sur le nouveau territoire concquis
 
                         } catch (UnreadableException e) {
                             // TODO Auto-generated catch block
@@ -518,8 +519,10 @@ public class Joueur extends GuiAgent {
 
                     } else // pas de nouveau territoire
                     {
-                        if (nbRegimentAttaquant > nbRegimentAttaquantUpdate)
-                            getTerritoireByName(nomTerritoireAttaque).setRegimentSurTerritoire(getTerritoireByName(nomTerritoireAttaque).getRegimentSurTerritoire() - (nbRegimentAttaquant - nbRegimentAttaquantUpdate));
+                        if (nbRegimentAttaquant > nbRegimentAttaquantUpdate) {
+                            Territoire t = getTerritoireByName(nomTerritoireAttaque);
+                            t.setRegimentSurTerritoire(t.getRegimentSurTerritoire() - (nbRegimentAttaquant - nbRegimentAttaquantUpdate));
+                        }
                     }
 
                     //Lancement de l autorisation d une nouvelle attaque
@@ -811,7 +814,10 @@ public class Joueur extends GuiAgent {
      */
     private void detectJoueurs() {
         var model = AgentServicesTools.createAgentDescription("liste joueur", "get AID joueur");
-        this.joueurs = new ArrayList<>();
+        if(this.joueurs == null)
+            this.joueurs = new ArrayList<>();
+        else
+            this.joueurs.clear();
 
         //souscription au service des pages jaunes pour recevoir une alerte en cas mouvement sur le service travel agency'seller
         addBehaviour(new DFSubscriber(this, model) {
