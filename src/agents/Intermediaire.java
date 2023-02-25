@@ -313,13 +313,13 @@ public class Intermediaire extends GuiAgent {
 					window.println("\n");
 
 					while (nbRegimentAttaquantUpdate > 0 && nbRegimentDefenseurUpdate > 0) {
-						window.println(nomTerritoireAttaque + " possede " + nbRegimentAttaquantUpdate + " regiment(s).\n"
+						StringBuilder affichage = new StringBuilder(nomTerritoireAttaque + " possede " + nbRegimentAttaquantUpdate + " regiment(s).\n"
 								+ nomTerritoireDefense + " possede " + nbRegimentDefenseurUpdate + " regiment(s).\nDebut du combat.");
-						window.println("\tLancer de des");
+						affichage.append("\n\tLancer de des");
 						// savoir combien de des ils peuvent lances
 						int nbDesAttaquant = nbDes("attaquant", nbRegimentAttaquantUpdate);
 						int nbDesDefenseur = nbDes("defenseur", nbRegimentDefenseurUpdate);
-						window.println("\tL attaquant lance " + nbDesAttaquant + " des. Le defenseur lance " + nbDesDefenseur + " des.");
+						affichage.append("\n\tL attaquant lance ").append(nbDesAttaquant).append(" des. Le defenseur lance ").append(nbDesDefenseur).append(" des.");
 
 						// resultat lancement
 						Random rand = new Random();
@@ -333,8 +333,8 @@ public class Intermediaire extends GuiAgent {
 						// trie decroissant
 						resultatsAtt.sort(Collections.reverseOrder());
 						resultatsDef.sort(Collections.reverseOrder());
-						window.println("\tResultat des lancer de l'attaquant : " + resultatsAtt);
-						window.println("\tResultat des lancer du defenseur : " + resultatsDef);
+						affichage.append("\n\tResultat des lancer de l'attaquant : ").append(resultatsAtt);
+						affichage.append("\n\tResultat des lancer du defenseur : ").append(resultatsDef);
 						// confrontation lancement
 						int nbConfrontation;
 						if (resultatsAtt.size() >= 2 && resultatsDef.size() >= 2)
@@ -343,12 +343,13 @@ public class Intermediaire extends GuiAgent {
 						for (i = 0; i < nbConfrontation; i++) {
 							if (resultatsAtt.get(i) > resultatsDef.get(i)) {
 								nbRegimentDefenseurUpdate--;
-								window.println("\t" + resultatsAtt.get(i) + " > " + resultatsDef.get(i) + ", le defenseur perd 1 unite.");
+								affichage.append("\n\t").append(resultatsAtt.get(i)).append(" > ").append(resultatsDef.get(i)).append(", le defenseur perd 1 unite.");
 							} else {
 								nbRegimentAttaquantUpdate--;
-								window.println("\t" + resultatsAtt.get(i) + " <= " + resultatsDef.get(i) + ", l attaquant perd 1 unite.");
+								affichage.append("\n\t").append(resultatsAtt.get(i)).append(" <= ").append(resultatsDef.get(i)).append(", l attaquant perd 1 unite.");
 							}
 						}
+						window.println(affichage.toString());
 					}
 					if (nbRegimentAttaquantUpdate == 0)
 						window.println("L attaquant ne possede plus d unite. Victoire du defenseur " + nomTerritoireDefense);
