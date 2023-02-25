@@ -1385,8 +1385,16 @@ public class Joueur extends GuiAgent {
             }
             case "defense" -> {
                 int indexTer = indexGreatestDanger();
-                territoires.get(indexTer).addRegimentSurTerritoire(nombreRegimentAPlacer);
-                nombreRegimentAPlacer = 0;
+                if(indexTer != -1) {
+                    territoires.get(indexTer).addRegimentSurTerritoire(nombreRegimentAPlacer);
+                    nombreRegimentAPlacer = 0;
+                } else {
+                    while (nombreRegimentAPlacer != 0) {
+                        indexTer = indexWeakestTerritoire();
+                        territoires.get(indexTer).addRegimentSurTerritoire(1);
+                        nombreRegimentAPlacer--;
+                    }
+                }
             }
             case "equilibre" -> {
                 while (nombreRegimentAPlacer != 0) {
