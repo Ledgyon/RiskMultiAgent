@@ -569,10 +569,9 @@ public class Joueur extends GuiAgent {
                     boolean continuer = true;
                     if (nbRegimentDefenseurUpdate <= 0) { //Perte territoire
                         territoires.remove(getTerritoireByName(nomTerritoireDefense));
-                        /*
                         if (strategie.equals("revanche"))
                             if (boolAttaquable(getTerritoireAdjacentByName(nomTerritoireAttaque)))
-                                attaqueRevanche.remove(getTerritoireByName(nomTerritoireAttaque));*/
+                                attaqueRevanche.remove(getTerritoireByName(nomTerritoireAttaque));
                         if (territoires.isEmpty()) {
                             window.println("Vous n'avez plus de territoire. Vous etes elimine.");
 
@@ -1714,7 +1713,7 @@ public class Joueur extends GuiAgent {
                             window.println("\nManoeuvre effectue\n");
                         }
                     }
-                    case "attaque", "revanche" -> {
+                    case "attaque" -> {
                         String position = findPositionLowestValue();
                         if (!position.isEmpty()) {
                             String[] string = position.split(",");
@@ -1752,7 +1751,7 @@ public class Joueur extends GuiAgent {
                             }
                         }
                     }
-                    case "equilibre" -> {
+                    case "equilibre", "revanche" -> {
                         String position = indexWeakestTerritoire(tempTAdd);
                         if (!position.isEmpty()) {
                             String[] string = position.split(",");
