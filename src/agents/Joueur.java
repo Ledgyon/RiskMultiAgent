@@ -1495,7 +1495,8 @@ public class Joueur extends GuiAgent {
                             nbRegimentDefenseur = this.territoires.get(i).getTerritoires_adjacents().get(j).getRegimentSurTerritoire();
                             message.setContent(nomTerritoireAttaque + "," + nomTerritoireDefense + "," + nbRegimentAttaquant + "," + nbRegimentDefenseur);
                             send(message);
-                        }
+                        } else
+                            manoeuvreRegiment();
                     } else
                         manoeuvreRegiment();
                 } else {
