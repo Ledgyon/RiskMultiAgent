@@ -412,8 +412,8 @@ public class Joueur extends GuiAgent {
 
                     if(msg.getContent().equals("autorisation joueur"))
                     {
-                    	window.println("nbAutorJoueur = " + nbAutorJoueur + ", nbAutorJoueurRecquis = " + nbAutorJoueurRecquis);
                     	nbAutorJoueur++;
+                    	window.println("nbAutorJoueur = " + nbAutorJoueur + ", nbAutorJoueurRecquis = " + nbAutorJoueurRecquis);
                     }
 
                     if(msg.getContent().equals("autorisation intermediaire"))
@@ -421,7 +421,7 @@ public class Joueur extends GuiAgent {
                     	autorIntermediaire = true;
                     }
 
-                    if(autorIntermediaire && nbAutorJoueurRecquis == nbAutorJoueur)
+                    if(autorIntermediaire && nbAutorJoueurRecquis >= nbAutorJoueur)
                     {
                     	//reset des variables
                     	autorIntermediaire = false;
