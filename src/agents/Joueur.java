@@ -1793,6 +1793,7 @@ public class Joueur extends GuiAgent {
     private void verifVictoire() {
         boolean finPartie = false;
         int i;
+        String affichage;
 
         //preparation du modele d'envoie de la fin de partie, peut ne pas etre envoye si la condition de victoire n est pas remplie
         ACLMessage message1 = new ACLMessage(ACLMessage.REQUEST);
@@ -1818,18 +1819,22 @@ public class Joueur extends GuiAgent {
                 if (objectif.getContinentAConquerir().size() == 2) // alors pas de "Autre", victoire
                 {
                     finPartie = true;
-                    window.println("\nEnvoie fin de partie a Intermediaire. Le " + this.getLocalName() + " a gagne la partie,"
+                    affichage = "Le " + this.getLocalName() + " a gagne la partie,"
                             + "\ncar il a complete sa mission de concquerir les territoires " + objectif.getContinentAConquerir().get(0)
-                            + " et " + objectif.getContinentAConquerir().get(1) + ".");
+                            + " et " + objectif.getContinentAConquerir().get(1) + ".";
+                    window.println("\nEnvoie fin de partie a Intermediaire. " + affichage);
+                    message1.setContent(affichage);
                     send(message1);
                 } else // besoin de ses 2 continents + un "Autre" au choix, si oui, victoire, sinon, la partie continue
                 {
                     if (continents.size() >= 3) // alors victoire
                     {
                         finPartie = true;
-                        window.println("\nEnvoie fin de partie a Intermediaire. Le " + this.getLocalName() + " a gagne la partie,"
+                        affichage = "Le " + this.getLocalName() + " a gagne la partie,"
                                 + "\ncar il a complete sa mission de concquerir les territoires " + objectif.getContinentAConquerir().get(0)
-                                + ", " + objectif.getContinentAConquerir().get(1) + " et un autre de son choix.");
+                                + ", " + objectif.getContinentAConquerir().get(1) + " et un autre de son choix.";
+                        window.println("\nEnvoie fin de partie a Intermediaire. " + affichage);
+                        message1.setContent(affichage);
                         send(message1);
                     }
                 }
@@ -1841,8 +1846,10 @@ public class Joueur extends GuiAgent {
             if (armees_eliminees.contains(objectif.getCouleur())) //alors victoire
             {
                 finPartie = true;
-                window.println("\nEnvoie fin de partie a Intermediaire. Le " + this.getLocalName() + " a gagne la partie,"
-                        + "\ncar il a complete sa mission d eliminer les armees " + objectif.getCouleur() + ".");
+                affichage = "Le " + this.getLocalName() + " a gagne la partie,"
+                        + "\ncar il a complete sa mission d eliminer les armees " + objectif.getCouleur() + ".";
+                window.println("\nEnvoie fin de partie a Intermediaire. " + affichage);
+                message1.setContent(affichage);
                 send(message1);
             }
         }
@@ -1852,8 +1859,10 @@ public class Joueur extends GuiAgent {
             if (territoires.size() == objectif.getNbTerritoire()) //alors victoire
             {
                 finPartie = true;
-                window.println("\nEnvoie fin de partie a Intermediaire. Le " + this.getLocalName() + " a gagne la partie,"
-                        + "\ncar il a complete sa mission de concquerir " + objectif.getNbTerritoire() + " territoires.");
+                affichage = "Le " + this.getLocalName() + " a gagne la partie,"
+                        + "\ncar il a complete sa mission de concquerir " + objectif.getNbTerritoire() + " territoires.";
+                window.println("\nEnvoie fin de partie a Intermediaire. " + affichage);
+                message1.setContent(affichage);
                 send(message1);
             }
         }
@@ -1873,9 +1882,11 @@ public class Joueur extends GuiAgent {
                 if (nbTerritoiresAvecNbArmeesRecquis >= objectif.getNbTerritoire()) // alors victoire
                 {
                     finPartie = true;
-                    window.println("\nEnvoie fin de partie a Intermediaire. Le " + this.getLocalName() + " a gagne la partie,"
+                    affichage = "Le " + this.getLocalName() + " a gagne la partie,"
                             + "\ncar il a complete sa mission de concquerir " + objectif.getNbTerritoire() + " territoires "
-                            + " avec au moins " + objectif.getNbArmee() + " sur ce nombre de territoire a concquerir.");
+                            + " avec au moins " + objectif.getNbArmee() + " sur ce nombre de territoire a concquerir.";
+                    window.println("\nEnvoie fin de partie a Intermediaire. " + affichage);
+                    message1.setContent(affichage);
                     send(message1);
                 }
             }

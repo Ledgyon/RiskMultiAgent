@@ -438,6 +438,23 @@ public class Intermediaire extends GuiAgent {
 				reset(model3, MsgReceiver.INFINITE, null, null);
 			}
 		});
+		
+		var model4 = MessageTemplate.MatchConversationId("victoire / fin de partie");
+
+
+        addBehaviour(new MsgReceiver(this, model4, MsgReceiver.INFINITE, null, null) {
+            protected void handleMessage(ACLMessage msg) {
+                if (msg != null) {
+                    window.println("\nMessage recu sur le model " + model4 + " emis par :  " + msg.getSender().getLocalName());
+
+                    String affichage = msg.getContent();
+                    
+                    window.println("Fin de la partie. " + affichage);
+
+                }
+                reset(model4, MsgReceiver.INFINITE, null, null);
+            }
+        });
 
 
 	}
