@@ -179,7 +179,7 @@ public class Intermediaire extends GuiAgent {
 			nbTerritoireUpdate += 1;
 
 			if (m.getEncoding() != null) {
-				if (nbTerritoireUpdate == Integer.parseInt(m.getEncoding())) {
+				if (nbTerritoireUpdate >= Integer.parseInt(m.getEncoding())) {
 					nbTerritoireUpdate = 0;
 					autorisationCombat(m.getSender().getLocalName());
 				}
@@ -351,9 +351,9 @@ public class Intermediaire extends GuiAgent {
 						}
 					}
 					if (nbRegimentAttaquantUpdate == 0)
-						window.println("Le defenseur ne possede plus d unite. Victoire de l'attaquant " + nomTerritoireAttaque);
-					else
 						window.println("L attaquant ne possede plus d unite. Victoire du defenseur " + nomTerritoireDefense);
+					else
+						window.println("Le defenseur ne possede plus d unite. Victoire de l'attaquant " + nomTerritoireAttaque);
 
 
 					//Retour des resultats pour l attaquant
@@ -479,6 +479,8 @@ public class Intermediaire extends GuiAgent {
 			public void onDeregister(DFAgentDescription dfd) { // lorsque le joueur est mort
 				joueurs.remove(dfd.getName());
 				window.println(dfd.getName().getLocalName() + " s'est desinscrit de  : " + model.getAllServices().get(0));
+				var infos = dfd.getName().getLocalName().split("_");
+				if(Integer.parseInt(infos[1]) <= iJoueurTourCombat) iJoueurTourCombat--;
 			}
 		});
 		System.out.println("Liste de joueurs" + joueurs);

@@ -582,7 +582,7 @@ public class Joueur extends GuiAgent {
                             //Envoie au joueur l'ayant eliminer
                             ACLMessage message = new ACLMessage(ACLMessage.INFORM);
                             message.addReceiver(topicElimJoueur);
-                            message.setContent(getLocalName() + "," + couleur + ";" + joueurAttaque);
+                            message.setContent(getLocalName() + "," + couleur + "," + joueurAttaque);
                             send(message);
 
                             doDelete(); // invoque le takeDown() pour delete l'agent
@@ -1477,10 +1477,9 @@ public class Joueur extends GuiAgent {
                         tempI = rand.nextInt(tempList.size());
                         i = territoires.indexOf(tempList.get(tempI));
                         List<Territoire> listTemp = new ArrayList<>(this.territoires.get(i).getTerritoires_adjacents());
-                        for (Territoire t : territoires)
-                            for (int k = (listTemp.size() - 1); k >= 0; --k)
-                                if (listTemp.get(k).getNomTerritoire().equals(t.getNomTerritoire()))
-                                    listTemp.remove(k);
+                        for (int k = (listTemp.size() - 1); k >= 0; --k)
+                            if (!territoireNotContains(listTemp.get(k)))
+                                listTemp.remove(k);
                         if (!listTemp.isEmpty()) {
                             j = rand.nextInt(listTemp.size());
                             window.println("\n Position de l'attaque \n" + i + "\t" + j);
