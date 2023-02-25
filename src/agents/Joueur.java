@@ -1367,7 +1367,7 @@ public class Joueur extends GuiAgent {
                     nombreRegimentAPlacer--;
                 }
             }
-            case "attaque", "revanche" -> {
+            case "attaque" -> {
                 String position = findPositionLowestValue();
                 if(!position.isEmpty()) {
                     String[] pos = position.split(",");
@@ -1395,7 +1395,7 @@ public class Joueur extends GuiAgent {
                     }
                 }
             }
-            case "equilibre" -> {
+            case "equilibre", "revanche" -> {
                 while (nombreRegimentAPlacer != 0) {
                     int indexTer = indexWeakestTerritoire();
                     territoires.get(indexTer).addRegimentSurTerritoire(1);
