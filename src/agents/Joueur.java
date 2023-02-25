@@ -569,9 +569,10 @@ public class Joueur extends GuiAgent {
                     boolean continuer = true;
                     if (nbRegimentDefenseurUpdate <= 0) { //Perte territoire
                         territoires.remove(getTerritoireByName(nomTerritoireDefense));
+                        /*
                         if (strategie.equals("revanche"))
                             if (boolAttaquable(getTerritoireAdjacentByName(nomTerritoireAttaque)))
-                                attaqueRevanche.remove(getTerritoireByName(nomTerritoireAttaque));
+                                attaqueRevanche.remove(getTerritoireByName(nomTerritoireAttaque));*/
                         if (territoires.isEmpty()) {
                             window.println("Vous n'avez plus de territoire. Vous etes elimine.");
 
