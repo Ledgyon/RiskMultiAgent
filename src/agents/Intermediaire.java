@@ -165,8 +165,6 @@ public class Intermediaire extends GuiAgent {
 
 
 		addBehaviour(new ReceiverBehaviour(this, -1, MessageTemplate.MatchTopic(topicRegimentTeritoire), true, (a, m) -> {
-			window.println("Message recu sur le topic " + topicRegimentTeritoire.getLocalName() + ". Contenu " + m.getContent()
-					+ " emis par :  " + m.getSender().getLocalName());
 			Territoire tempT = null;
 			try {
 				tempT = (Territoire) m.getContentObject();
@@ -174,6 +172,9 @@ public class Intermediaire extends GuiAgent {
 				//throw new RuntimeException(e);
 			}
 
+			window.println("Message recu sur le topic " + topicRegimentTeritoire.getLocalName() + ". Pour mettre à jour les informations du territoire " + tempT.getNomTerritoire()
+			+ " emis par :  " + m.getSender().getLocalName());
+			
 			assert tempT != null;
 			plateau.getTerritoireByName(tempT.getNomTerritoire()).setRegimentSurTerritoire(tempT.getRegimentSurTerritoire());
 			//window.println(plateau.toString());
@@ -279,9 +280,9 @@ public class Intermediaire extends GuiAgent {
 					window.println("fin du tour " + numTour + " dont le dernier est " + msg.getSender().getLocalName());
 					// tous le monde a fait sa phase de combat, DEBUT PHASE MANOEUVRE
 
-					ACLMessage assignRegiment = new ACLMessage(ACLMessage.INFORM);
-					assignRegiment.addReceiver(topicAffichageFinTour);
-					send(assignRegiment);
+					ACLMessage AffichageFinTour = new ACLMessage(ACLMessage.INFORM);
+					AffichageFinTour.addReceiver(topicAffichageFinTour);
+					send(AffichageFinTour);
 
 					window.println("\n" + plateau.toString());
 
@@ -447,11 +448,18 @@ public class Intermediaire extends GuiAgent {
         addBehaviour(new MsgReceiver(this, model4, MsgReceiver.INFINITE, null, null) {
             protected void handleMessage(ACLMessage msg) {
                 if (msg != null) {
+                	window.println(plateau.toString());
+                	
                     window.println("\nMessage recu sur le model " + model4 + " emis par :  " + msg.getSender().getLocalName());
 
                     String affichage = msg.getContent();
                     
                     window.println("Fin de la partie. " + affichage);
+                    
+                    ACLMessage finPartie = new ACLMessage(ACLMessage.INFORM);
+                    finPartie.addReceiver(topicAffichageFinTour);
+					finPartie.setEncoding(affichage);
+					send(finPartie);
 
                 }
                 reset(model4, MsgReceiver.INFINITE, null, null);
@@ -476,7 +484,7 @@ public class Intermediaire extends GuiAgent {
 			@Override
 			public void onRegister(DFAgentDescription dfd) { //au debut
 				joueurs.add(dfd.getName());
-				System.out.println("Liste de joueurs AID" + joueurs);
+				//System.out.println("Liste de joueurs AID" + joueurs);
 				window.println(dfd.getName().getLocalName() + " s'est inscrit en tant que joueur : " + model.getAllServices().get(0));
 			}
 
@@ -488,7 +496,7 @@ public class Intermediaire extends GuiAgent {
 				if(Integer.parseInt(infos[1]) <= iJoueurTourCombat) iJoueurTourCombat--;
 			}
 		});
-		System.out.println("Liste de joueurs" + joueurs);
+		//System.out.println("Liste de joueurs" + joueurs);
 
 	}
 

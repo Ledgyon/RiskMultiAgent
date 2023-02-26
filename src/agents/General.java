@@ -127,7 +127,7 @@ public class General extends GuiAgent {
             @Override
             public void onRegister(DFAgentDescription dfd) { //au debut
                 joueurs.add(dfd.getName());
-                System.out.println("Liste de joueurs AID"+joueurs);
+                //System.out.println("Liste de joueurs AID"+joueurs);
                 window.println(dfd.getName().getLocalName() + " s'est inscrit en tant que joueur : " + model.getAllServices().get(0));
             }
             
@@ -137,7 +137,7 @@ public class General extends GuiAgent {
                 window.println(dfd.getName().getLocalName() + " s'est desinscrit de  : " + model.getAllServices().get(0));
             }
         });
-        System.out.println("Liste de joueurs"+joueurs);
+        //System.out.println("Liste de joueurs"+joueurs);
 
     }
 

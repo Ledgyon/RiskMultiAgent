@@ -28,7 +28,7 @@ import java.util.*;
 
 @SuppressWarnings("serial")
 public class Joueur extends GuiAgent {
-
+	
     private String couleur;
     private int nombreRegimentAPlacer;
     private int nombreRegimentMax;
@@ -351,7 +351,7 @@ public class Joueur extends GuiAgent {
                         String affichage = "Le " + getLocalName() + " a gagne la partie,"
                                 + "\ncar il a complete sa mission, l armee " + objectif.getCouleur() + " a ete eliminee."
                                 + "\nLe " + getLocalName() + " revendique la victoire.";
-                    	window.println("\nEnvoie fin de partie a Intermediaire. " + affichage);
+                    	window.println("\nEnvoie fin de partie a Intermediaire. ");
                         ACLMessage message1 = new ACLMessage(ACLMessage.REQUEST);
                         message1.setConversationId("victoire / fin de partie");
                         message1.addReceiver(new AID(intermediaire.getLocalName(), AID.ISLOCALNAME));
@@ -413,7 +413,10 @@ public class Joueur extends GuiAgent {
                     if(msg.getContent().equals("autorisation joueur"))
                     {
                     	nbAutorJoueur++;
-                    	window.println("nbAutorJoueur = " + nbAutorJoueur + ", nbAutorJoueurRecquis = " + nbAutorJoueurRecquis);
+                    	if(nbAutorJoueurRecquis >= nbAutorJoueur)
+                    	{
+                    		window.println("nbAutorJoueur = " + nbAutorJoueur + ", nbAutorJoueurRecquis = " + nbAutorJoueurRecquis);
+                    	}
                     }
 
                     if(msg.getContent().equals("autorisation intermediaire"))
@@ -579,6 +582,7 @@ public class Joueur extends GuiAgent {
                                 attaqueRevanche.remove(getTerritoireByName(nomTerritoireAttaque));
                         if (territoires.isEmpty()) {
                             window.println("Vous n'avez plus de territoire. Vous etes elimine.");
+                            window.println("Strategie : "+strategie+"\nMission : "+objectif.toString()+"\nContinents possedes : "+continents);
 
                             continuer = false;
 
@@ -667,7 +671,7 @@ public class Joueur extends GuiAgent {
                     if (msg.getContent().equals("autorisation topic")) {
                         //Autorisation nouvel attaque de l attaquant
                         nbAutorTopicTerrAdj++;
-                        window.println(msg.getSender().getLocalName() + " a envoye son autorisation. NbTopic = " + nbAutorTopicTerrAdj + " / NbTopicRecquis = " + nbAutorTopicTerrAdjRecquis);
+                        window.println(msg.getSender().getLocalName() + " a envoye son autorisation. NbTopic = " + nbAutorTopicTerrAdj + " / NbTopicRecquis = " + nbAutorTopicTerrAdjRecquis*joueurs.size());
                     }
                     if ((nbAutorTopicTerrAdjRecquis*joueurs.size()) == nbAutorTopicTerrAdj && !autorTopicTerrAdj) {
                         autorTopicTerrAdj = true;
@@ -728,6 +732,12 @@ public class Joueur extends GuiAgent {
                     + " emis par :  " + m.getSender().getLocalName());
 
             window.println(territoires.toString());
+            if(m.getEncoding() != null)
+            {
+            	String affichage = m.getEncoding();
+            	window.println(affichage);
+            	window.println("Strategie : "+strategie+"\nMission : "+objectif.toString()+"\nContinents possedes : "+continents);
+            }
         }));
 
         topicElimJoueur = AgentServicesTools.generateTopicAID(this, "ELIMINATION JOUEUR");
@@ -824,7 +834,7 @@ public class Joueur extends GuiAgent {
             @Override
             public void onRegister(DFAgentDescription dfd) { //au debut
                 joueurs.add(dfd.getName());
-                System.out.println("Liste de joueurs AID" + joueurs);
+                //System.out.println("Liste de joueurs AID" + joueurs);
                 window.println(dfd.getName().getLocalName() + " s'est inscrit en tant que joueur : " + model.getAllServices().get(0));
             }
 
@@ -834,7 +844,7 @@ public class Joueur extends GuiAgent {
                 window.println(dfd.getName().getLocalName() + " s'est desinscrit de  : " + model.getAllServices().get(0));
             }
         });
-        System.out.println("Liste de joueurs" + joueurs);
+        //System.out.println("Liste de joueurs" + joueurs);
 
     }
 
@@ -1366,6 +1376,16 @@ public class Joueur extends GuiAgent {
     }
 
     public void addRegimentTerritoire() {
+    	if(objectif.getTypeMission().equals(TypeMission.TERRITOIRES_ET_ARMEES_MIN.toString()))
+    	{
+    		for(Territoire t : territoires)
+    		{
+    				while(nombreRegimentAPlacer != 0 && t.getRegimentSurTerritoire() < objectif.getNbArmee())
+    				{
+    					t.addRegimentSurTerritoire(1);
+    				}
+    		}
+    	}
         switch (strategie) {
             case "aleatoire", "passive" -> {
                 Random rand = new Random();
@@ -1834,7 +1854,7 @@ public class Joueur extends GuiAgent {
                     affichage = "Le " + this.getLocalName() + " a gagne la partie,"
                             + "\ncar il a complete sa mission de concquerir les territoires " + objectif.getContinentAConquerir().get(0)
                             + " et " + objectif.getContinentAConquerir().get(1) + ".";
-                    window.println("\nEnvoie fin de partie a Intermediaire. " + affichage);
+                    window.println("\nEnvoie fin de partie a Intermediaire. ");
                     message1.setContent(affichage);
                     send(message1);
                 } else // besoin de ses 2 continents + un "Autre" au choix, si oui, victoire, sinon, la partie continue
@@ -1845,7 +1865,7 @@ public class Joueur extends GuiAgent {
                         affichage = "Le " + this.getLocalName() + " a gagne la partie,"
                                 + "\ncar il a complete sa mission de concquerir les territoires " + objectif.getContinentAConquerir().get(0)
                                 + ", " + objectif.getContinentAConquerir().get(1) + " et un autre de son choix.";
-                        window.println("\nEnvoie fin de partie a Intermediaire. " + affichage);
+                        window.println("\nEnvoie fin de partie a Intermediaire. ");
                         message1.setContent(affichage);
                         send(message1);
                     }
@@ -1860,7 +1880,7 @@ public class Joueur extends GuiAgent {
                 finPartie = true;
                 affichage = "Le " + this.getLocalName() + " a gagne la partie,"
                         + "\ncar il a complete sa mission d eliminer les armees " + objectif.getCouleur() + ".";
-                window.println("\nEnvoie fin de partie a Intermediaire. " + affichage);
+                window.println("\nEnvoie fin de partie a Intermediaire. ");
                 message1.setContent(affichage);
                 send(message1);
             }
@@ -1873,7 +1893,7 @@ public class Joueur extends GuiAgent {
                 finPartie = true;
                 affichage = "Le " + this.getLocalName() + " a gagne la partie,"
                         + "\ncar il a complete sa mission de concquerir " + objectif.getNbTerritoire() + " territoires.";
-                window.println("\nEnvoie fin de partie a Intermediaire. " + affichage);
+                window.println("\nEnvoie fin de partie a Intermediaire. ");
                 message1.setContent(affichage);
                 send(message1);
             }
@@ -1897,7 +1917,7 @@ public class Joueur extends GuiAgent {
                     affichage = "Le " + this.getLocalName() + " a gagne la partie,"
                             + "\ncar il a complete sa mission de concquerir " + objectif.getNbTerritoire() + " territoires "
                             + " avec au moins " + objectif.getNbArmee() + " sur ce nombre de territoire a concquerir.";
-                    window.println("\nEnvoie fin de partie a Intermediaire. " + affichage);
+                    window.println("\nEnvoie fin de partie a Intermediaire. ");
                     message1.setContent(affichage);
                     send(message1);
                 }
