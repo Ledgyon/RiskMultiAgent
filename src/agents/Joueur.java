@@ -985,7 +985,7 @@ public class Joueur extends GuiAgent {
                     }
                 }
         if (nbRegimentContinent != 0)
-            affichage = "\n\t" + nbRegimentContinent + " grace a ces continents qu'il possede";
+            affichage += "\n\t" + nbRegimentContinent + " grace a ces continents qu'il possede";
         String affichageCartes = "";
         if (main.size() >= 3)
             affichageCartes = nouveauxRenfortsMain();
