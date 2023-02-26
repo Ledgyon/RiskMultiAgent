@@ -1005,7 +1005,7 @@ public class Joueur extends GuiAgent {
     // Permet de rajouter d'obtenir de nouveaux renforts par rapport aux cartes se trouvant dans la main du joueur
     private String nouveauxRenfortsMain() {
         int nbFantassin = 0, nbCavalier = 0, nbCanon = 0, nbJoker = 0, troisCartes = 0;
-        String renvoieInfo = "";
+        StringBuilder renvoieInfo = new StringBuilder();
         Map<Integer, String> fantassins = new HashMap<>();
         Map<Integer, String> cavaliers = new HashMap<>();
         Map<Integer, String> canons = new HashMap<>();
@@ -1069,7 +1069,8 @@ public class Joueur extends GuiAgent {
                         for (Territoire ter : territoires)
                             if (ter.getNomTerritoire().equals(fantassins.get(j))) {
                                 nombreRegimentMax += 2;
-                                ter.addRegimentSurTerritoire(2);
+                                nombreRegimentAPlacer += 2;
+                                renvoieInfo.append(2 + " car la carte echange est un des territoires possedes par le joueur\n\t");
                             }
                         fantassins.remove(j);
                     }
@@ -1078,7 +1079,8 @@ public class Joueur extends GuiAgent {
                         for (Territoire ter : territoires)
                             if (ter.getNomTerritoire().equals(cavaliers.get(k))) {
                                 nombreRegimentMax += 2;
-                                ter.addRegimentSurTerritoire(2);
+                                nombreRegimentAPlacer += 2;
+                                renvoieInfo.append(2 + " car la carte echange est un des territoires possedes par le joueur\n\t");
                             }
                         cavaliers.remove(k);
                     }
@@ -1087,13 +1089,14 @@ public class Joueur extends GuiAgent {
                         for (Territoire ter : territoires)
                             if (ter.getNomTerritoire().equals(canons.get(t))) {
                                 nombreRegimentMax += 2;
-                                ter.addRegimentSurTerritoire(2);
+                                nombreRegimentAPlacer += 2;
+                                renvoieInfo.append(2 + " car la carte echange est un des territoires possedes par le joueur\n\t");
                             }
                         canons.remove(t);
                     }
                 }
             }
-            renvoieInfo += 10 + " grace a l'echange d'une carte fantassin, d'une carte cavalier et d'une carte canon";
+            renvoieInfo.append(10 + " grace a l'echange d'une carte fantassin, d'une carte cavalier et d'une carte canon");
             nombreRegimentMax += 10;
             nombreRegimentAPlacer += 10;
         } else if (joker && (((nbFantassin > 1) && (nbCanon > 1)) || ((nbFantassin > 1) && (nbCavalier > 1)) || ((nbCavalier > 1) && (nbCanon > 1)))) {
@@ -1159,7 +1162,8 @@ public class Joueur extends GuiAgent {
                                 for (Territoire ter : territoires)
                                     if (ter.getNomTerritoire().equals(cavaliers.get(i))) {
                                         nombreRegimentMax += 2;
-                                        ter.addRegimentSurTerritoire(2);
+                                        nombreRegimentAPlacer += 2;
+                                        renvoieInfo.append(2 + " car la carte echange est un des territoires possedes par le joueur\n\t");
                                     }
                                 cavaliers.remove(i);
                             }
@@ -1171,7 +1175,8 @@ public class Joueur extends GuiAgent {
                                 for (Territoire ter : territoires)
                                     if (ter.getNomTerritoire().equals(canons.get(i))) {
                                         nombreRegimentMax += 2;
-                                        ter.addRegimentSurTerritoire(2);
+                                        nombreRegimentAPlacer += 2;
+                                        renvoieInfo.append(2 + " car la carte echange est un des territoires possedes par le joueur\n\t");
                                     }
                                 canons.remove(i);
                             }
@@ -1179,7 +1184,7 @@ public class Joueur extends GuiAgent {
                     }
                     returnCarteGeneral(i);
                 }
-                renvoieInfo += 10 + " grace a l'echange d'une carte joker, d'une carte cavalier et d'une carte canon";
+                renvoieInfo.append(10 + " grace a l'echange d'une carte joker, d'une carte cavalier et d'une carte canon");
             } else if (nbCanon == 1) {
                 boolean cavalierSend = false, fantassinSend = false;
                 for (int i = (unite.size() - 1); i >= 0; i--) {
@@ -1201,7 +1206,8 @@ public class Joueur extends GuiAgent {
                                 for (Territoire ter : territoires)
                                     if (ter.getNomTerritoire().equals(cavaliers.get(i))) {
                                         nombreRegimentMax += 2;
-                                        ter.addRegimentSurTerritoire(2);
+                                        nombreRegimentAPlacer += 2;
+                                        renvoieInfo.append(2 + " car la carte echange est un des territoires possedes par le joueur\n\t");
                                     }
                                 cavaliers.remove(i);
                             }
@@ -1213,7 +1219,8 @@ public class Joueur extends GuiAgent {
                                 for (Territoire ter : territoires)
                                     if (ter.getNomTerritoire().equals(fantassins.get(i))) {
                                         nombreRegimentMax += 2;
-                                        ter.addRegimentSurTerritoire(2);
+                                        nombreRegimentAPlacer += 2;
+                                        renvoieInfo.append(2 + " car la carte echange est un des territoires possedes par le joueur\n\t");
                                     }
                                 fantassins.remove(i);
                             }
@@ -1221,7 +1228,7 @@ public class Joueur extends GuiAgent {
                     }
                     returnCarteGeneral(i);
                 }
-                renvoieInfo += 10 + " grace a l'echange d'une carte fantassin, d'une carte cavalier et d'une carte joker";
+                renvoieInfo.append(10 + " grace a l'echange d'une carte fantassin, d'une carte cavalier et d'une carte joker");
             } else if (nbCavalier == 1) {
                 boolean fantassinSend = false, canonSend = false;
                 for (int i = (unite.size() - 1); i >= 0; i--) {
@@ -1243,7 +1250,8 @@ public class Joueur extends GuiAgent {
                                 for (Territoire ter : territoires)
                                     if (ter.getNomTerritoire().equals(fantassins.get(i))) {
                                         nombreRegimentMax += 2;
-                                        ter.addRegimentSurTerritoire(2);
+                                        nombreRegimentAPlacer += 2;
+                                        renvoieInfo.append(2 + " car la carte echange est un des territoires possedes par le joueur\n\t");
                                     }
                                 fantassins.remove(i);
                             }
@@ -1255,7 +1263,8 @@ public class Joueur extends GuiAgent {
                                 for (Territoire ter : territoires)
                                     if (ter.getNomTerritoire().equals(canons.get(i))) {
                                         nombreRegimentMax += 2;
-                                        ter.addRegimentSurTerritoire(2);
+                                        nombreRegimentAPlacer += 2;
+                                        renvoieInfo.append(2 + " car la carte echange est un des territoires possedes par le joueur\n\t");
                                     }
                                 canons.remove(i);
                             }
@@ -1263,7 +1272,7 @@ public class Joueur extends GuiAgent {
                     }
                     returnCarteGeneral(i);
                 }
-                renvoieInfo += 10 + " grace a l'echange d'une carte fantassin, d'une carte joker et d'une carte canon";
+                renvoieInfo.append(10 + " grace a l'echange d'une carte fantassin, d'une carte joker et d'une carte canon");
             }
             nombreRegimentMax += 10;
             nombreRegimentAPlacer += 10;
@@ -1274,7 +1283,8 @@ public class Joueur extends GuiAgent {
                     for (Territoire ter : territoires) {
                         if (ter.getNomTerritoire().equals(canons.get(j))) {
                             nombreRegimentMax += 2;
-                            ter.addRegimentSurTerritoire(2);
+                            nombreRegimentAPlacer += 2;
+                            renvoieInfo.append(2 + " car la carte echange est un des territoires possedes par le joueur\n\t");
                         }
                     }
                 else {
@@ -1292,9 +1302,9 @@ public class Joueur extends GuiAgent {
                     break;
             }
             if (joker)
-                renvoieInfo += 8 + " grace a l'echange de deux cartes canon et d'une carte joker";
+                renvoieInfo.append(8 + " grace a l'echange de deux cartes canon et d'une carte joker");
             else
-                renvoieInfo += 8 + " grace a l'echange de trois cartes canon";
+                renvoieInfo.append(8 + " grace a l'echange de trois cartes canon");
             nombreRegimentMax += 8;
             nombreRegimentAPlacer += 8;
         } else if (nbCavalier >= 3) {
@@ -1304,7 +1314,8 @@ public class Joueur extends GuiAgent {
                     for (Territoire ter : territoires) {
                         if (ter.getNomTerritoire().equals(cavaliers.get(j))) {
                             nombreRegimentMax += 2;
-                            ter.addRegimentSurTerritoire(2);
+                            nombreRegimentAPlacer += 2;
+                            renvoieInfo.append(2 + " car la carte echange est un des territoires possedes par le joueur\n\t");
                         }
                     }
                 else {
@@ -1322,9 +1333,9 @@ public class Joueur extends GuiAgent {
                     break;
             }
             if (joker)
-                renvoieInfo += 6 + " grace a l'echange de deux cartes cavalier et d'une carte joker";
+                renvoieInfo.append(6 + " grace a l'echange de deux cartes cavalier et d'une carte joker");
             else
-                renvoieInfo += 6 + " grace a l'echange de trois cartes cavalier";
+                renvoieInfo.append(6 + " grace a l'echange de trois cartes cavalier");
             nombreRegimentMax += 6;
             nombreRegimentAPlacer += 6;
         } else if (nbFantassin >= 3) {
@@ -1334,7 +1345,8 @@ public class Joueur extends GuiAgent {
                     for (Territoire ter : territoires) {
                         if (ter.getNomTerritoire().equals(fantassins.get(j))) {
                             nombreRegimentMax += 2;
-                            ter.addRegimentSurTerritoire(2);
+                            nombreRegimentAPlacer += 2;
+                            renvoieInfo.append(2 + " car la carte echange est un des territoires possedes par le joueur\n\t");
                         }
                     }
                 else {
@@ -1352,13 +1364,13 @@ public class Joueur extends GuiAgent {
                     break;
             }
             if (joker)
-                renvoieInfo += 4 + " grace a l'echange de deux cartes fantassin et d'une carte joker";
+                renvoieInfo.append(4 + " grace a l'echange de deux cartes fantassin et d'une carte joker");
             else
-                renvoieInfo += 4 + " grace a l'echange de trois cartes fantassin";
+                renvoieInfo.append(4 + " grace a l'echange de trois cartes fantassin");
             nombreRegimentMax += 4;
             nombreRegimentAPlacer += 4;
         }
-        return renvoieInfo;
+        return renvoieInfo.toString();
     }
 
     // Renvoie des cartes de la main vers la pioche du General
