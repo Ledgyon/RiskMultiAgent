@@ -1374,15 +1374,12 @@ public class Joueur extends GuiAgent {
     }
 
     public void addRegimentTerritoire() {
-    	if(objectif.getTypeMission().equals(TypeMission.TERRITOIRES_ET_ARMEES_MIN.toString()))
-    	{
-    		for(Territoire t : territoires)
-    		{
-    				while(nombreRegimentAPlacer != 0 && t.getRegimentSurTerritoire() < objectif.getNbArmee())
-    				{
-    					t.addRegimentSurTerritoire(1);
-    					nombreRegimentAPlacer--;
-    				}
+    	if(objectif.getTypeMission().equals(TypeMission.TERRITOIRES_ET_ARMEES_MIN.toString())) {
+    		for(Territoire t : territoires) {
+                while(nombreRegimentAPlacer != 0 && t.getRegimentSurTerritoire() < objectif.getNbArmee()) {
+                    t.addRegimentSurTerritoire(1);
+                    nombreRegimentAPlacer--;
+                }
     		}
     	}
     	List<Territoire> tempT = new ArrayList<>();
