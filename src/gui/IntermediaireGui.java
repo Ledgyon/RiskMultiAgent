@@ -42,7 +42,7 @@ public class IntermediaireGui extends JFrame {
         setResizable(true);
 
         JPanel p = new JPanel();
-        p.setLayout(new GridLayout(0, 2, 0, 0));
+        p.setLayout(new GridLayout(0, 1, 0, 0));
 
         getContentPane().add(p, BorderLayout.SOUTH);
 
@@ -60,20 +60,7 @@ public class IntermediaireGui extends JFrame {
             // Permet de rendre le bouton inutilisable
             ((JButton)event.getSource()).setEnabled(false);
         });
-        JButton addButton2 = new JButton("Tour");
-        addButton2.addActionListener(event -> {
-            try {
-                // SEND AN GUI EVENT TO THE AGENT !!!
-                GuiEvent guiEv = new GuiEvent(this, Intermediaire.LANCER_TOUR_RISK);
-                myAgent.postGuiEvent(guiEv);
-                // END SEND AN GUI EVENT TO THE AGENT !!!
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(IntermediaireGui.this, "Invalid values. " + e.getMessage(), "Error",
-                        JOptionPane.ERROR_MESSAGE);
-            }
-        });
         p.add(addButton);
-        p.add(addButton2);
     }
 
     public void display() {

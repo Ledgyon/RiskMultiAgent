@@ -31,8 +31,6 @@ public class Intermediaire extends GuiAgent {
 
 	public static final int LANCER_RISK = 1;
 
-	public static final int LANCER_TOUR_RISK = 2;
-
 	private int nbAutorisation = 0; // boolean activant la phase de combat si == 6 (= tous les joueurs ont fini la phase de renfort)
 	/**
 	 * topic du joueur demandant les informations du territoire
@@ -288,7 +286,7 @@ public class Intermediaire extends GuiAgent {
 
 					numTour++;
 					iJoueurTourCombat = 0;
-					//if (numTour < 10)
+					//if (numTour < 50)
 					debutPartie();  // A METTRE EN COMMENTAIRE SI ON NE VEUT PLUS LOOP (si on veut ne faire que 1 seul tour)
 				}
 				reset(model2, MsgReceiver.INFINITE, null, null);
@@ -578,12 +576,6 @@ public class Intermediaire extends GuiAgent {
 			System.out.println(joueurs);
 
 			launchRisk();
-		} else if (guiEvent.getType() == Intermediaire.LANCER_TOUR_RISK) {
-			//trie des joueurs par leur nom (Joueur_1 -> Joueur_6)
-			Comparator<AID> joueurComparator
-					= Comparator.comparing(AID::getLocalName);
-			joueurs.sort(joueurComparator);
-			debutPartie();
 		}
 	}
 
