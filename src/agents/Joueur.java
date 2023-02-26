@@ -1469,8 +1469,15 @@ public class Joueur extends GuiAgent {
                 updateRegimentTerritoire(ter, terEnvoie.size());
                 updateRegimentTerritoireAdjPourJoueursPhaseRenfort(ter);
             }
-        } else
+        } 
+        else
+        {
+        	territoiresPouvantAttaquer.clear();
+            for (int i = 0; i < territoires.size(); i++) {
+                territoiresPouvantAttaquer.add(i);
+            }
         	phaseCombatJoueur(true);
+        }
     }
 
     private void phaseCombatJoueur(boolean attaque) {
