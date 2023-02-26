@@ -408,15 +408,12 @@ public class Joueur extends GuiAgent {
         addBehaviour(new MsgReceiver(this, model4bis, MsgReceiver.INFINITE, null, null) {
             protected void handleMessage(ACLMessage msg) {
                 if (msg != null) {
-                    window.println("\nMessage recu sur le model " + model4 + " emis par :  " + msg.getSender().getLocalName());
+                    window.println("\nMessage recu sur le model " + model4bis + " emis par :  " + msg.getSender().getLocalName());
 
                     if(msg.getContent().equals("autorisation joueur"))
                     {
                     	nbAutorJoueur++;
-                    	if(nbAutorJoueurRecquis >= nbAutorJoueur)
-                    	{
-                    		window.println("nbAutorJoueur = " + nbAutorJoueur + ", nbAutorJoueurRecquis = " + nbAutorJoueurRecquis);
-                    	}
+                    	window.println("nbAutorJoueur = " + nbAutorJoueur + ", nbAutorJoueurRecquis = " + nbAutorJoueurRecquis);
                     }
 
                     if(msg.getContent().equals("autorisation intermediaire"))
@@ -424,7 +421,7 @@ public class Joueur extends GuiAgent {
                     	autorIntermediaire = true;
                     }
 
-                    if(autorIntermediaire && nbAutorJoueurRecquis >= nbAutorJoueur)
+                    if(autorIntermediaire && nbAutorJoueurRecquis == nbAutorJoueur)
                     {
                     	//reset des variables
                     	autorIntermediaire = false;
@@ -1383,6 +1380,7 @@ public class Joueur extends GuiAgent {
     				while(nombreRegimentAPlacer != 0 && t.getRegimentSurTerritoire() < objectif.getNbArmee())
     				{
     					t.addRegimentSurTerritoire(1);
+    					nombreRegimentAPlacer--;
     				}
     		}
     	}
