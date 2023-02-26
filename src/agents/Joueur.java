@@ -1374,16 +1374,17 @@ public class Joueur extends GuiAgent {
     }
 
     public void addRegimentTerritoire() {
+        List<Territoire> terEnvoie = new ArrayList<>();
     	if(objectif.getTypeMission().equals(TypeMission.TERRITOIRES_ET_ARMEES_MIN.toString())) {
     		for(Territoire t : territoires) {
                 while(nombreRegimentAPlacer != 0 && t.getRegimentSurTerritoire() < objectif.getNbArmee()) {
                     t.addRegimentSurTerritoire(1);
                     nombreRegimentAPlacer--;
+                    if(!terEnvoie.contains(territoires.get(territoires.indexOf(t))))
+                        terEnvoie.add(territoires.get(territoires.indexOf(t)));
                 }
     		}
     	}
-    	List<Territoire> tempT = new ArrayList<>();
-    	tempT.addAll(territoires);
         switch (strategie) {
             case "aleatoire", "passive" -> {
                 Random rand = new Random();
@@ -1391,6 +1392,8 @@ public class Joueur extends GuiAgent {
                     int indexTer = rand.nextInt(territoires.size());
                     territoires.get(indexTer).addRegimentSurTerritoire(1);
                     nombreRegimentAPlacer--;
+                    if(!terEnvoie.contains(territoires.get(indexTer)))
+                        terEnvoie.add(territoires.get(indexTer));
                 }
             }
             case "attaque" -> {
@@ -1400,11 +1403,15 @@ public class Joueur extends GuiAgent {
                     int indexTer = Integer.parseInt(pos[0]);
                     territoires.get(indexTer).addRegimentSurTerritoire(nombreRegimentAPlacer);
                     nombreRegimentAPlacer = 0;
+                    if(!terEnvoie.contains(territoires.get(indexTer)))
+                        terEnvoie.add(territoires.get(indexTer));
                 } else {
                     while (nombreRegimentAPlacer != 0) {
                         int indexTer = indexWeakestTerritoire();
                         territoires.get(indexTer).addRegimentSurTerritoire(1);
                         nombreRegimentAPlacer--;
+                        if(!terEnvoie.contains(territoires.get(indexTer)))
+                            terEnvoie.add(territoires.get(indexTer));
                     }
                 }
             }
@@ -1413,11 +1420,15 @@ public class Joueur extends GuiAgent {
                 if(indexTer != -1) {
                     territoires.get(indexTer).addRegimentSurTerritoire(nombreRegimentAPlacer);
                     nombreRegimentAPlacer = 0;
+                    if(!terEnvoie.contains(territoires.get(indexTer)))
+                        terEnvoie.add(territoires.get(indexTer));
                 } else {
                     while (nombreRegimentAPlacer != 0) {
                         indexTer = indexWeakestTerritoire();
                         territoires.get(indexTer).addRegimentSurTerritoire(1);
                         nombreRegimentAPlacer--;
+                        if(!terEnvoie.contains(territoires.get(indexTer)))
+                            terEnvoie.add(territoires.get(indexTer));
                     }
                 }
             }
@@ -1426,20 +1437,13 @@ public class Joueur extends GuiAgent {
                     int indexTer = indexWeakestTerritoire();
                     territoires.get(indexTer).addRegimentSurTerritoire(1);
                     nombreRegimentAPlacer--;
+                    if(!terEnvoie.contains(territoires.get(indexTer)))
+                        terEnvoie.add(territoires.get(indexTer));
                 }
             }
         }
-        
-        List<Territoire> terEnvoie = new ArrayList<>();
-        for(int i = 0; i < territoires.size(); i++)
-        {
-        	if(tempT.get(i).getRegimentSurTerritoire() != territoires.get(i).getRegimentSurTerritoire())
-        	{
-        		terEnvoie.add(territoires.get(i));
-        	}
-        }
 
-        if(terEnvoie.isEmpty())
+        if(!terEnvoie.isEmpty())
         {
         	//set du nombre de topic de joueurs a recevoir avant de continuer
             nbAutorJoueurRecquis = joueurs.size() * terEnvoie.size();
@@ -1449,12 +1453,8 @@ public class Joueur extends GuiAgent {
                 updateRegimentTerritoire(ter);
                 updateRegimentTerritoireAdjPourJoueursPhaseRenfort(ter);
             }
-        }
-        else
-        {
+        } else
         	phaseCombatJoueur(true);
-        }
-        
     }
 
     private void phaseCombatJoueur(boolean attaque) {
