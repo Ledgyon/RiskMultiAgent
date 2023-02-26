@@ -322,6 +322,7 @@ public class Joueur extends GuiAgent {
                 if (msg != null) {
                     window.println("\nMessage recu sur le model " + model3 + " emis par :  " + msg.getSender().getLocalName());
                     var infos = msg.getContent().split(",");
+                    continents.clear();
                     continents.addAll(Arrays.asList(infos));
 
                     if (debutPartie) {

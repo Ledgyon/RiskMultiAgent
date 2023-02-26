@@ -84,6 +84,10 @@ public class Continent {
         return territoires;
     }
 
+    public String getNom() {
+        return nom;
+    }
+
     @Override
     public String toString() {
         return "\n\tContinent{" +
