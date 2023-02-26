@@ -286,8 +286,18 @@ public class Intermediaire extends GuiAgent {
 
 					numTour++;
 					iJoueurTourCombat = 0;
-					//if (numTour < 50)
-					debutPartie();  // A METTRE EN COMMENTAIRE SI ON NE VEUT PLUS LOOP (si on veut ne faire que 1 seul tour)
+					if (numTour <= 65) {
+						debutPartie();  // A METTRE EN COMMENTAIRE SI ON NE VEUT PLUS LOOP (si on veut ne faire que 1 seul tour)
+					}
+					else {
+						String affichage = "Le nombre de tour maximum initialise a " + numTour + " a ete atteint, on stop l'execution car cela prend trop de temps";
+						
+						ACLMessage finPartie = new ACLMessage(ACLMessage.INFORM);
+	                    finPartie.addReceiver(topicAffichageFinTour);
+						finPartie.setEncoding(affichage);
+						send(finPartie);
+					}
+					
 				}
 				reset(model2, MsgReceiver.INFINITE, null, null);
 			}
