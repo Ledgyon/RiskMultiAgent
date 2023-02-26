@@ -286,7 +286,7 @@ public class Intermediaire extends GuiAgent {
 
 					numTour++;
 					iJoueurTourCombat = 0;
-					if (numTour <= 80) {
+					if (numTour <= 100) {
 						debutPartie();  // A METTRE EN COMMENTAIRE SI ON NE VEUT PLUS LOOP (si on veut ne faire que 1 seul tour)
 					}
 					else {

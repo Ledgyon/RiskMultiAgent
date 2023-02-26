@@ -732,9 +732,16 @@ public class Joueur extends GuiAgent {
             window.println(territoires.toString());
             if(m.getEncoding() != null)
             {
+            	int nbTerritoire = 0, nbRegiment = 0;
+            	for(Territoire t : territoires)
+            	{
+            		nbTerritoire++;
+            		nbRegiment += t.getRegimentSurTerritoire();
+            	}
+            	
             	String affichage = m.getEncoding();
             	window.println(affichage);
-            	window.println("Strategie : "+strategie+"\nMission : "+objectif.toString()+"\nContinents possedes : "+continents);
+            	window.println("Strategie : "+strategie+"\nNombre de territoire : "+nbTerritoire+"\nNombre de regiment : "+nbRegiment+"\nMission : "+objectif.toString()+"\nContinents possedes : "+continents);
             }
         }));
 
