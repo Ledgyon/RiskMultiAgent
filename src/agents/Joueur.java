@@ -1385,6 +1385,8 @@ public class Joueur extends GuiAgent {
     				}
     		}
     	}
+    	List<Territoire> tempT = new ArrayList<>();
+    	tempT.addAll(territoires);
         switch (strategie) {
             case "aleatoire", "passive" -> {
                 Random rand = new Random();
@@ -1430,15 +1432,32 @@ public class Joueur extends GuiAgent {
                 }
             }
         }
-
-        //set du nombre de topic de joueurs a recevoir avant de continuer
-        nbAutorJoueurRecquis = joueurs.size() * territoires.size();
-
-        //envoie des update au plateau et aux joueurs
-        for (Territoire ter : territoires) {
-            updateRegimentTerritoire(ter);
-            updateRegimentTerritoireAdjPourJoueursPhaseRenfort(ter);
+        
+        List<Territoire> terEnvoie = new ArrayList<>();
+        for(int i = 0; i < territoires.size(); i++)
+        {
+        	if(tempT.get(i).getRegimentSurTerritoire() != territoires.get(i).getRegimentSurTerritoire())
+        	{
+        		terEnvoie.add(territoires.get(i));
+        	}
         }
+
+        if(terEnvoie.isEmpty())
+        {
+        	//set du nombre de topic de joueurs a recevoir avant de continuer
+            nbAutorJoueurRecquis = joueurs.size() * terEnvoie.size();
+
+            //envoie des update au plateau et aux joueurs
+            for (Territoire ter : terEnvoie) {
+                updateRegimentTerritoire(ter);
+                updateRegimentTerritoireAdjPourJoueursPhaseRenfort(ter);
+            }
+        }
+        else
+        {
+        	phaseCombatJoueur(true);
+        }
+        
     }
 
     private void phaseCombatJoueur(boolean attaque) {
