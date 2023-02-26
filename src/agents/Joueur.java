@@ -1466,24 +1466,13 @@ public class Joueur extends GuiAgent {
             }
         }
 
-        if(!terEnvoie.isEmpty())
-        {
-        	//set du nombre de topic de joueurs a recevoir avant de continuer
-            nbAutorJoueurRecquis = joueurs.size() * terEnvoie.size();
+    	//set du nombre de topic de joueurs a recevoir avant de continuer
+        nbAutorJoueurRecquis = joueurs.size() * terEnvoie.size();
 
-            //envoie des update au plateau et aux joueurs
-            for (Territoire ter : terEnvoie) {
-                updateRegimentTerritoire(ter, terEnvoie.size());
-                updateRegimentTerritoireAdjPourJoueursPhaseRenfort(ter);
-            }
-        } 
-        else
-        {
-        	territoiresPouvantAttaquer.clear();
-            for (int i = 0; i < territoires.size(); i++) {
-                territoiresPouvantAttaquer.add(i);
-            }
-        	phaseCombatJoueur(true);
+        //envoie des update au plateau et aux joueurs
+        for (Territoire ter : terEnvoie) {
+            updateRegimentTerritoire(ter, terEnvoie.size());
+            updateRegimentTerritoireAdjPourJoueursPhaseRenfort(ter);
         }
     }
 
