@@ -291,13 +291,13 @@ public class Intermediaire extends GuiAgent {
 					}
 					else {
 						String affichage = "Le nombre de tour maximum initialise a " + numTour + " a ete atteint, on stop l'execution car cela prend trop de temps";
-						
+
 						ACLMessage finPartie = new ACLMessage(ACLMessage.INFORM);
-	                    finPartie.addReceiver(topicAffichageFinTour);
+						finPartie.addReceiver(topicAffichageFinTour);
 						finPartie.setEncoding(affichage);
 						send(finPartie);
 					}
-					
+
 				}
 				reset(model2, MsgReceiver.INFINITE, null, null);
 			}

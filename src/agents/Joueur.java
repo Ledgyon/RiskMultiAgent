@@ -879,6 +879,22 @@ public class Joueur extends GuiAgent {
         send(infoRegimentTerritoire);
     }
 
+    public void updateRegimentTerritoire(Territoire ter, int size) {
+        ACLMessage infoRegimentTerritoire = new ACLMessage(ACLMessage.INFORM);
+        try {
+            infoRegimentTerritoire.setContentObject(ter);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        infoRegimentTerritoire.addReceiver(topicRegimentTeritoire);
+        if (debutPartie) // alors la fonction sert a update le plateau apres nouveau renfort a chaque tour
+        {
+            infoRegimentTerritoire.setEncoding("" + size);
+        }
+        send(infoRegimentTerritoire);
+    }
+
     public void updateRegimentTerritoireAdjPourJoueursPhaseRenfort(Territoire ter) {
         ACLMessage infoRegimentTerritoireAdjPourJoueursPhaseRenfort = new ACLMessage(ACLMessage.INFORM);
         infoRegimentTerritoireAdjPourJoueursPhaseRenfort.addReceiver(topicRegimentTerritoireAdjacentPourJoueursPhaseRenfort);
@@ -1450,7 +1466,7 @@ public class Joueur extends GuiAgent {
 
             //envoie des update au plateau et aux joueurs
             for (Territoire ter : terEnvoie) {
-                updateRegimentTerritoire(ter);
+                updateRegimentTerritoire(ter, terEnvoie.size());
                 updateRegimentTerritoireAdjPourJoueursPhaseRenfort(ter);
             }
         } else
